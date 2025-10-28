@@ -1,0 +1,149 @@
+.react-flex-layout-tabset {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* Only the specific tabset being hovered over should show drop zone styling */
+
+.react-flex-layout-tabset.drag-over {
+  position: relative;
+}
+
+.react-flex-layout-tabset.drag-over::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Drop zone indicators - only show in specific areas */
+.react-flex-layout-tabset.drag-over[data-drop-position="center"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(33, 150, 243, 0.1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.react-flex-layout-tabset.drag-over[data-drop-position="left"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 25%;
+  bottom: 0;
+  background-color: rgba(76, 175, 80, 0.3);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.react-flex-layout-tabset.drag-over[data-drop-position="right"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 75%;
+  width: 25%;
+  bottom: 0;
+  background-color: rgba(76, 175, 80, 0.3);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.react-flex-layout-tabset.drag-over[data-drop-position="top"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background-color: rgba(76, 175, 80, 0.3);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.react-flex-layout-tabset.drag-over[data-drop-position="bottom"]::before {
+  content: "";
+  position: absolute;
+  top: 75%;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background-color: rgba(76, 175, 80, 0.3);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.react-flex-layout-tabset.drag-over::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(0, 122, 204, 0.1) 25%,
+    transparent 25%,
+    transparent 75%,
+    rgba(0, 122, 204, 0.1) 75%
+  );
+  background-size: 20px 20px;
+  animation: diagonalMove 1s linear infinite;
+  pointer-events: none;
+  z-index: 999;
+}
+
+@keyframes dropZonePulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 8px 25px rgba(0, 122, 204, 0.6);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    box-shadow: 0 12px 35px rgba(0, 122, 204, 0.8);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 8px 25px rgba(0, 122, 204, 0.6);
+  }
+}
+
+@keyframes diagonalMove {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 20px;
+  }
+}
+
+.react-flex-layout-tabset-header {
+  display: flex;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  min-height: 40px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.react-flex-layout-tabset-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}

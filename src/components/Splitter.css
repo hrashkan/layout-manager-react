@@ -1,0 +1,13 @@
+.react-flex-layout-splitter {
+  position: relative;
+  user-select: none;
+  z-index: 10;
+}
+
+.react-flex-layout-splitter:hover {
+  background-color: #007acc !important;
+}
+
+.react-flex-layout-splitter:active {
+  background-color: #005a9e !important;
+}

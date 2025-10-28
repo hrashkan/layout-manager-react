@@ -1,0 +1,44 @@
+.react-flex-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.react-flex-layout-row {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.react-flex-layout-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Global styles for better UX */
+.react-flex-layout * {
+  box-sizing: border-box;
+}
+
+.react-flex-layout .react-flex-layout-tabset {
+  min-width: 0;
+  min-height: 0;
+}
+
+.react-flex-layout .react-flex-layout-row > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+.react-flex-layout .react-flex-layout-column > * {
+  min-width: 0;
+  min-height: 0;
+}
