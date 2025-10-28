@@ -28,7 +28,7 @@
   z-index: 10;
 }
 
-/* Drop zone indicators - only show in specific areas */
+/* Drop zone indicators - clean style with blurred background and dashed border */
 .react-flex-layout-tabset.drag-over[data-drop-position="center"]::before {
   content: "";
   position: absolute;
@@ -36,7 +36,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(33, 150, 243, 0.1);
+  background: rgba(33, 150, 243, 0.1);
+  backdrop-filter: blur(2px);
+  border: 2px dashed #2196f3;
   pointer-events: none;
   z-index: 10;
 }
@@ -48,7 +50,9 @@
   left: 0;
   width: 25%;
   bottom: 0;
-  background-color: rgba(76, 175, 80, 0.3);
+  background: rgba(33, 150, 243, 0.1);
+  backdrop-filter: blur(2px);
+  border: 2px dashed #2196f3;
   pointer-events: none;
   z-index: 10;
 }
@@ -60,7 +64,9 @@
   left: 75%;
   width: 25%;
   bottom: 0;
-  background-color: rgba(76, 175, 80, 0.3);
+  background: rgba(33, 150, 243, 0.1);
+  backdrop-filter: blur(2px);
+  border: 2px dashed #2196f3;
   pointer-events: none;
   z-index: 10;
 }
@@ -72,7 +78,9 @@
   left: 0;
   right: 0;
   height: 25%;
-  background-color: rgba(76, 175, 80, 0.3);
+  background: rgba(33, 150, 243, 0.1);
+  backdrop-filter: blur(2px);
+  border: 2px dashed #2196f3;
   pointer-events: none;
   z-index: 10;
 }
@@ -84,53 +92,11 @@
   left: 0;
   right: 0;
   height: 25%;
-  background-color: rgba(76, 175, 80, 0.3);
+  background: rgba(33, 150, 243, 0.1);
+  backdrop-filter: blur(2px);
+  border: 2px dashed #2196f3;
   pointer-events: none;
   z-index: 10;
-}
-
-.react-flex-layout-tabset.drag-over::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    45deg,
-    rgba(0, 122, 204, 0.1) 25%,
-    transparent 25%,
-    transparent 75%,
-    rgba(0, 122, 204, 0.1) 75%
-  );
-  background-size: 20px 20px;
-  animation: diagonalMove 1s linear infinite;
-  pointer-events: none;
-  z-index: 999;
-}
-
-@keyframes dropZonePulse {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 8px 25px rgba(0, 122, 204, 0.6);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.05);
-    box-shadow: 0 12px 35px rgba(0, 122, 204, 0.8);
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 8px 25px rgba(0, 122, 204, 0.6);
-  }
-}
-
-@keyframes diagonalMove {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 20px 20px;
-  }
 }
 
 .react-flex-layout-tabset-header {
@@ -146,4 +112,32 @@
   flex: 1;
   overflow: hidden;
   position: relative;
+}
+
+/* Tabset close button */
+.react-flex-layout-tabset-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin-left: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.react-flex-layout-tabset-close:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.react-flex-layout-tabset-close:active {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* RTL support for close button */
+.react-flex-layout[dir="rtl"] .react-flex-layout-tabset-close {
+  margin-left: 0;
+  margin-right: 8px;
 }

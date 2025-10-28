@@ -3,6 +3,7 @@ export { Layout } from "./components/Layout";
 export { TabSet } from "./components/TabSet";
 export { Tab } from "./components/Tab";
 export { Splitter } from "./components/Splitter";
+export { DefaultCloseIcon } from "./components/DefaultCloseIcon";
 
 // Memoized components for better performance
 export { MemoizedTab } from "./components/MemoizedTab";
@@ -15,6 +16,7 @@ export type {
   LayoutProps,
   LayoutAction,
   SelectTabPayload,
+  CloseTabsetPayload,
   TabProps,
   TabSetProps,
   SplitterProps,
@@ -33,7 +35,20 @@ export {
   updateNodeById,
   removeNodeById,
   calculateFlexValues,
+  removeEmptyTabsets,
 } from "./utils/layoutUtils";
+
+// Storage utilities
+export {
+  createLayoutStorage,
+  isLocalStorageAvailable,
+  LayoutStorage,
+} from "./utils/storageUtils";
+export type { StorageOptions } from "./utils/storageUtils";
+
+// Storage hook
+export { useLayoutStorage } from "./hooks/useLayoutStorage";
+export type { UseLayoutStorageOptions } from "./hooks/useLayoutStorage";
 
 // CSS imports
 import "./components/Layout.css";

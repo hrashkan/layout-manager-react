@@ -12,10 +12,6 @@
   position: relative;
 }
 
-.react-flex-layout-tab:hover {
-  background-color: #e8e8e8;
-}
-
 .react-flex-layout-tab.active {
   background-color: #fff;
   border-bottom: 1px solid #fff;

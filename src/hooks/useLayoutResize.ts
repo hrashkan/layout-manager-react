@@ -61,10 +61,12 @@ export const useLayoutResize = (
         }),
       });
 
-      onModelChange({
-        ...model,
-        layout: updatedLayout,
-      });
+      if (updatedLayout) {
+        onModelChange({
+          ...model,
+          layout: updatedLayout,
+        });
+      }
     },
     [model, onModelChange]
   );

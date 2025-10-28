@@ -1,12 +1,17 @@
 import { LayoutNode, LayoutModel } from "../types";
 
-export const createLayoutModel = (layout: LayoutNode): LayoutModel => ({
+export const createLayoutModel = (
+  layout: LayoutNode,
+  global?: Partial<LayoutModel["global"]>
+): LayoutModel => ({
   global: {
     enableClose: true,
     enableDrag: true,
     enableResize: true,
     splitterSize: 8,
     tabOverlapLength: 0,
+    direction: "ltr",
+    ...global,
   },
   layout,
 });
@@ -113,71 +118,26 @@ export const findParentNode = (
   return null;
 };
 
-export const removeEmptyTabsets = (node: LayoutNode): LayoutNode => {
-  if (!node.children) {
-    return node;
-  }
-
-  // Filter out empty tabsets and recursively clean children
-  const cleanedChildren = node.children
-    .map((child) => removeEmptyTabsets(child))
-    .filter((child) => {
-      if (child === null) return false;
-      if (child.type === "tabset") {
-        // Keep tabset only if it has children (tabs)
-        return child.children && child.children.length > 0;
-      }
-      if (child.type === "row" || child.type === "column") {
-        // Keep row/column only if it has children
-        return child.children && child.children.length > 0;
-      }
-      return true;
-    });
-
-  // If this is a row or column and has no children left, return null to indicate removal
-  if (
-    (node.type === "row" || node.type === "column") &&
-    cleanedChildren.length === 0
-  ) {
-    return null as any; // This will be filtered out by the parent
-  }
-
-  // If this is a row or column and has only one child left, promote that child
-  if (
-    (node.type === "row" || node.type === "column") &&
-    cleanedChildren.length === 1
-  ) {
-    const singleChild = cleanedChildren[0];
-    return {
-      ...singleChild,
-      id: node.id, // Keep the parent's ID to maintain references
-    };
-  }
-
-  // Recalculate flex values for remaining children
-  const updatedChildren = calculateFlexValues(cleanedChildren);
-
-  return {
-    ...node,
-    children: updatedChildren,
-  };
-};
-
 export const updateNodeById = (
   node: LayoutNode,
   id: string,
-  updates: Partial<LayoutNode>
-): LayoutNode => {
+  updates: Partial<LayoutNode> | null
+): LayoutNode | null => {
   if (node.id === id) {
+    if (updates === null) {
+      return null; // Remove the node
+    }
     return { ...node, ...updates };
   }
 
   if (node.children) {
+    const updatedChildren = node.children
+      .map((child) => updateNodeById(child, id, updates))
+      .filter((child): child is LayoutNode => child !== null);
+
     return {
       ...node,
-      children: node.children.map((child) =>
-        updateNodeById(child, id, updates)
-      ),
+      children: updatedChildren,
     };
   }
 
@@ -204,4 +164,60 @@ export const calculateFlexValues = (children: LayoutNode[]): LayoutNode[] => {
     ...child,
     flex: child.flex || 1 / children.length,
   }));
+};
+
+/**
+ * Removes empty tabsets and redistributes flex values to remaining children
+ */
+export const removeEmptyTabsets = (node: LayoutNode): LayoutNode | null => {
+  // If this is a tabset with no children, remove it
+  if (
+    node.type === "tabset" &&
+    (!node.children || node.children.length === 0)
+  ) {
+    return null;
+  }
+
+  // If this is a tabset with only one child, promote the child
+  if (node.type === "tabset" && node.children && node.children.length === 1) {
+    const child = node.children[0];
+    return {
+      ...child,
+      flex: node.flex || 1, // Inherit the parent's flex value
+    };
+  }
+
+  // Process children recursively
+  if (node.children) {
+    const processedChildren = node.children
+      .map(removeEmptyTabsets)
+      .filter((child): child is LayoutNode => child !== null);
+
+    // If no children left, remove this node
+    if (processedChildren.length === 0) {
+      return null;
+    }
+
+    // If only one child left, promote it
+    if (processedChildren.length === 1) {
+      return {
+        ...processedChildren[0],
+        flex: node.flex || 1,
+      };
+    }
+
+    // Redistribute flex values equally among remaining children
+    const equalFlex = 1 / processedChildren.length;
+    const updatedChildren = processedChildren.map((child) => ({
+      ...child,
+      flex: equalFlex,
+    }));
+
+    return {
+      ...node,
+      children: updatedChildren,
+    };
+  }
+
+  return node;
 };

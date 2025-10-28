@@ -147,22 +147,34 @@ export const useDragAndDrop = (
       );
 
       // Update source tabset with remaining children (even if empty)
-      updatedLayout = updateNodeById(updatedLayout, sourceTabsetId, {
-        children: updatedSourceChildren,
-        selected: Math.min(
-          sourceTabset.selected || 0,
-          updatedSourceChildren.length - 1
-        ),
-      });
+      const updatedSourceLayout = updateNodeById(
+        updatedLayout,
+        sourceTabsetId,
+        {
+          children: updatedSourceChildren,
+          selected: Math.min(
+            sourceTabset.selected || 0,
+            updatedSourceChildren.length - 1
+          ),
+        }
+      );
+      if (!updatedSourceLayout) return;
+      updatedLayout = updatedSourceLayout;
 
       // Handle different drop positions
       if (dropPosition === "center") {
         // Add tab to existing target tabset
         const newTab = { ...tabToMove, id: `${tabToMove.id}-${Date.now()}` };
-        updatedLayout = updateNodeById(updatedLayout, targetTabsetId, {
-          children: [...(targetTabset.children || []), newTab],
-          selected: targetTabset.children?.length || 0,
-        });
+        const updatedTargetLayout = updateNodeById(
+          updatedLayout,
+          targetTabsetId,
+          {
+            children: [...(targetTabset.children || []), newTab],
+            selected: targetTabset.children?.length || 0,
+          }
+        );
+        if (!updatedTargetLayout) return;
+        updatedLayout = updatedTargetLayout;
       } else {
         // Create new tabset and split the layout
         const newTab = { ...tabToMove, id: `${tabToMove.id}-${Date.now()}` };
@@ -186,13 +198,19 @@ export const useDragAndDrop = (
               dropPosition === "left" ? targetTabset : newTabset,
             ]);
 
-            updatedLayout = updateNodeById(updatedLayout, parent.id, {
-              children: [
-                ...(parent.children?.slice(0, targetIndex) || []),
-                newRow,
-                ...(parent.children?.slice(targetIndex + 1) || []),
-              ],
-            });
+            const updatedParentLayout = updateNodeById(
+              updatedLayout,
+              parent.id,
+              {
+                children: [
+                  ...(parent.children?.slice(0, targetIndex) || []),
+                  newRow,
+                  ...(parent.children?.slice(targetIndex + 1) || []),
+                ],
+              }
+            );
+            if (!updatedParentLayout) return;
+            updatedLayout = updatedParentLayout;
           } else if (dropPosition === "top" || dropPosition === "bottom") {
             // Create vertical split
             const newColumn = createColumn(
@@ -203,13 +221,19 @@ export const useDragAndDrop = (
               ]
             );
 
-            updatedLayout = updateNodeById(updatedLayout, parent.id, {
-              children: [
-                ...(parent.children?.slice(0, targetIndex) || []),
-                newColumn,
-                ...(parent.children?.slice(targetIndex + 1) || []),
-              ],
-            });
+            const updatedParentLayout2 = updateNodeById(
+              updatedLayout,
+              parent.id,
+              {
+                children: [
+                  ...(parent.children?.slice(0, targetIndex) || []),
+                  newColumn,
+                  ...(parent.children?.slice(targetIndex + 1) || []),
+                ],
+              }
+            );
+            if (!updatedParentLayout2) return;
+            updatedLayout = updatedParentLayout2;
           }
         }
       }

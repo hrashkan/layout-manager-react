@@ -18,6 +18,8 @@ export interface LayoutNode {
   enableResize?: boolean;
 }
 
+export type Direction = "ltr" | "rtl";
+
 export interface LayoutModel {
   global: {
     enableClose?: boolean;
@@ -25,6 +27,7 @@ export interface LayoutModel {
     enableResize?: boolean;
     splitterSize?: number;
     tabOverlapLength?: number;
+    direction?: Direction;
   };
   layout: LayoutNode;
 }
@@ -36,6 +39,17 @@ export interface LayoutProps {
   onAction?: (action: LayoutAction) => void;
   className?: string;
   style?: React.CSSProperties;
+  storage?: {
+    enabled?: boolean;
+    key?: string;
+    autoSave?: boolean;
+    debounceMs?: number;
+  };
+  splitterStyles?: {
+    default?: React.CSSProperties;
+    hover?: React.CSSProperties;
+    active?: React.CSSProperties;
+  };
 }
 
 export interface SelectTabPayload {
@@ -43,8 +57,18 @@ export interface SelectTabPayload {
   tabIndex: number;
 }
 
+export interface CloseTabsetPayload {
+  nodeId: string;
+}
+
 export interface LayoutAction {
-  type: "addNode" | "removeNode" | "moveNode" | "resizeNode" | "selectTab";
+  type:
+    | "addNode"
+    | "removeNode"
+    | "moveNode"
+    | "resizeNode"
+    | "selectTab"
+    | "closeTabset";
   payload: SelectTabPayload | unknown;
 }
 
@@ -90,6 +114,7 @@ export interface TabSetProps {
   onDrop?: (e: React.DragEvent, tabsetId: string) => void;
   dragOverTabset?: string | null;
   dropPosition?: DropPosition;
+  direction?: Direction;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -100,4 +125,9 @@ export interface SplitterProps {
   size?: number;
   className?: string;
   style?: React.CSSProperties;
+  customStyles?: {
+    default?: React.CSSProperties;
+    hover?: React.CSSProperties;
+    active?: React.CSSProperties;
+  };
 }

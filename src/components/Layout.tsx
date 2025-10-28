@@ -4,12 +4,19 @@ import {
   LayoutNode,
   LayoutAction,
   SelectTabPayload,
+  CloseTabsetPayload,
+  LayoutModel,
 } from "../types";
 import { TabSet } from "./TabSet";
 import { Splitter } from "./Splitter";
 import { useLayoutResize } from "../hooks/useLayoutResize";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
-import { updateNodeById } from "../utils/layoutUtils";
+import { useLayoutStorage } from "../hooks/useLayoutStorage";
+import {
+  updateNodeById,
+  findNodeById,
+  removeEmptyTabsets,
+} from "../utils/layoutUtils";
 import "./Layout.css";
 
 export const Layout: React.FC<LayoutProps> = ({
@@ -19,11 +26,54 @@ export const Layout: React.FC<LayoutProps> = ({
   onAction,
   className = "",
   style = {},
+  storage,
 }) => {
   const [internalModel, setInternalModel] = useState(model);
 
-  const currentModel = onModelChange ? model : internalModel;
-  const { handleResize } = useLayoutResize(currentModel, onModelChange);
+  // Use storage if enabled
+  const {
+    model: storedModel,
+    updateModel: updateStoredModel,
+    isLoaded,
+  } = useLayoutStorage(model, {
+    key: storage?.key,
+    autoSave: storage?.autoSave,
+    debounceMs: storage?.debounceMs,
+    onLoad: (loadedModel) => {
+      if (!onModelChange) {
+        setInternalModel(loadedModel);
+      }
+    },
+  });
+
+  // Use stored model if storage is enabled, otherwise use provided model or internal model
+  const currentModel = storage?.enabled
+    ? storedModel
+    : onModelChange
+    ? model
+    : internalModel;
+  const handleModelChange = useCallback(
+    (newModel: LayoutModel) => {
+      // If storage is enabled, update storage (this will trigger re-render)
+      if (storage?.enabled) {
+        updateStoredModel(newModel);
+        // Also call parent's onModelChange to keep parent state in sync
+        if (onModelChange) {
+          onModelChange(newModel);
+        }
+      } else {
+        // No storage, use parent handler or internal state
+        if (onModelChange) {
+          onModelChange(newModel);
+        } else {
+          setInternalModel(newModel);
+        }
+      }
+    },
+    [onModelChange, storage?.enabled, updateStoredModel]
+  );
+
+  const { handleResize } = useLayoutResize(currentModel, handleModelChange);
   const {
     dragOverTabset,
     dropPosition,
@@ -32,34 +82,161 @@ export const Layout: React.FC<LayoutProps> = ({
     handleDragOver,
     handleDragLeave,
     handleDrop,
-  } = useDragAndDrop(currentModel, onModelChange);
+  } = useDragAndDrop(currentModel, handleModelChange);
 
   const handleAction = useCallback(
     (action: LayoutAction) => {
+      // Always call parent's onAction first
       onAction?.(action);
 
-      if (onModelChange) {
-        // Let parent handle model updates
-        return;
-      }
-
-      // Internal model updates
-      setInternalModel((prevModel) => {
-        switch (action.type) {
-          case "selectTab":
-            const { nodeId, tabIndex } = action.payload as SelectTabPayload;
-            return {
-              ...prevModel,
-              layout: updateNodeById(prevModel.layout, nodeId, {
+      // If storage is enabled, we need to handle the action to update storage
+      if (storage?.enabled) {
+        const updateModel = (prevModel: LayoutModel): LayoutModel => {
+          switch (action.type) {
+            case "selectTab":
+              const { nodeId, tabIndex } = action.payload as SelectTabPayload;
+              const selectResult = updateNodeById(prevModel.layout, nodeId, {
                 selected: tabIndex,
-              }),
-            };
-          default:
-            return prevModel;
+              });
+              return {
+                ...prevModel,
+                layout: selectResult || prevModel.layout,
+              };
+            case "removeNode":
+              const { nodeId: tabsetId, tabIndex: removeTabIndex } =
+                action.payload as { nodeId: string; tabIndex: number };
+              // Find the tabset and remove the specific tab
+              const tabsetNode = findNodeById(prevModel.layout, tabsetId);
+              if (tabsetNode && tabsetNode.children) {
+                const updatedChildren = tabsetNode.children.filter(
+                  (_, index) => index !== removeTabIndex
+                );
+                const updatedTabset = {
+                  ...tabsetNode,
+                  children: updatedChildren,
+                };
+                const updatedLayout = updateNodeById(
+                  prevModel.layout,
+                  tabsetId,
+                  updatedTabset
+                );
+                if (updatedLayout) {
+                  // Clean up empty tabsets and redistribute flex values
+                  const cleanedLayout = removeEmptyTabsets(updatedLayout);
+                  if (cleanedLayout) {
+                    return {
+                      ...prevModel,
+                      layout: cleanedLayout,
+                    };
+                  }
+                }
+              }
+              return prevModel;
+            case "closeTabset":
+              const { nodeId: closeTabsetId } =
+                action.payload as CloseTabsetPayload;
+              // Remove the tabset by setting it to null
+              const updatedLayout = updateNodeById(
+                prevModel.layout,
+                closeTabsetId,
+                null
+              );
+              if (updatedLayout) {
+                return {
+                  ...prevModel,
+                  layout: updatedLayout,
+                };
+              }
+              // If layout becomes null, return the original model (shouldn't happen in practice)
+              return prevModel;
+            default:
+              return prevModel;
+          }
+        };
+
+        const updatedModel = updateModel(storedModel);
+        updateStoredModel(updatedModel);
+        // Also call parent's onModelChange to keep parent state in sync
+        if (onModelChange) {
+          onModelChange(updatedModel);
         }
-      });
+      } else if (!onModelChange) {
+        // If no storage and no parent onModelChange, handle internally
+        const updateModel = (prevModel: LayoutModel): LayoutModel => {
+          switch (action.type) {
+            case "selectTab":
+              const { nodeId, tabIndex } = action.payload as SelectTabPayload;
+              const selectResult = updateNodeById(prevModel.layout, nodeId, {
+                selected: tabIndex,
+              });
+              return {
+                ...prevModel,
+                layout: selectResult || prevModel.layout,
+              };
+            case "removeNode":
+              const { nodeId: tabsetId, tabIndex: removeTabIndex } =
+                action.payload as { nodeId: string; tabIndex: number };
+              // Find the tabset and remove the specific tab
+              const tabsetNode = findNodeById(prevModel.layout, tabsetId);
+              if (tabsetNode && tabsetNode.children) {
+                const updatedChildren = tabsetNode.children.filter(
+                  (_, index) => index !== removeTabIndex
+                );
+                const updatedTabset = {
+                  ...tabsetNode,
+                  children: updatedChildren,
+                };
+                const updatedLayout = updateNodeById(
+                  prevModel.layout,
+                  tabsetId,
+                  updatedTabset
+                );
+                if (updatedLayout) {
+                  // Clean up empty tabsets and redistribute flex values
+                  const cleanedLayout = removeEmptyTabsets(updatedLayout);
+                  if (cleanedLayout) {
+                    return {
+                      ...prevModel,
+                      layout: cleanedLayout,
+                    };
+                  }
+                }
+              }
+              return prevModel;
+            case "closeTabset":
+              const { nodeId: closeTabsetId } =
+                action.payload as CloseTabsetPayload;
+              // Remove the tabset by setting it to null
+              const updatedLayout = updateNodeById(
+                prevModel.layout,
+                closeTabsetId,
+                null
+              );
+              if (updatedLayout) {
+                return {
+                  ...prevModel,
+                  layout: updatedLayout,
+                };
+              }
+              // If layout becomes null, return the original model (shouldn't happen in practice)
+              return prevModel;
+            default:
+              return prevModel;
+          }
+        };
+
+        const updatedModel = updateModel(internalModel);
+        setInternalModel(updatedModel);
+      }
     },
-    [onAction, onModelChange]
+    [
+      onAction,
+      onModelChange,
+      storage?.enabled,
+      updateStoredModel,
+      storedModel,
+      internalModel,
+    ]
   );
 
   const renderNode = useCallback(
@@ -92,10 +269,18 @@ export const Layout: React.FC<LayoutProps> = ({
               dropPosition={
                 dragOverTabset === node.id ? dropPosition : undefined
               }
+              direction={currentModel.global.direction || "ltr"}
             />
           );
 
         case "row":
+          const direction = currentModel.global.direction || "ltr";
+          const isRTL = direction === "rtl";
+          const rowChildren = node.children || [];
+          const childrenToRender = isRTL
+            ? [...rowChildren].reverse()
+            : rowChildren;
+
           return (
             <div
               key={node.id}
@@ -110,10 +295,10 @@ export const Layout: React.FC<LayoutProps> = ({
                 maxHeight: node.maxHeight ? `${node.maxHeight}px` : undefined,
               }}
             >
-              {node.children?.map((child, index) => (
+              {childrenToRender.map((child, index) => (
                 <React.Fragment key={child.id}>
                   {renderNode(child)}
-                  {index < (node.children?.length || 0) - 1 && (
+                  {index < childrenToRender.length - 1 && (
                     <Splitter
                       direction="horizontal"
                       onResize={(delta) =>
@@ -181,14 +366,37 @@ export const Layout: React.FC<LayoutProps> = ({
     ]
   );
 
+  const direction = currentModel.global.direction || "ltr";
+
   const layoutStyle: React.CSSProperties = {
     ...style,
     height: "100%",
     width: "100%",
   };
 
+  // Don't render until storage is loaded (if using storage)
+  if (storage?.enabled && !isLoaded) {
+    return (
+      <div
+        className={`react-flex-layout ${className}`}
+        style={{
+          ...layoutStyle,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div>Loading layout...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`react-flex-layout ${className}`} style={layoutStyle}>
+    <div
+      className={`react-flex-layout ${className}`}
+      style={layoutStyle}
+      dir={direction}
+    >
       {renderNode(currentModel.layout)}
     </div>
   );

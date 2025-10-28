@@ -16,12 +16,18 @@ export const TabSet: React.FC<TabSetProps> = ({
   onDrop,
   dragOverTabset,
   dropPosition,
+  direction = "ltr",
   className = "",
   style = {},
 }) => {
   const tabs = useMemo(() => {
     return node.children?.filter((child) => child.type === "tab") || [];
   }, [node.children]);
+
+  // In RTL mode, reverse the tabs for proper visual order
+  const tabsToRender = useMemo(() => {
+    return direction === "rtl" ? [...tabs].reverse() : tabs;
+  }, [tabs, direction]);
 
   const selectedTabIndex = node.selected ?? 0;
   const selectedTab = tabs[selectedTabIndex];
@@ -137,18 +143,22 @@ export const TabSet: React.FC<TabSetProps> = ({
       onDrop={handleDrop}
     >
       <div className="react-flex-layout-tabset-header">
-        {tabs.map((tab, index) => (
-          <Tab
-            key={tab.id}
-            node={tab}
-            index={index}
-            onSelect={handleTabSelect}
-            onClose={handleTabClose}
-            onDragStart={handleTabDragStart}
-            onDragEnd={onTabDragEnd}
-            className={index === selectedTabIndex ? "active" : ""}
-          />
-        ))}
+        {tabsToRender.map((tab) => {
+          // Find the original index for proper selection handling
+          const originalIndex = tabs.findIndex((t) => t.id === tab.id);
+          return (
+            <Tab
+              key={tab.id}
+              node={tab}
+              index={originalIndex}
+              onSelect={handleTabSelect}
+              onClose={handleTabClose}
+              onDragStart={handleTabDragStart}
+              onDragEnd={onTabDragEnd}
+              className={originalIndex === selectedTabIndex ? "active" : ""}
+            />
+          );
+        })}
       </div>
       <div className="react-flex-layout-tabset-content">
         {selectedTab && (factory ? factory(selectedTab) : children)}

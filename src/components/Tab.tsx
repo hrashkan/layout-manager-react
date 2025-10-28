@@ -62,16 +62,14 @@ export const Tab: React.FC<TabProps> = ({
       <span className="react-flex-layout-tab-title">
         {node.name || "Untitled"}
       </span>
-      {node.enableClose !== false && (
-        <button
-          className="react-flex-layout-tab-close"
-          onClick={handleClose}
-          type="button"
-          aria-label="Close tab"
-        >
-          ×
-        </button>
-      )}
+      <button
+        className="react-flex-layout-tab-close"
+        onClick={handleClose}
+        type="button"
+        aria-label="Close tab"
+      >
+        ×
+      </button>
     </div>
   );
 };

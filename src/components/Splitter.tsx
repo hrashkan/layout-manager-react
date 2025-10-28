@@ -8,8 +8,10 @@ export const Splitter: React.FC<SplitterProps> = ({
   size = 8,
   className = "",
   style = {},
+  customStyles = {},
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const startPosRef = useRef<number>(0);
 
   const handleMouseDown = useCallback(
@@ -38,6 +40,27 @@ export const Splitter: React.FC<SplitterProps> = ({
     [direction, onResize]
   );
 
+  // Default styles
+  const defaultStyles: React.CSSProperties = {
+    backgroundColor: "#ffffff",
+    border: "none",
+    outline: "none",
+  };
+
+  // Get current state styles
+  const getCurrentStyles = () => {
+    if (isDragging && customStyles.active) {
+      return customStyles.active;
+    }
+    if (isHovered && customStyles.hover) {
+      return customStyles.hover;
+    }
+    if (customStyles.default) {
+      return customStyles.default;
+    }
+    return defaultStyles;
+  };
+
   const splitterStyle: React.CSSProperties = {
     ...style,
     width: direction === "horizontal" ? `${size}px` : "100%",
@@ -46,15 +69,25 @@ export const Splitter: React.FC<SplitterProps> = ({
     minHeight: direction === "vertical" ? `${size}px` : undefined,
     flexShrink: 0,
     cursor: direction === "horizontal" ? "col-resize" : "row-resize",
-    backgroundColor: isDragging ? "#007acc" : "#e1e1e1",
-    transition: isDragging ? "none" : "background-color 0.2s ease",
+    ...getCurrentStyles(),
+    transition: isDragging ? "none" : "all 0.2s ease",
   };
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   return (
     <div
       className={`react-flex-layout-splitter ${className}`}
       style={splitterStyle}
       onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     />
   );
 };
