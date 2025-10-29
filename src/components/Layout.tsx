@@ -366,7 +366,7 @@ export const Layout: React.FC<LayoutProps> = ({
     ]
   );
 
-  const direction = currentModel.global.direction || "ltr";
+  const direction = currentModel.global?.direction || "ltr";
 
   const layoutStyle: React.CSSProperties = {
     ...style,

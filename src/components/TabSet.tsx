@@ -54,7 +54,6 @@ export const TabSet: React.FC<TabSetProps> = ({
 
   const handleTabDragStart = useCallback(
     (tabId: string, tabIndex?: number) => {
-      console.log("TABSET DRAG START:", node.id, tabId, tabIndex);
       const actualIndex =
         tabIndex !== undefined
           ? tabIndex

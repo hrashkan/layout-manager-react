@@ -28,7 +28,7 @@ export class LayoutStorage {
       const serialized = JSON.stringify(model);
       localStorage.setItem(this.storageKey, serialized);
     } catch (error) {
-      console.warn("Failed to save layout to localStorage:", error);
+      // Failed to save layout to localStorage
     }
   }
 
@@ -42,7 +42,7 @@ export class LayoutStorage {
         return JSON.parse(serialized) as LayoutModel;
       }
     } catch (error) {
-      console.warn("Failed to load layout from localStorage:", error);
+      // Failed to load layout from localStorage
     }
     return null;
   }
@@ -54,7 +54,7 @@ export class LayoutStorage {
     try {
       localStorage.removeItem(this.storageKey);
     } catch (error) {
-      console.warn("Failed to clear layout from localStorage:", error);
+      // Failed to clear layout from localStorage
     }
   }
 

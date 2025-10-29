@@ -89,11 +89,11 @@ const BasicExample: React.FC = () => {
   };
 
   const handleModelChange = (newModel: any) => {
-    console.log("Model changed:", newModel);
+    // Handle model changes
   };
 
   const handleAction = (action: any) => {
-    console.log("Action:", action);
+    // Handle actions
   };
 
   return (

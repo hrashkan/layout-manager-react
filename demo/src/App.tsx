@@ -40,8 +40,14 @@ const SampleComponent: React.FC<{ title: string; color: string }> = ({
 );
 
 const App: React.FC = () => {
-  const [direction, setDirection] = useState<"ltr" | "rtl">("ltr");
-  const [storageEnabled, setStorageEnabled] = useState(true);
+  const [direction, setDirection] = useState<"ltr" | "rtl">(() => {
+    const saved = localStorage.getItem("demo-direction");
+    return (saved as "ltr" | "rtl") || "ltr";
+  });
+  const [storageEnabled, setStorageEnabled] = useState(() => {
+    const saved = localStorage.getItem("demo-storage-enabled");
+    return saved ? JSON.parse(saved) : true;
+  });
   const [storageKey, setStorageKey] = useState("demo-layout");
 
   const initialModel = createLayoutModel(
@@ -153,6 +159,7 @@ const App: React.FC = () => {
   const toggleDirection = useCallback(() => {
     const newDirection = direction === "ltr" ? "rtl" : "ltr";
     setDirection(newDirection);
+    localStorage.setItem("demo-direction", newDirection);
     setModel((prevModel) => ({
       ...prevModel,
       global: {
@@ -226,7 +233,14 @@ const App: React.FC = () => {
               <input
                 type="checkbox"
                 checked={storageEnabled}
-                onChange={(e) => setStorageEnabled(e.target.checked)}
+                onChange={(e) => {
+                  const newValue = e.target.checked;
+                  setStorageEnabled(newValue);
+                  localStorage.setItem(
+                    "demo-storage-enabled",
+                    JSON.stringify(newValue)
+                  );
+                }}
                 style={{ marginRight: "5px" }}
               />
               Enable Storage

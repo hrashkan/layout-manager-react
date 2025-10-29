@@ -70,7 +70,9 @@ const MyApp = () => {
     <Layout
       model={layoutModel}
       factory={factory}
-      onModelChange={(model) => console.log("Model changed:", model)}
+      onModelChange={(model) => {
+        // Handle model changes
+      }}
     />
   );
 };

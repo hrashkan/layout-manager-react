@@ -212,24 +212,24 @@ const AdvancedExample: React.FC = () => {
   }, []);
 
   const handleAction = useCallback((action: LayoutAction) => {
-    console.log("Layout action:", action);
+    // Handle layout actions
 
     // Handle different actions
     switch (action.type) {
       case "selectTab":
-        console.log("Tab selected:", action.payload);
+        // Tab selected
         break;
       case "removeNode":
-        console.log("Node removed:", action.payload);
+        // Node removed
         break;
       case "moveNode":
-        console.log("Node moved:", action.payload);
+        // Node moved
         break;
       case "resizeNode":
-        console.log("Node resized:", action.payload);
+        // Node resized
         break;
       default:
-        console.log("Unknown action:", action);
+      // Unknown action
     }
   }, []);
 
