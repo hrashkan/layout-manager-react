@@ -6,6 +6,7 @@ import {
   SelectTabPayload,
   CloseTabsetPayload,
   LayoutModel,
+  Direction,
 } from "../types";
 import { TabSet } from "./TabSet";
 import { Splitter } from "./Splitter";
@@ -86,10 +87,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
   const handleAction = useCallback(
     (action: LayoutAction) => {
-      // Always call parent's onAction first
-      onAction?.(action);
-
-      // If storage is enabled, we need to handle the action to update storage
+      // If storage is enabled, handle the action first to update storage
       if (storage?.enabled) {
         const updateModel = (prevModel: LayoutModel): LayoutModel => {
           switch (action.type) {
@@ -149,6 +147,17 @@ export const Layout: React.FC<LayoutProps> = ({
               }
               // If layout becomes null, return the original model (shouldn't happen in practice)
               return prevModel;
+            case "changeDirection":
+              const { direction: newDirection } = action.payload as {
+                direction: Direction;
+              };
+              return {
+                ...prevModel,
+                global: {
+                  ...prevModel.global,
+                  direction: newDirection,
+                },
+              };
             default:
               return prevModel;
           }
@@ -160,7 +169,12 @@ export const Layout: React.FC<LayoutProps> = ({
         if (onModelChange) {
           onModelChange(updatedModel);
         }
-      } else if (!onModelChange) {
+      } else {
+        // If no storage, call parent's onAction first
+        onAction?.(action);
+      }
+
+      if (!storage?.enabled && !onModelChange) {
         // If no storage and no parent onModelChange, handle internally
         const updateModel = (prevModel: LayoutModel): LayoutModel => {
           switch (action.type) {

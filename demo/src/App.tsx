@@ -152,6 +152,19 @@ const App: React.FC = () => {
           }));
         }
       }
+      // Handle direction change
+      if (action.type === "changeDirection") {
+        const { direction: newDirection } = action.payload as {
+          direction: "ltr" | "rtl";
+        };
+        setModel((prevModel) => ({
+          ...prevModel,
+          global: {
+            ...prevModel.global,
+            direction: newDirection,
+          },
+        }));
+      }
     },
     [model.layout]
   );
@@ -167,7 +180,15 @@ const App: React.FC = () => {
         direction: newDirection,
       },
     }));
-  }, [direction]);
+
+    // If storage is enabled, also trigger the action to update stored model
+    if (storageEnabled) {
+      handleAction({
+        type: "changeDirection",
+        payload: { direction: newDirection },
+      });
+    }
+  }, [direction, storageEnabled, handleAction]);
 
   const clearStorage = useCallback(() => {
     if (isLocalStorageAvailable()) {

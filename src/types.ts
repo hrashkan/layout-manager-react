@@ -61,6 +61,10 @@ export interface CloseTabsetPayload {
   nodeId: string;
 }
 
+export interface ChangeDirectionPayload {
+  direction: Direction;
+}
+
 export interface LayoutAction {
   type:
     | "addNode"
@@ -68,7 +72,8 @@ export interface LayoutAction {
     | "moveNode"
     | "resizeNode"
     | "selectTab"
-    | "closeTabset";
+    | "closeTabset"
+    | "changeDirection";
   payload: SelectTabPayload | unknown;
 }
 
