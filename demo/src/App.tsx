@@ -192,22 +192,25 @@ const App: React.FC = () => {
     const newDirection = direction === "ltr" ? "rtl" : "ltr";
     setDirection(newDirection);
     localStorage.setItem("demo-direction", newDirection);
-    setModel((prevModel) => ({
-      ...prevModel,
-      global: {
-        ...prevModel.global,
-        direction: newDirection,
-      },
-    }));
 
-    // If storage is enabled, also trigger the action to update stored model
+    const updatedModel: LayoutModel = {
+      ...model,
+      global: {
+        ...model.global,
+        direction: newDirection as "ltr" | "rtl",
+      },
+    };
+
+    setModel(updatedModel);
+
+    // If storage is enabled, trigger action through Layout's handler
     if (storageEnabled) {
       handleAction({
         type: "changeDirection",
         payload: { direction: newDirection },
       });
     }
-  }, [direction, storageEnabled, handleAction]);
+  }, [direction, storageEnabled, handleAction, model]);
 
   const clearStorage = useCallback(() => {
     if (isLocalStorageAvailable()) {
@@ -341,7 +344,16 @@ const App: React.FC = () => {
       <Layout
         model={model}
         factory={factory}
-        onModelChange={setModel}
+        onModelChange={(newModel) => {
+          setModel(newModel);
+          if (
+            newModel.global?.direction &&
+            newModel.global.direction !== direction
+          ) {
+            setDirection(newModel.global.direction);
+            localStorage.setItem("demo-direction", newModel.global.direction);
+          }
+        }}
         onAction={handleAction}
         storage={{
           enabled: storageEnabled,

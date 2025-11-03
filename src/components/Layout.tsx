@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   LayoutProps,
   LayoutNode,
@@ -30,6 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({
   storage,
 }) => {
   const [internalModel, setInternalModel] = useState(model);
+  const [pendingDirection, setPendingDirection] = useState<string | null>(null);
 
   // Use storage if enabled
   const {
@@ -41,7 +42,9 @@ export const Layout: React.FC<LayoutProps> = ({
     autoSave: storage?.autoSave,
     debounceMs: storage?.debounceMs,
     onLoad: (loadedModel) => {
-      if (!onModelChange) {
+      if (onModelChange) {
+        onModelChange(loadedModel);
+      } else {
         setInternalModel(loadedModel);
       }
     },
@@ -74,7 +77,10 @@ export const Layout: React.FC<LayoutProps> = ({
     [onModelChange, storage?.enabled, updateStoredModel]
   );
 
-  const { handleResize } = useLayoutResize(currentModel, handleModelChange);
+  const { handleResize, resetResize } = useLayoutResize(
+    currentModel,
+    handleModelChange
+  );
   const {
     dragOverTabset,
     dropPosition,
@@ -168,6 +174,8 @@ export const Layout: React.FC<LayoutProps> = ({
               const { direction: newDirection } = action.payload as {
                 direction: Direction;
               };
+              // Store direction immediately to force update
+              setPendingDirection(newDirection);
               return {
                 ...prevModel,
                 global: {
@@ -186,6 +194,8 @@ export const Layout: React.FC<LayoutProps> = ({
         if (onModelChange) {
           onModelChange(updatedModel);
         }
+        // Call onAction to allow parent to handle the action if needed
+        onAction?.(action);
       } else {
         // If no storage, call parent's onAction first
         onAction?.(action);
@@ -352,6 +362,10 @@ export const Layout: React.FC<LayoutProps> = ({
                       onResize={(delta) =>
                         handleResize(child.id, delta, "horizontal")
                       }
+                      onResizeStart={() => {
+                        // Reset any previous resize state for this node
+                        resetResize(child.id, "horizontal");
+                      }}
                       size={currentModel.global.splitterSize || 8}
                     />
                   )}
@@ -384,6 +398,10 @@ export const Layout: React.FC<LayoutProps> = ({
                       onResize={(delta) =>
                         handleResize(child.id, delta, "vertical")
                       }
+                      onResizeStart={() => {
+                        // Reset any previous resize state for this node
+                        resetResize(child.id, "vertical");
+                      }}
                       size={currentModel.global.splitterSize || 8}
                     />
                   )}
@@ -414,7 +432,21 @@ export const Layout: React.FC<LayoutProps> = ({
     ]
   );
 
-  const direction = currentModel.global?.direction || "ltr";
+  // Use pendingDirection if set (for immediate update when storage enabled), otherwise use currentModel
+  const direction =
+    storage?.enabled && pendingDirection
+      ? pendingDirection
+      : currentModel.global?.direction || "ltr";
+
+  // Clear pendingDirection after storedModel has updated
+  useEffect(() => {
+    if (pendingDirection && storage?.enabled) {
+      // When storedModel direction matches pendingDirection, clear it
+      if (storedModel?.global?.direction === pendingDirection) {
+        setPendingDirection(null);
+      }
+    }
+  }, [pendingDirection, storage?.enabled, storedModel?.global?.direction]);
 
   const layoutStyle: React.CSSProperties = {
     ...style,

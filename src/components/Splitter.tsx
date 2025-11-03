@@ -5,6 +5,7 @@ import "./Splitter.css";
 export const Splitter: React.FC<SplitterProps> = ({
   direction,
   onResize,
+  onResizeStart,
   size = 8,
   className = "",
   style = {},
@@ -22,6 +23,9 @@ export const Splitter: React.FC<SplitterProps> = ({
       setIsDragging(true);
       startPosRef.current = direction === "horizontal" ? e.clientX : e.clientY;
 
+      // Call onResizeStart to reset initial flex values
+      onResizeStart?.();
+
       const handleMouseMove = (e: MouseEvent) => {
         const currentPos = direction === "horizontal" ? e.clientX : e.clientY;
         const delta = currentPos - startPosRef.current;
@@ -37,7 +41,7 @@ export const Splitter: React.FC<SplitterProps> = ({
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [direction, onResize]
+    [direction, onResize, onResizeStart]
   );
 
   // Default styles

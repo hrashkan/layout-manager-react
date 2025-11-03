@@ -127,6 +127,7 @@ export interface TabSetProps {
 export interface SplitterProps {
   direction: "horizontal" | "vertical";
   onResize: (delta: number) => void;
+  onResizeStart?: () => void;
   size?: number;
   className?: string;
   style?: React.CSSProperties;

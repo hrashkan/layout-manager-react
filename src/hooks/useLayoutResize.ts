@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { LayoutNode, LayoutModel } from "../types";
 import { updateNodeById } from "../utils/layoutUtils";
 
@@ -6,6 +6,11 @@ export const useLayoutResize = (
   model: LayoutModel,
   onModelChange?: (model: LayoutModel) => void
 ) => {
+  // Track initial flex values when resize starts
+  const initialFlexRef = useRef<{
+    [key: string]: { current: number; sibling: number };
+  }>({});
+
   const handleResize = useCallback(
     (nodeId: string, delta: number, direction: "horizontal" | "vertical") => {
       if (!onModelChange) return;
@@ -22,56 +27,88 @@ export const useLayoutResize = (
 
       if (siblingIndex >= parent.children.length) return;
 
-      const currentChild = parent.children[currentIndex];
-      const siblingChild = parent.children[siblingIndex];
+      const resizeKey = `${nodeId}-${direction}`;
 
-      // Calculate new flex values based on delta
-      const containerSize =
+      // Initialize or get initial flex values
+      if (!initialFlexRef.current[resizeKey]) {
+        const currentChild = parent.children[currentIndex];
+        const siblingChild = parent.children[siblingIndex];
+        initialFlexRef.current[resizeKey] = {
+          current: currentChild.flex || 1,
+          sibling: siblingChild.flex || 1,
+        };
+      }
+
+      const initialFlex = initialFlexRef.current[resizeKey];
+      const totalFlex = initialFlex.current + initialFlex.sibling;
+
+      // Use reference container size for pixel conversion
+      const refContainerSize =
         direction === "horizontal" ? window.innerWidth : window.innerHeight;
 
-      // Get current flex values
-      const currentFlex = currentChild.flex || 1;
-      const siblingFlex = siblingChild.flex || 1;
-      const totalFlex = currentFlex + siblingFlex;
+      // Calculate initial pixel sizes
+      const initialCurrentPixels =
+        (initialFlex.current / totalFlex) * refContainerSize;
+      const initialSiblingPixels =
+        (initialFlex.sibling / totalFlex) * refContainerSize;
 
-      // Convert current flex values to pixel equivalents
-      const currentPixels = (currentFlex / totalFlex) * containerSize;
-      const siblingPixels = (siblingFlex / totalFlex) * containerSize;
+      // Apply delta to get new pixel sizes
+      const minSize = 100;
+      let newCurrentPixels = initialCurrentPixels + delta;
+      let newSiblingPixels = initialSiblingPixels - delta;
 
-      // Apply delta to current panel with minimum constraints
-      const minSize = 100; // Minimum 100px
-      const newCurrentPixels = Math.max(minSize, currentPixels + delta);
-      const newSiblingPixels = Math.max(minSize, siblingPixels - delta);
+      // Enforce minimum constraints
+      if (newCurrentPixels < minSize) {
+        const excess = minSize - newCurrentPixels;
+        newCurrentPixels = minSize;
+        newSiblingPixels -= excess;
+      }
+      if (newSiblingPixels < minSize) {
+        const excess = minSize - newSiblingPixels;
+        newSiblingPixels = minSize;
+        newCurrentPixels -= excess;
+      }
 
       // Convert back to flex values
       const newTotalPixels = newCurrentPixels + newSiblingPixels;
-      const newCurrentFlex = (newCurrentPixels / newTotalPixels) * totalFlex;
-      const newSiblingFlex = (newSiblingPixels / newTotalPixels) * totalFlex;
+      if (newTotalPixels > 0) {
+        const newCurrentFlex = (newCurrentPixels / newTotalPixels) * totalFlex;
+        const newSiblingFlex = (newSiblingPixels / newTotalPixels) * totalFlex;
 
-      // Update the model
-      const updatedLayout = updateNodeById(model.layout, parent.id, {
-        children: parent.children.map((child, index) => {
-          if (index === currentIndex) {
-            return { ...child, flex: newCurrentFlex };
-          }
-          if (index === siblingIndex) {
-            return { ...child, flex: newSiblingFlex };
-          }
-          return child;
-        }),
-      });
-
-      if (updatedLayout) {
-        onModelChange({
-          ...model,
-          layout: updatedLayout,
+        // Update the model
+        const updatedLayout = updateNodeById(model.layout, parent.id, {
+          children: parent.children.map((child, index) => {
+            if (index === currentIndex) {
+              return { ...child, flex: newCurrentFlex };
+            }
+            if (index === siblingIndex) {
+              return { ...child, flex: newSiblingFlex };
+            }
+            return child;
+          }),
         });
+
+        if (updatedLayout) {
+          onModelChange({
+            ...model,
+            layout: updatedLayout,
+          });
+        }
       }
     },
     [model, onModelChange]
   );
 
-  return { handleResize };
+  // Reset initial flex tracking when drag ends
+  const resetResize = useCallback(
+    (nodeId: string, direction: "horizontal" | "vertical") => {
+      const resizeKey = `${nodeId}-${direction}`;
+      delete initialFlexRef.current[resizeKey];
+    },
+    []
+  );
+
+  return { handleResize, resetResize };
 };
 
 // Helper function to find parent node
