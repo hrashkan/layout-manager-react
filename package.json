@@ -2,9 +2,14 @@
     "name": "layout-manager-react",
     "version": "0.0.1",
     "description": "A modern React layout manager using flexbox with percentage-based sizing",
-    "main": "dist/index.umd.js",
-    "module": "dist/index.es.js",
-    "types": "dist/index.d.ts",
+    "main": "./dist/index.umd.js",
+    "module": "./dist/index.es.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
     "exports": {
         ".": {
             "import": "./dist/index.es.js",
@@ -16,7 +21,8 @@
         "dev": "vite",
         "build": "tsc && vite build",
         "preview": "vite preview",
-        "type-check": "tsc --noEmit"
+        "type-check": "tsc --noEmit",
+        "prepublishOnly": "npm run build"
     },
     "keywords": [
         "react",
@@ -28,19 +34,24 @@
     ],
     "author": "Ashkan Hooshidar",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ashkanhooshidar/layout-manager-react.git"
+    },
+    "homepage": "https://github.com/ashkanhooshidar/layout-manager-react#readme",
+    "bugs": {
+        "url": "https://github.com/ashkanhooshidar/layout-manager-react/issues"
+    },
     "peerDependencies": {
         "react": ">=16.8.0",
         "react-dom": ">=16.8.0"
     },
     "devDependencies": {
+        "@types/node": "^24.10.0",
         "@types/react": "^18.2.0",
         "@types/react-dom": "^18.2.0",
         "@vitejs/plugin-react": "^4.0.0",
         "typescript": "^5.0.0",
         "vite": "^4.4.0"
-    },
-    "dependencies": {
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
     }
 }

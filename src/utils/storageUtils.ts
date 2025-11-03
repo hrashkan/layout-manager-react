@@ -12,7 +12,7 @@ export class LayoutStorage {
   private storageKey: string;
   private autoSave: boolean;
   private debounceMs: number;
-  private saveTimeout: number | null = null;
+  private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(options: StorageOptions = {}) {
     this.storageKey = `${STORAGE_PREFIX}-${options.key || "default"}`;

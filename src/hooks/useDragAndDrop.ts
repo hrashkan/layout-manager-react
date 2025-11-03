@@ -1,5 +1,5 @@
 import { useCallback, useState, useRef } from "react";
-import { LayoutModel, LayoutNode, DropPosition } from "../types";
+import { LayoutModel, DropPosition } from "../types";
 import {
   findNodeById,
   updateNodeById,
