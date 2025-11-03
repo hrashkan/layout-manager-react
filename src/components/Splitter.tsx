@@ -12,7 +12,6 @@ export const Splitter: React.FC<SplitterProps> = ({
   customStyles = {},
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const startPosRef = useRef<number>(0);
 
   const handleMouseDown = useCallback(
@@ -56,9 +55,7 @@ export const Splitter: React.FC<SplitterProps> = ({
     if (isDragging && customStyles.active) {
       return customStyles.active;
     }
-    if (isHovered && customStyles.hover) {
-      return customStyles.hover;
-    }
+
     if (customStyles.default) {
       return customStyles.default;
     }
@@ -77,21 +74,11 @@ export const Splitter: React.FC<SplitterProps> = ({
     transition: isDragging ? "none" : "all 0.2s ease",
   };
 
-  const handleMouseEnter = useCallback(() => {
-    setIsHovered(true);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-  }, []);
-
   return (
     <div
       className={`react-flex-layout-splitter ${className}`}
       style={splitterStyle}
       onMouseDown={handleMouseDown}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     />
   );
 };

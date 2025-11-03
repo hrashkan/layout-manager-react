@@ -45,6 +45,7 @@ export const useLayoutStorage = (
       if (!storageRef.current) return;
 
       try {
+        // For direction changes, save immediately without debounce to ensure UI updates
         if (storageRef.current.isAutoSaveEnabled()) {
           storageRef.current.debouncedSave(newModel);
         } else {
@@ -61,8 +62,13 @@ export const useLayoutStorage = (
   // Update model and save
   const updateModel = useCallback(
     (newModel: LayoutModel) => {
-      setModel(newModel);
-      saveModel(newModel);
+      // Ensure we create a new object reference so React detects the change
+      const modelUpdate: LayoutModel = { ...newModel };
+      if (newModel.global) {
+        modelUpdate.global = { ...newModel.global };
+      }
+      setModel(modelUpdate);
+      saveModel(modelUpdate);
     },
     [saveModel]
   );

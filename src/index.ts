@@ -14,6 +14,7 @@ export type {
   LayoutNode,
   LayoutModel,
   LayoutProps,
+  LayoutRef,
   LayoutAction,
   SelectTabPayload,
   CloseTabsetPayload,

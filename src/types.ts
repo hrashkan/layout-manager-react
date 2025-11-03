@@ -32,6 +32,10 @@ export interface LayoutModel {
   layout: LayoutNode;
 }
 
+export interface LayoutRef {
+  handleAction: (action: LayoutAction) => void;
+}
+
 export interface LayoutProps {
   model: LayoutModel;
   factory: (node: LayoutNode) => React.ReactNode;

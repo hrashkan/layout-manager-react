@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   Layout,
   createLayoutModel,
@@ -7,6 +7,7 @@ import {
   createRow,
   createColumn,
   LayoutModel,
+  LayoutRef,
   LayoutAction,
   SelectTabPayload,
   CloseTabsetPayload,
@@ -44,6 +45,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem("demo-direction");
     return (saved as "ltr" | "rtl") || "ltr";
   });
+  const layoutRef = useRef<LayoutRef>(null);
   const [storageEnabled, setStorageEnabled] = useState(() => {
     const saved = localStorage.getItem("demo-storage-enabled");
     return saved ? JSON.parse(saved) : true;
@@ -99,7 +101,6 @@ const App: React.FC = () => {
 
   const handleAction = useCallback(
     (action: LayoutAction) => {
-      // Handle tab selection
       if (action.type === "selectTab") {
         const { nodeId, tabIndex } = action.payload as SelectTabPayload;
         setModel((prevModel) => {
@@ -112,7 +113,6 @@ const App: React.FC = () => {
           };
         });
       }
-      // Handle tab close (remove individual tab)
       if (action.type === "removeNode") {
         const { nodeId, tabIndex } = action.payload as {
           nodeId: string;
@@ -156,7 +156,6 @@ const App: React.FC = () => {
           }
         }
       }
-      // Handle tabset close
       if (action.type === "closeTabset") {
         const { nodeId } = action.payload as CloseTabsetPayload;
         const updatedLayout = updateNodeById(model.layout, nodeId, null);
@@ -193,24 +192,33 @@ const App: React.FC = () => {
     setDirection(newDirection);
     localStorage.setItem("demo-direction", newDirection);
 
-    const updatedModel: LayoutModel = {
-      ...model,
-      global: {
-        ...model.global,
-        direction: newDirection as "ltr" | "rtl",
-      },
-    };
-
-    setModel(updatedModel);
-
-    // If storage is enabled, trigger action through Layout's handler
     if (storageEnabled) {
-      handleAction({
-        type: "changeDirection",
-        payload: { direction: newDirection },
-      });
+      if (layoutRef.current) {
+        layoutRef.current.handleAction({
+          type: "changeDirection",
+          payload: { direction: newDirection },
+        });
+      } else {
+        const updatedModel: LayoutModel = {
+          ...model,
+          global: {
+            ...model.global,
+            direction: newDirection as "ltr" | "rtl",
+          },
+        };
+        setModel(updatedModel);
+      }
+    } else {
+      const updatedModel: LayoutModel = {
+        ...model,
+        global: {
+          ...model.global,
+          direction: newDirection as "ltr" | "rtl",
+        },
+      };
+      setModel(updatedModel);
     }
-  }, [direction, storageEnabled, handleAction, model]);
+  }, [direction, storageEnabled, model]);
 
   const clearStorage = useCallback(() => {
     if (isLocalStorageAvailable()) {
@@ -342,6 +350,7 @@ const App: React.FC = () => {
         </div>
       </div>
       <Layout
+        ref={layoutRef}
         model={model}
         factory={factory}
         onModelChange={(newModel) => {
@@ -354,7 +363,11 @@ const App: React.FC = () => {
             localStorage.setItem("demo-direction", newModel.global.direction);
           }
         }}
-        onAction={handleAction}
+        onAction={(action) => {
+          if (action.type !== "changeDirection") {
+            handleAction(action);
+          }
+        }}
         storage={{
           enabled: storageEnabled,
           key: storageKey,
