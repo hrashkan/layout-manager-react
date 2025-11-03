@@ -46,7 +46,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       null
     );
 
-    // Use storage if enabled
     const {
       model: storedModel,
       updateModel: updateStoredModel,
@@ -64,7 +63,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       },
     });
 
-    // Use stored model if storage is enabled, otherwise use provided model or internal model
     const currentModel = storage?.enabled
       ? storedModel
       : onModelChange
@@ -72,15 +70,12 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       : internalModel;
     const handleModelChange = useCallback(
       (newModel: LayoutModel) => {
-        // If storage is enabled, update storage (this will trigger re-render)
         if (storage?.enabled) {
           updateStoredModel(newModel);
-          // Also call parent's onModelChange to keep parent state in sync
           if (onModelChange) {
             onModelChange(newModel);
           }
         } else {
-          // No storage, use parent handler or internal state
           if (onModelChange) {
             onModelChange(newModel);
           } else {
@@ -110,19 +105,19 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       storedModelRef.current = storedModel;
     }, [storedModel]);
 
-  const handleAction = useCallback(
-    (action: LayoutAction) => {
-      if (storage?.enabled) {
-        const currentStoredModel = storedModelRef.current;
+    const handleAction = useCallback(
+      (action: LayoutAction) => {
+        if (storage?.enabled) {
+          const currentStoredModel = storedModelRef.current;
 
-        if (action.type === "changeDirection") {
-          const { direction: newDirection } = action.payload as {
-            direction: Direction;
-          };
-          setPendingDirection(newDirection);
-        }
+          if (action.type === "changeDirection") {
+            const { direction: newDirection } = action.payload as {
+              direction: Direction;
+            };
+            setPendingDirection(newDirection);
+          }
 
-        const updateModel = (prevModel: LayoutModel): LayoutModel => {
+          const updateModel = (prevModel: LayoutModel): LayoutModel => {
             switch (action.type) {
               case "selectTab":
                 const { nodeId, tabIndex } = action.payload as SelectTabPayload;
@@ -136,21 +131,17 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               case "removeNode":
                 const { nodeId: tabsetId, tabIndex: removeTabIndex } =
                   action.payload as { nodeId: string; tabIndex: number };
-                // Find the tabset and remove the specific tab
                 const tabsetNode = findNodeById(prevModel.layout, tabsetId);
                 if (tabsetNode && tabsetNode.children) {
                   const updatedChildren = tabsetNode.children.filter(
                     (_, index) => index !== removeTabIndex
                   );
 
-                  // Update selected index to ensure it's valid
                   const currentSelected = tabsetNode.selected ?? 0;
                   let newSelected = currentSelected;
                   if (removeTabIndex <= currentSelected) {
-                    // If we removed a tab at or before the selected index, adjust
                     newSelected = Math.max(0, currentSelected - 1);
                   }
-                  // Ensure selected index doesn't exceed bounds
                   newSelected = Math.min(
                     newSelected,
                     updatedChildren.length - 1
@@ -168,7 +159,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     updatedTabset
                   );
                   if (updatedLayout) {
-                    // Clean up empty tabsets without redistributing flex values
                     const cleanedLayout = removeEmptyTabsets(updatedLayout);
                     if (cleanedLayout) {
                       return {
@@ -182,14 +172,12 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               case "closeTabset":
                 const { nodeId: closeTabsetId } =
                   action.payload as CloseTabsetPayload;
-                // Remove the tabset by setting it to null
                 const updatedLayout = updateNodeById(
                   prevModel.layout,
                   closeTabsetId,
                   null
                 );
                 if (updatedLayout) {
-                  // Clean up and redistribute flex values so remaining tabsets grow
                   const cleanedLayout = removeEmptyTabsets(updatedLayout);
                   if (cleanedLayout) {
                     return {
@@ -198,13 +186,11 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     };
                   }
                 }
-                // If layout becomes null, return the original model (shouldn't happen in practice)
                 return prevModel;
               case "changeDirection":
                 const { direction: newDirection } = action.payload as {
                   direction: Direction;
                 };
-                // Return updated model with new direction
                 return {
                   ...prevModel,
                   global: {
@@ -217,18 +203,18 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             }
           };
 
-        const updatedModel = updateModel(currentStoredModel);
-        updateStoredModel(updatedModel);
-        if (onModelChange) {
-          onModelChange(updatedModel);
+          const updatedModel = updateModel(currentStoredModel);
+          updateStoredModel(updatedModel);
+          if (onModelChange) {
+            onModelChange(updatedModel);
+          }
+          onAction?.(action);
+        } else {
+          onAction?.(action);
         }
-        onAction?.(action);
-      } else {
-        onAction?.(action);
-      }
 
-      if (!storage?.enabled && !onModelChange) {
-        const updateModel = (prevModel: LayoutModel): LayoutModel => {
+        if (!storage?.enabled && !onModelChange) {
+          const updateModel = (prevModel: LayoutModel): LayoutModel => {
             switch (action.type) {
               case "selectTab":
                 const { nodeId, tabIndex } = action.payload as SelectTabPayload;
@@ -242,21 +228,17 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               case "removeNode":
                 const { nodeId: tabsetId, tabIndex: removeTabIndex } =
                   action.payload as { nodeId: string; tabIndex: number };
-                // Find the tabset and remove the specific tab
                 const tabsetNode = findNodeById(prevModel.layout, tabsetId);
                 if (tabsetNode && tabsetNode.children) {
                   const updatedChildren = tabsetNode.children.filter(
                     (_, index) => index !== removeTabIndex
                   );
 
-                  // Update selected index to ensure it's valid
                   const currentSelected = tabsetNode.selected ?? 0;
                   let newSelected = currentSelected;
                   if (removeTabIndex <= currentSelected) {
-                    // If we removed a tab at or before the selected index, adjust
                     newSelected = Math.max(0, currentSelected - 1);
                   }
-                  // Ensure selected index doesn't exceed bounds
                   newSelected = Math.min(
                     newSelected,
                     updatedChildren.length - 1
@@ -274,7 +256,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     updatedTabset
                   );
                   if (updatedLayout) {
-                    // Clean up empty tabsets without redistributing flex values
                     const cleanedLayout = removeEmptyTabsets(updatedLayout);
                     if (cleanedLayout) {
                       return {
@@ -288,14 +269,12 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               case "closeTabset":
                 const { nodeId: closeTabsetId } =
                   action.payload as CloseTabsetPayload;
-                // Remove the tabset by setting it to null
                 const updatedLayout = updateNodeById(
                   prevModel.layout,
                   closeTabsetId,
                   null
                 );
                 if (updatedLayout) {
-                  // Clean up and redistribute flex values so remaining tabsets grow
                   const cleanedLayout = removeEmptyTabsets(updatedLayout);
                   if (cleanedLayout) {
                     return {
@@ -304,7 +283,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     };
                   }
                 }
-                // If layout becomes null, return the original model (shouldn't happen in practice)
                 return prevModel;
               default:
                 return prevModel;
@@ -327,15 +305,15 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       ]
     );
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      handleAction,
-    }),
-    [handleAction]
-  );
+    useImperativeHandle(
+      ref,
+      () => ({
+        handleAction,
+      }),
+      [handleAction]
+    );
 
-  const renderNode = useCallback(
+    const renderNode = useCallback(
       (node: LayoutNode): React.ReactNode => {
         switch (node.type) {
           case "tabset":
@@ -520,32 +498,32 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       ]
     );
 
-  let direction: Direction;
-  if (storage?.enabled) {
-    if (pendingDirection !== null) {
-      direction = pendingDirection;
+    let direction: Direction;
+    if (storage?.enabled) {
+      if (pendingDirection !== null) {
+        direction = pendingDirection;
+      } else {
+        direction = storedModel?.global?.direction || "ltr";
+      }
     } else {
-      direction = storedModel?.global?.direction || "ltr";
+      direction = currentModel.global?.direction || "ltr";
     }
-  } else {
-    direction = currentModel.global?.direction || "ltr";
-  }
 
-  useEffect(() => {
-    if (!storage?.enabled && pendingDirection !== null) {
-      setPendingDirection(null);
-    }
-  }, [storage?.enabled, pendingDirection]);
+    useEffect(() => {
+      if (!storage?.enabled && pendingDirection !== null) {
+        setPendingDirection(null);
+      }
+    }, [storage?.enabled, pendingDirection]);
 
-  const layoutStyle: React.CSSProperties = {
+    const layoutStyle: React.CSSProperties = {
       ...style,
       height: "100%",
       width: "100%",
     };
 
-  if (storage?.enabled && !isLoaded) {
-    return (
-      <div
+    if (storage?.enabled && !isLoaded) {
+      return (
+        <div
           className={`react-flex-layout ${className}`}
           style={{
             ...layoutStyle,
@@ -559,7 +537,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       );
     }
 
-  return (
+    return (
       <div
         className={`react-flex-layout ${className}`}
         style={layoutStyle}

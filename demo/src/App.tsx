@@ -124,14 +124,11 @@ const App: React.FC = () => {
             (_, index) => index !== tabIndex
           );
 
-          // Update selected index to ensure it's valid
           const currentSelected = tabsetNode.selected ?? 0;
           let newSelected = currentSelected;
           if (tabIndex <= currentSelected) {
-            // If we removed a tab at or before the selected index, adjust
             newSelected = Math.max(0, currentSelected - 1);
           }
-          // Ensure selected index doesn't exceed bounds
           newSelected = Math.min(newSelected, updatedChildren.length - 1);
 
           const updatedTabset = {
@@ -145,7 +142,6 @@ const App: React.FC = () => {
             updatedTabset
           );
           if (updatedLayout) {
-            // Clean up empty tabsets without redistributing flex values
             const cleanedLayout = removeEmptyTabsets(updatedLayout);
             if (cleanedLayout) {
               setModel((prevModel) => ({
@@ -160,7 +156,6 @@ const App: React.FC = () => {
         const { nodeId } = action.payload as CloseTabsetPayload;
         const updatedLayout = updateNodeById(model.layout, nodeId, null);
         if (updatedLayout) {
-          // Clean up and redistribute flex values so remaining tabsets grow
           const cleanedLayout = removeEmptyTabsets(updatedLayout);
           if (cleanedLayout) {
             setModel((prevModel) => ({
@@ -170,7 +165,6 @@ const App: React.FC = () => {
           }
         }
       }
-      // Handle direction change
       if (action.type === "changeDirection") {
         const { direction: newDirection } = action.payload as {
           direction: "ltr" | "rtl";
