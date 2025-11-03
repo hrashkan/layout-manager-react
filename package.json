@@ -19,7 +19,7 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "tsc && vite build",
+        "build": "vite build && tsc --declaration --emitDeclarationOnly --outDir dist",
         "preview": "vite preview",
         "type-check": "tsc --noEmit",
         "prepublishOnly": "npm run build"
@@ -36,7 +36,7 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/ashkanhooshidar/layout-manager-react.git"
+        "url": "git+https://github.com/ashkanhooshidar/layout-manager-react.git"
     },
     "homepage": "https://github.com/ashkanhooshidar/layout-manager-react#readme",
     "bugs": {
