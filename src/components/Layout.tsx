@@ -109,9 +109,22 @@ export const Layout: React.FC<LayoutProps> = ({
                 const updatedChildren = tabsetNode.children.filter(
                   (_, index) => index !== removeTabIndex
                 );
+
+                // Update selected index to ensure it's valid
+                const currentSelected = tabsetNode.selected ?? 0;
+                let newSelected = currentSelected;
+                if (removeTabIndex <= currentSelected) {
+                  // If we removed a tab at or before the selected index, adjust
+                  newSelected = Math.max(0, currentSelected - 1);
+                }
+                // Ensure selected index doesn't exceed bounds
+                newSelected = Math.min(newSelected, updatedChildren.length - 1);
+
                 const updatedTabset = {
                   ...tabsetNode,
                   children: updatedChildren,
+                  selected:
+                    updatedChildren.length > 0 ? newSelected : undefined,
                 };
                 const updatedLayout = updateNodeById(
                   prevModel.layout,
@@ -119,7 +132,7 @@ export const Layout: React.FC<LayoutProps> = ({
                   updatedTabset
                 );
                 if (updatedLayout) {
-                  // Clean up empty tabsets and redistribute flex values
+                  // Clean up empty tabsets without redistributing flex values
                   const cleanedLayout = removeEmptyTabsets(updatedLayout);
                   if (cleanedLayout) {
                     return {
@@ -140,10 +153,14 @@ export const Layout: React.FC<LayoutProps> = ({
                 null
               );
               if (updatedLayout) {
-                return {
-                  ...prevModel,
-                  layout: updatedLayout,
-                };
+                // Clean up and redistribute flex values so remaining tabsets grow
+                const cleanedLayout = removeEmptyTabsets(updatedLayout);
+                if (cleanedLayout) {
+                  return {
+                    ...prevModel,
+                    layout: cleanedLayout,
+                  };
+                }
               }
               // If layout becomes null, return the original model (shouldn't happen in practice)
               return prevModel;
@@ -196,9 +213,22 @@ export const Layout: React.FC<LayoutProps> = ({
                 const updatedChildren = tabsetNode.children.filter(
                   (_, index) => index !== removeTabIndex
                 );
+
+                // Update selected index to ensure it's valid
+                const currentSelected = tabsetNode.selected ?? 0;
+                let newSelected = currentSelected;
+                if (removeTabIndex <= currentSelected) {
+                  // If we removed a tab at or before the selected index, adjust
+                  newSelected = Math.max(0, currentSelected - 1);
+                }
+                // Ensure selected index doesn't exceed bounds
+                newSelected = Math.min(newSelected, updatedChildren.length - 1);
+
                 const updatedTabset = {
                   ...tabsetNode,
                   children: updatedChildren,
+                  selected:
+                    updatedChildren.length > 0 ? newSelected : undefined,
                 };
                 const updatedLayout = updateNodeById(
                   prevModel.layout,
@@ -206,7 +236,7 @@ export const Layout: React.FC<LayoutProps> = ({
                   updatedTabset
                 );
                 if (updatedLayout) {
-                  // Clean up empty tabsets and redistribute flex values
+                  // Clean up empty tabsets without redistributing flex values
                   const cleanedLayout = removeEmptyTabsets(updatedLayout);
                   if (cleanedLayout) {
                     return {
@@ -227,10 +257,14 @@ export const Layout: React.FC<LayoutProps> = ({
                 null
               );
               if (updatedLayout) {
-                return {
-                  ...prevModel,
-                  layout: updatedLayout,
-                };
+                // Clean up and redistribute flex values so remaining tabsets grow
+                const cleanedLayout = removeEmptyTabsets(updatedLayout);
+                if (cleanedLayout) {
+                  return {
+                    ...prevModel,
+                    layout: cleanedLayout,
+                  };
+                }
               }
               // If layout becomes null, return the original model (shouldn't happen in practice)
               return prevModel;

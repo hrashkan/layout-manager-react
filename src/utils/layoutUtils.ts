@@ -100,14 +100,12 @@ export const findParentNode = (
     return null;
   }
 
-  // Check if any direct child matches
   for (const child of root.children) {
     if (child.id === childId) {
       return root;
     }
   }
 
-  // Recursively search in children
   for (const child of root.children) {
     const found = findParentNode(child, childId);
     if (found) {
@@ -125,7 +123,7 @@ export const updateNodeById = (
 ): LayoutNode | null => {
   if (node.id === id) {
     if (updates === null) {
-      return null; // Remove the node
+      return null;
     }
     return { ...node, ...updates };
   }
@@ -166,11 +164,7 @@ export const calculateFlexValues = (children: LayoutNode[]): LayoutNode[] => {
   }));
 };
 
-/**
- * Removes empty tabsets and redistributes flex values to remaining children
- */
 export const removeEmptyTabsets = (node: LayoutNode): LayoutNode | null => {
-  // If this is a tabset with no children, remove it
   if (
     node.type === "tabset" &&
     (!node.children || node.children.length === 0)
@@ -178,45 +172,80 @@ export const removeEmptyTabsets = (node: LayoutNode): LayoutNode | null => {
     return null;
   }
 
-  // If this is a tabset with only one child, promote the child
-  if (node.type === "tabset" && node.children && node.children.length === 1) {
-    const child = node.children[0];
-    return {
-      ...child,
-      flex: node.flex || 1, // Inherit the parent's flex value
-    };
-  }
-
-  // Process children recursively
   if (node.children) {
+    const originalChildrenCount = node.children.length;
     const processedChildren = node.children
       .map(removeEmptyTabsets)
       .filter((child): child is LayoutNode => child !== null);
 
-    // If no children left, remove this node
+    const childrenWereRemoved =
+      processedChildren.length < originalChildrenCount;
+
     if (processedChildren.length === 0) {
       return null;
     }
 
-    // If only one child left, promote it
-    if (processedChildren.length === 1) {
-      return {
-        ...processedChildren[0],
-        flex: node.flex || 1,
-      };
+    if (
+      (node.type === "row" || node.type === "column") &&
+      processedChildren.length > 0
+    ) {
+      const totalFlex = processedChildren.reduce(
+        (sum, child) => sum + (child.flex || 0),
+        0
+      );
+
+      const mustNormalize =
+        childrenWereRemoved ||
+        totalFlex < 0.999 ||
+        processedChildren.length === 1;
+
+      if (mustNormalize) {
+        let updatedChildren: LayoutNode[];
+
+        if (processedChildren.length === 1) {
+          updatedChildren = processedChildren.map((child) => ({
+            ...child,
+            flex: 1,
+          }));
+        } else if (totalFlex === 0 || totalFlex < 0.001) {
+          const equalFlex = 1 / processedChildren.length;
+          updatedChildren = processedChildren.map((child) => ({
+            ...child,
+            flex: equalFlex,
+          }));
+        } else {
+          const scaleFactor = 1 / totalFlex;
+          updatedChildren = processedChildren.map((child) => ({
+            ...child,
+            flex: (child.flex || 0) * scaleFactor,
+          }));
+        }
+
+        return {
+          ...node,
+          children: updatedChildren,
+        };
+      }
+
+      if (
+        processedChildren.length !== originalChildrenCount ||
+        processedChildren.some(
+          (child, index) => child !== node.children?.[index]
+        )
+      ) {
+        return {
+          ...node,
+          children: processedChildren,
+        };
+      }
     }
 
-    // Redistribute flex values equally among remaining children
-    const equalFlex = 1 / processedChildren.length;
-    const updatedChildren = processedChildren.map((child) => ({
-      ...child,
-      flex: equalFlex,
-    }));
-
-    return {
-      ...node,
-      children: updatedChildren,
-    };
+    if (processedChildren !== node.children) {
+      return {
+        ...node,
+        children: processedChildren,
+      };
+    }
   }
 
   return node;

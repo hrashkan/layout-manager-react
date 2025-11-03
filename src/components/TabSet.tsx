@@ -29,7 +29,12 @@ export const TabSet: React.FC<TabSetProps> = ({
     return direction === "rtl" ? [...tabs].reverse() : tabs;
   }, [tabs, direction]);
 
-  const selectedTabIndex = node.selected ?? 0;
+  // Ensure selected index is within bounds
+  const rawSelectedIndex = node.selected ?? 0;
+  const selectedTabIndex = Math.min(
+    rawSelectedIndex,
+    Math.max(0, tabs.length - 1)
+  );
   const selectedTab = tabs[selectedTabIndex];
 
   const handleTabSelect = useCallback(

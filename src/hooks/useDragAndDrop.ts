@@ -7,48 +7,8 @@ import {
   createRow,
   createColumn,
   findParentNode,
+  removeEmptyTabsets,
 } from "../utils/layoutUtils";
-
-function removeEmptyTabsets(node: LayoutNode): LayoutNode | null {
-  if (
-    node.type === "tabset" &&
-    (!node.children || node.children.length === 0)
-  ) {
-    return null;
-  }
-
-  if (node.type === "row" || node.type === "column") {
-    if (!node.children) return node;
-
-    const cleanedChildren = node.children
-      .map((child) => removeEmptyTabsets(child))
-      .filter((child): child is LayoutNode => child !== null);
-
-    if (cleanedChildren.length === 0) {
-      return null;
-    }
-
-    if (cleanedChildren.length === 1) {
-      return {
-        ...cleanedChildren[0],
-        flex: 1,
-      };
-    }
-
-    const equalFlex = 1 / cleanedChildren.length;
-    const normalizedChildren = cleanedChildren.map((child) => ({
-      ...child,
-      flex: equalFlex,
-    }));
-
-    return {
-      ...node,
-      children: normalizedChildren,
-    };
-  }
-
-  return node;
-}
 
 export const useDragAndDrop = (
   model: LayoutModel,

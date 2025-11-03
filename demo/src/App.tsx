@@ -123,14 +123,29 @@ const App: React.FC = () => {
           const updatedChildren = tabsetNode.children.filter(
             (_, index) => index !== tabIndex
           );
-          const updatedTabset = { ...tabsetNode, children: updatedChildren };
+
+          // Update selected index to ensure it's valid
+          const currentSelected = tabsetNode.selected ?? 0;
+          let newSelected = currentSelected;
+          if (tabIndex <= currentSelected) {
+            // If we removed a tab at or before the selected index, adjust
+            newSelected = Math.max(0, currentSelected - 1);
+          }
+          // Ensure selected index doesn't exceed bounds
+          newSelected = Math.min(newSelected, updatedChildren.length - 1);
+
+          const updatedTabset = {
+            ...tabsetNode,
+            children: updatedChildren,
+            selected: updatedChildren.length > 0 ? newSelected : undefined,
+          };
           const updatedLayout = updateNodeById(
             model.layout,
             nodeId,
             updatedTabset
           );
           if (updatedLayout) {
-            // Clean up empty tabsets and redistribute flex values
+            // Clean up empty tabsets without redistributing flex values
             const cleanedLayout = removeEmptyTabsets(updatedLayout);
             if (cleanedLayout) {
               setModel((prevModel) => ({
@@ -146,10 +161,14 @@ const App: React.FC = () => {
         const { nodeId } = action.payload as CloseTabsetPayload;
         const updatedLayout = updateNodeById(model.layout, nodeId, null);
         if (updatedLayout) {
-          setModel((prevModel) => ({
-            ...prevModel,
-            layout: updatedLayout,
-          }));
+          // Clean up and redistribute flex values so remaining tabsets grow
+          const cleanedLayout = removeEmptyTabsets(updatedLayout);
+          if (cleanedLayout) {
+            setModel((prevModel) => ({
+              ...prevModel,
+              layout: cleanedLayout,
+            }));
+          }
         }
       }
       // Handle direction change
