@@ -6,7 +6,11 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: "automatic",
+    }),
+  ],
   build: {
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
@@ -15,11 +19,23 @@ export default defineConfig({
       formats: ["es", "umd"],
     },
     rollupOptions: {
-      external: ["react", "react-dom"],
+      external: (id) => {
+        // Externalize React and all React-related modules
+        return (
+          id === "react" ||
+          id === "react-dom" ||
+          id === "react/jsx-runtime" ||
+          id === "react/jsx-dev-runtime" ||
+          id.startsWith("react/") ||
+          id.startsWith("react-dom/")
+        );
+      },
       output: {
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
+          "react/jsx-runtime": "React",
+          "react/jsx-dev-runtime": "React",
         },
         assetFileNames: (assetInfo) => {
           if (assetInfo.name === "style.css") return "style.css";

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2024-12-19
+
+### Fixed
+
+- Fixed React version mismatch error in Next.js and other frameworks by properly externalizing React and React DOM
+- React and `react/jsx-runtime` are now properly externalized, preventing duplicate React instances
+- Resolved "Cannot read properties of undefined (reading 'ReactCurrentDispatcher')" error
+
+### Changed
+
+- Updated Vite build configuration to externalize all React-related modules (`react`, `react-dom`, `react/jsx-runtime`, `react/jsx-dev-runtime`)
+- Reduced bundle size significantly by removing bundled React code (ES: 55.5 kB → 33.6 kB, UMD: 33.7 kB → 19.6 kB)
+
 ## [0.0.2] - 2024-12-19
 
 ### Added
