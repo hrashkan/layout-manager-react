@@ -82,11 +82,13 @@ export default App;
 ### CSS Import Options
 
 **Option 1: Direct import (Recommended)**
+
 ```tsx
 import "layout-manager-react/dist/style.css";
 ```
 
 **Option 2: In your main entry file (e.g., `app.tsx`, `_app.tsx`, or `main.tsx`)**
+
 ```tsx
 // Next.js App Router (app/layout.tsx)
 import "layout-manager-react/dist/style.css";
@@ -99,6 +101,7 @@ import "layout-manager-react/dist/style.css";
 ```
 
 **Option 3: In your global CSS file**
+
 ```css
 /* styles.css or globals.css */
 @import "layout-manager-react/dist/style.css";
@@ -107,6 +110,7 @@ import "layout-manager-react/dist/style.css";
 ### Next.js Specific
 
 **For Next.js App Router (`app/` directory):**
+
 ```tsx
 // app/layout.tsx or app/page.tsx
 import "layout-manager-react/dist/style.css";
@@ -114,6 +118,7 @@ import { Layout } from "layout-manager-react";
 ```
 
 **For Next.js Pages Router (`pages/` directory):**
+
 ```tsx
 // pages/_app.tsx or any page component
 import "layout-manager-react/dist/style.css";
