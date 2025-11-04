@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2024-12-19
+
+### Added
+- Added CSS export path in package.json for better module resolution
+- Enhanced README with Next.js-specific CSS import instructions
+- Added multiple CSS import options documentation
+
+### Changed
+- Improved package.json exports configuration to include CSS file
+
 ## [0.0.3] - 2024-12-19
 
 ### Fixed
