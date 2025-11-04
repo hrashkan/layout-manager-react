@@ -40,6 +40,24 @@ const SampleComponent: React.FC<{ title: string; color: string }> = ({
   </div>
 );
 
+// Custom close icon component
+const CustomCloseIcon: React.FC = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="15" y1="9" x2="9" y2="15" />
+    <line x1="9" y1="9" x2="15" y2="15" />
+  </svg>
+);
+
 const App: React.FC = () => {
   const [direction, setDirection] = useState<"ltr" | "rtl">(() => {
     const saved = localStorage.getItem("demo-direction");
@@ -368,6 +386,8 @@ const App: React.FC = () => {
           autoSave: true,
           debounceMs: 500,
         }}
+        closeIcon={<CustomCloseIcon />}
+        closeButtonClassName="demo-custom-close-button"
       />
     </div>
   );

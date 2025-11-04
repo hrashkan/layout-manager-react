@@ -20,6 +20,8 @@ export const TabSet: React.FC<TabSetProps> = ({
   direction = "ltr",
   className = "",
   style = {},
+  closeIcon,
+  closeButtonClassName,
 }) => {
   const tabs = useMemo(() => {
     return node.children?.filter((child) => child.type === "tab") || [];
@@ -241,6 +243,8 @@ export const TabSet: React.FC<TabSetProps> = ({
                 onDragStart={handleTabDragStart}
                 onDragEnd={onTabDragEnd}
                 className={isActive ? "active" : ""}
+                closeIcon={closeIcon}
+                closeButtonClassName={closeButtonClassName}
               />
             </React.Fragment>
           );

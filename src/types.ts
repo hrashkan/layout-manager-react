@@ -54,6 +54,8 @@ export interface LayoutProps {
     hover?: React.CSSProperties;
     active?: React.CSSProperties;
   };
+  closeIcon?: React.ReactElement;
+  closeButtonClassName?: string;
 }
 
 export interface SelectTabPayload {
@@ -110,6 +112,8 @@ export interface TabProps {
   onDragEnd?: () => void;
   className?: string;
   style?: React.CSSProperties;
+  closeIcon?: React.ReactElement;
+  closeButtonClassName?: string;
 }
 
 export interface TabSetProps {
@@ -134,6 +138,8 @@ export interface TabSetProps {
   direction?: Direction;
   className?: string;
   style?: React.CSSProperties;
+  closeIcon?: React.ReactElement;
+  closeButtonClassName?: string;
 }
 
 export interface SplitterProps {

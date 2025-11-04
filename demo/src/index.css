@@ -18,3 +18,14 @@ body {
   height: 100vh;
   width: 100vw;
 }
+
+/* Custom close button styles example */
+.demo-custom-close-button {
+  transition: all 0.2s ease;
+  border-radius: 50%;
+}
+
+.demo-custom-close-button:hover {
+  background-color: #e53935 !important;
+  transform: scale(1.1);
+}

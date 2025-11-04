@@ -11,11 +11,15 @@
   flex-grow: 0;
   white-space: nowrap;
   position: relative;
+  gap: 8px;
+}
+
+.react-flex-layout[dir="ltr"] .react-flex-layout-tab {
+  flex-direction: row-reverse;
 }
 
 .react-flex-layout-tab.active {
   background-color: #fff;
-  border-bottom: 1px solid #fff;
   z-index: 1;
 }
 
@@ -23,7 +27,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-right: 8px;
 }
 
 .react-flex-layout-tab-close {

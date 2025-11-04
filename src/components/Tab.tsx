@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { TabProps } from "../types";
+import { DefaultCloseIcon } from "./DefaultCloseIcon";
 import "./Tab.css";
 
 export const Tab: React.FC<TabProps> = ({
@@ -11,6 +12,8 @@ export const Tab: React.FC<TabProps> = ({
   onDragEnd,
   className = "",
   style = {},
+  closeIcon,
+  closeButtonClassName = "",
 }) => {
   const handleClick = useCallback(() => {
     onSelect?.(node.id);
@@ -63,12 +66,12 @@ export const Tab: React.FC<TabProps> = ({
         {node.name || "Untitled"}
       </span>
       <button
-        className="react-flex-layout-tab-close"
+        className={`react-flex-layout-tab-close ${closeButtonClassName}`.trim()}
         onClick={handleClose}
         type="button"
         aria-label="Close tab"
       >
-        ×
+        {closeIcon || <DefaultCloseIcon />}
       </button>
     </div>
   );

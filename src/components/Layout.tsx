@@ -39,6 +39,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       className = "",
       style = {},
       storage,
+      closeIcon,
+      closeButtonClassName,
     },
     ref
   ) => {
@@ -375,6 +377,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                   dragOverTabset === node.id ? dropTargetIndex : undefined
                 }
                 direction={direction}
+                closeIcon={closeIcon}
+                closeButtonClassName={closeButtonClassName}
               />
             );
 
@@ -527,6 +531,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         handleDrop,
         dragOverTabset,
         dropPosition,
+        closeIcon,
+        closeButtonClassName,
       ]
     );
 

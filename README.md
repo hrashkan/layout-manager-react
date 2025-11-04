@@ -183,15 +183,17 @@ The main layout component.
 
 #### Props
 
-| Prop            | Type                                    | Required | Description                               |
-| --------------- | --------------------------------------- | -------- | ----------------------------------------- |
-| `model`         | `LayoutModel`                           | Yes      | The layout model containing the structure |
-| `factory`       | `(node: LayoutNode) => React.ReactNode` | Yes      | Factory function to render tab content    |
-| `onModelChange` | `(model: LayoutModel) => void`          | No       | Callback when layout changes              |
-| `onAction`      | `(action: LayoutAction) => void`        | No       | Callback for layout actions               |
-| `storage`       | `StorageOptions`                        | No       | Storage configuration                     |
-| `className`     | `string`                                | No       | Additional CSS class                      |
-| `style`         | `React.CSSProperties`                   | No       | Additional inline styles                  |
+| Prop                   | Type                                    | Required | Description                               |
+| ---------------------- | --------------------------------------- | -------- | ----------------------------------------- |
+| `model`                | `LayoutModel`                           | Yes      | The layout model containing the structure |
+| `factory`              | `(node: LayoutNode) => React.ReactNode` | Yes      | Factory function to render tab content    |
+| `onModelChange`        | `(model: LayoutModel) => void`          | No       | Callback when layout changes              |
+| `onAction`             | `(action: LayoutAction) => void`        | No       | Callback for layout actions               |
+| `storage`              | `StorageOptions`                        | No       | Storage configuration                     |
+| `className`            | `string`                                | No       | Additional CSS class                      |
+| `style`                | `React.CSSProperties`                   | No       | Additional inline styles                  |
+| `closeIcon`            | `React.ReactElement`                    | No       | Custom close icon for all tabs            |
+| `closeButtonClassName` | `string`                                | No       | Custom CSS class for close buttons        |
 
 ### LayoutNode Types
 
@@ -378,6 +380,51 @@ The library includes default styles, but you can customize them by overriding CS
 - `.react-flex-layout-tabset` - Tabset container
 - `.react-flex-layout-tab` - Individual tab
 - `.react-flex-layout-splitter` - Resize splitter
+
+### Custom Close Icons
+
+You can customize the close icon for all tabs by passing a custom React element:
+
+```tsx
+const CustomCloseIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="15" y1="9" x2="9" y2="15" />
+    <line x1="9" y1="9" x2="15" y2="15" />
+  </svg>
+);
+
+<Layout model={model} factory={factory} closeIcon={<CustomCloseIcon />} />;
+```
+
+### Custom Close Button Styling
+
+Apply custom CSS classes to close buttons:
+
+```tsx
+<Layout
+  model={model}
+  factory={factory}
+  closeButtonClassName="my-custom-close-button"
+/>
+
+// In your CSS
+.my-custom-close-button {
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.my-custom-close-button:hover {
+  background-color: #e53935;
+  transform: scale(1.1);
+}
+```
 
 ## Examples
 

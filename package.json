@@ -1,6 +1,6 @@
 {
     "name": "layout-manager-react",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "A modern React layout manager using flexbox with percentage-based sizing",
     "main": "./dist/index.umd.js",
     "module": "./dist/index.es.js",

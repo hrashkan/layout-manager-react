@@ -5,14 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2024-12-19
+
+### Added
+
+- Custom close icon support: Pass a custom React element as `closeIcon` prop to customize tab close icons
+- Custom close button styling: Pass `closeButtonClassName` prop to apply custom CSS classes to close buttons
+- Smooth drop zone transitions: All drop zone position changes now animate smoothly with cubic-bezier easing
+
+### Changed
+
+- Improved drop zone visual feedback: Enhanced transitions between center, top, bottom, left, and right drop positions
+- Drop zone animations now use consistent width/height properties for smoother transitions
+- Default close icon is now a fallback when no custom icon is provided
+
+### Fixed
+
+- Fixed drop zone transition animations for center-to-top and center-to-left directions
+- Ensured all drop zone position changes use consistent CSS properties for proper animation
+
 ## [0.0.4] - 2024-12-19
 
 ### Added
+
 - Added CSS export path in package.json for better module resolution
 - Enhanced README with Next.js-specific CSS import instructions
 - Added multiple CSS import options documentation
 
 ### Changed
+
 - Improved package.json exports configuration to include CSS file
 
 ## [0.0.3] - 2024-12-19
