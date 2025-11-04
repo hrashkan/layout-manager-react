@@ -38,11 +38,11 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ashkanhooshidar/layout-manager-react.git"
+        "url": "git+https://github.com/hrashkan/layout-manager-react.git"
     },
-    "homepage": "https://github.com/ashkanhooshidar/layout-manager-react#readme",
+    "homepage": "https://github.com/hrashkan/layout-manager-react#readme",
     "bugs": {
-        "url": "https://github.com/ashkanhooshidar/layout-manager-react/issues"
+        "url": "https://github.com/hrashkan/layout-manager-react/issues"
     },
     "peerDependencies": {
         "react": ">=16.8.0",

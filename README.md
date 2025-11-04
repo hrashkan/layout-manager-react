@@ -455,4 +455,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Repository
 
-[GitHub Repository](https://github.com/ashkanhooshidar/layout-manager-react)
+[GitHub Repository](https://github.com/hrashkan/layout-manager-react)
