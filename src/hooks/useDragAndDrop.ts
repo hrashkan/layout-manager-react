@@ -21,6 +21,7 @@ export const useDragAndDrop = (
 
   const [dragOverTabset, setDragOverTabset] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<DropPosition>("center");
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
 
   // Use ref to avoid stale closure issues
   const draggedTabRef = useRef<{
@@ -38,18 +39,25 @@ export const useDragAndDrop = (
     setDraggedTab(null);
     draggedTabRef.current = null;
     setDragOverTabset(null);
+    setDropTargetIndex(null);
   }, []);
 
   const handleDragOver = useCallback(
     (
       e: React.DragEvent,
       tabsetId: string,
-      position: DropPosition = "center"
+      position: DropPosition = "center",
+      targetIndex?: number
     ) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       setDragOverTabset(tabsetId);
       setDropPosition(position);
+      if (targetIndex !== undefined) {
+        setDropTargetIndex(targetIndex);
+      } else if (position !== "tab") {
+        setDropTargetIndex(null);
+      }
     },
     []
   );
@@ -59,6 +67,7 @@ export const useDragAndDrop = (
     if (e.currentTarget === e.target) {
       setTimeout(() => {
         setDragOverTabset(null);
+        setDropTargetIndex(null);
       }, 50);
     }
   }, []);
@@ -74,8 +83,55 @@ export const useDragAndDrop = (
 
       const { tabsetId: sourceTabsetId, tabIndex } = currentDraggedTab;
 
-      // Don't drop on the same tabset
-      if (sourceTabsetId === targetTabsetId) {
+      // Handle reordering within the same tabset
+      if (
+        sourceTabsetId === targetTabsetId &&
+        dropPosition === "tab" &&
+        dropTargetIndex !== null
+      ) {
+        const sourceTabset = findNodeById(model.layout, sourceTabsetId);
+        if (!sourceTabset || !sourceTabset.children) {
+          return;
+        }
+
+        const tabToMove = sourceTabset.children[tabIndex];
+        if (!tabToMove || tabIndex === dropTargetIndex) {
+          return;
+        }
+
+        const newChildren = [...sourceTabset.children];
+        newChildren.splice(tabIndex, 1);
+        newChildren.splice(dropTargetIndex, 0, tabToMove);
+
+        let newSelected = sourceTabset.selected ?? 0;
+        if (tabIndex < newSelected && dropTargetIndex >= newSelected) {
+          newSelected = Math.max(0, newSelected - 1);
+        } else if (tabIndex > newSelected && dropTargetIndex <= newSelected) {
+          newSelected = Math.min(newSelected + 1, newChildren.length - 1);
+        } else if (tabIndex === newSelected) {
+          newSelected = dropTargetIndex;
+        }
+
+        const updatedLayout = updateNodeById(model.layout, sourceTabsetId, {
+          children: newChildren,
+          selected: newSelected,
+        });
+
+        if (updatedLayout) {
+          onModelChange({
+            ...model,
+            layout: updatedLayout,
+          });
+        }
+
+        setDraggedTab(null);
+        setDragOverTabset(null);
+        setDropTargetIndex(null);
+        return;
+      }
+
+      // Don't drop on the same tabset content area
+      if (sourceTabsetId === targetTabsetId && dropPosition !== "tab") {
         return;
       }
 
@@ -213,13 +269,14 @@ export const useDragAndDrop = (
       setDraggedTab(null);
       setDragOverTabset(null);
     },
-    [model, onModelChange, dropPosition]
+    [model, onModelChange, dropPosition, dropTargetIndex]
   );
 
   return {
     draggedTab,
     dragOverTabset,
     dropPosition,
+    dropTargetIndex,
     handleDragStart,
     handleDragEnd,
     handleDragOver,

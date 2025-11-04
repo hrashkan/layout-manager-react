@@ -125,13 +125,30 @@ export const updateNodeById = (
     if (updates === null) {
       return null;
     }
+    const hasChanges = Object.keys(updates).some(
+      (key) => (node as any)[key] !== (updates as any)[key]
+    );
+    if (!hasChanges) {
+      return node;
+    }
     return { ...node, ...updates };
   }
 
   if (node.children) {
+    let hasChildChanges = false;
     const updatedChildren = node.children
-      .map((child) => updateNodeById(child, id, updates))
+      .map((child) => {
+        const updated = updateNodeById(child, id, updates);
+        if (updated !== child) {
+          hasChildChanges = true;
+        }
+        return updated;
+      })
       .filter((child): child is LayoutNode => child !== null);
+
+    if (!hasChildChanges) {
+      return node;
+    }
 
     return {
       ...node,

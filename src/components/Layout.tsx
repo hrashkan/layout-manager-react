@@ -5,6 +5,7 @@ import React, {
   useRef,
   useImperativeHandle,
   forwardRef,
+  useMemo,
 } from "react";
 import {
   LayoutProps,
@@ -16,7 +17,7 @@ import {
   LayoutModel,
   Direction,
 } from "../types";
-import { TabSet } from "./TabSet";
+import { MemoizedTabSet } from "./MemoizedTabSet";
 import { Splitter } from "./Splitter";
 import { useLayoutResize } from "../hooks/useLayoutResize";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
@@ -93,6 +94,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     const {
       dragOverTabset,
       dropPosition,
+      dropTargetIndex,
       handleDragStart,
       handleDragEnd,
       handleDragOver,
@@ -104,6 +106,11 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     useEffect(() => {
       storedModelRef.current = storedModel;
     }, [storedModel]);
+
+    const internalModelRef = useRef<LayoutModel>(internalModel);
+    useEffect(() => {
+      internalModelRef.current = internalModel;
+    }, [internalModel]);
 
     const handleAction = useCallback(
       (action: LayoutAction) => {
@@ -124,9 +131,12 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 const selectResult = updateNodeById(prevModel.layout, nodeId, {
                   selected: tabIndex,
                 });
+                if (!selectResult || selectResult === prevModel.layout) {
+                  return prevModel;
+                }
                 return {
                   ...prevModel,
-                  layout: selectResult || prevModel.layout,
+                  layout: selectResult,
                 };
               case "removeNode":
                 const { nodeId: tabsetId, tabIndex: removeTabIndex } =
@@ -214,6 +224,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         }
 
         if (!storage?.enabled && !onModelChange) {
+          const currentInternalModel = internalModelRef.current;
           const updateModel = (prevModel: LayoutModel): LayoutModel => {
             switch (action.type) {
               case "selectTab":
@@ -221,9 +232,12 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 const selectResult = updateNodeById(prevModel.layout, nodeId, {
                   selected: tabIndex,
                 });
+                if (!selectResult || selectResult === prevModel.layout) {
+                  return prevModel;
+                }
                 return {
                   ...prevModel,
-                  layout: selectResult || prevModel.layout,
+                  layout: selectResult,
                 };
               case "removeNode":
                 const { nodeId: tabsetId, tabIndex: removeTabIndex } =
@@ -289,20 +303,11 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             }
           };
 
-          const updatedModel = updateModel(internalModel);
+          const updatedModel = updateModel(currentInternalModel);
           setInternalModel(updatedModel);
         }
       },
-      [
-        onAction,
-        onModelChange,
-        storage?.enabled,
-        updateStoredModel,
-        internalModel,
-        storedModel,
-        pendingDirection,
-        setPendingDirection,
-      ]
+      [onAction, onModelChange, storage?.enabled, updateStoredModel]
     );
 
     useImperativeHandle(
@@ -313,27 +318,50 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       [handleAction]
     );
 
+    const handleTabSelect = useCallback(
+      (nodeId: string, tabIndex: number) => {
+        handleAction({
+          type: "selectTab",
+          payload: { nodeId, tabIndex },
+        });
+      },
+      [handleAction]
+    );
+
+    const handleTabClose = useCallback(
+      (nodeId: string, tabIndex: number) => {
+        handleAction({
+          type: "removeNode",
+          payload: { nodeId, tabIndex },
+        });
+      },
+      [handleAction]
+    );
+
+    let direction: Direction;
+    if (storage?.enabled) {
+      if (pendingDirection !== null) {
+        direction = pendingDirection;
+      } else {
+        direction = storedModel?.global?.direction || "ltr";
+      }
+    } else {
+      direction = currentModel.global?.direction || "ltr";
+    }
+
+    const splitterSize = currentModel.global?.splitterSize || 8;
+
     const renderNode = useCallback(
       (node: LayoutNode): React.ReactNode => {
         switch (node.type) {
           case "tabset":
             return (
-              <TabSet
+              <MemoizedTabSet
                 key={node.id}
                 node={node}
                 factory={factory}
-                onTabSelect={(nodeId, tabIndex) => {
-                  handleAction({
-                    type: "selectTab",
-                    payload: { nodeId, tabIndex },
-                  });
-                }}
-                onTabClose={(nodeId, tabIndex) => {
-                  handleAction({
-                    type: "removeNode",
-                    payload: { nodeId, tabIndex },
-                  });
-                }}
+                onTabSelect={handleTabSelect}
+                onTabClose={handleTabClose}
                 onTabDragStart={handleDragStart}
                 onTabDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}
@@ -343,12 +371,14 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 dropPosition={
                   dragOverTabset === node.id ? dropPosition : undefined
                 }
-                direction={currentModel.global.direction || "ltr"}
+                dropTargetIndex={
+                  dragOverTabset === node.id ? dropTargetIndex : undefined
+                }
+                direction={direction}
               />
             );
 
           case "row":
-            const direction = currentModel.global.direction || "ltr";
             const isRTL = direction === "rtl";
             const rowChildren = node.children || [];
             const childrenToRender = isRTL
@@ -432,7 +462,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                         onResizeStart={() => {
                           resetResize(firstChild.id, "horizontal");
                         }}
-                        size={currentModel.global.splitterSize || 8}
+                        size={splitterSize}
                       />
                     </React.Fragment>
                   );
@@ -468,7 +498,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                           // Reset any previous resize state for this node
                           resetResize(child.id, "vertical");
                         }}
-                        size={currentModel.global.splitterSize || 8}
+                        size={splitterSize}
                       />
                     )}
                   </React.Fragment>
@@ -484,9 +514,11 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         }
       },
       [
-        currentModel.global.splitterSize,
+        direction,
+        splitterSize,
         factory,
-        handleAction,
+        handleTabSelect,
+        handleTabClose,
         handleResize,
         handleDragStart,
         handleDragEnd,
@@ -498,22 +530,16 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       ]
     );
 
-    let direction: Direction;
-    if (storage?.enabled) {
-      if (pendingDirection !== null) {
-        direction = pendingDirection;
-      } else {
-        direction = storedModel?.global?.direction || "ltr";
-      }
-    } else {
-      direction = currentModel.global?.direction || "ltr";
-    }
-
     useEffect(() => {
       if (!storage?.enabled && pendingDirection !== null) {
         setPendingDirection(null);
       }
     }, [storage?.enabled, pendingDirection]);
+
+    const renderedLayout = useMemo(
+      () => renderNode(currentModel.layout),
+      [renderNode, currentModel.layout]
+    );
 
     const layoutStyle: React.CSSProperties = {
       ...style,
@@ -543,7 +569,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         style={layoutStyle}
         dir={direction}
       >
-        {renderNode(currentModel.layout)}
+        {renderedLayout}
       </div>
     );
   }

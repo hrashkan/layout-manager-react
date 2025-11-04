@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   Layout,
   createLayoutModel,
@@ -6,7 +6,13 @@ import {
   createTabSet,
   createRow,
   createColumn,
-} from "react-flex-layout";
+  type LayoutModel,
+  type LayoutAction,
+} from "../src/index";
+import "../src/components/Layout.css";
+import "../src/components/TabSet.css";
+import "../src/components/Tab.css";
+import "../src/components/Splitter.css";
 
 // Example components
 const Dashboard: React.FC = () => (
@@ -31,51 +37,51 @@ const Logs: React.FC = () => (
 );
 
 const BasicExample: React.FC = () => {
-  // Create a layout model
-  const model = createLayoutModel(
-    createRow("root", [
-      // Left column with dashboard
-      createColumn(
-        "left",
-        [
-          createTabSet("dashboard-tabs", [
-            createTab("dashboard-tab", "dashboard", "Dashboard"),
-          ]),
-        ],
-        30
-      ), // 30% width
+  const [model, setModel] = useState<LayoutModel>(() =>
+    createLayoutModel(
+      createRow("root", [
+        // Left column with dashboard
+        createColumn(
+          "left",
+          [
+            createTabSet("dashboard-tabs", [
+              createTab("dashboard-tab", "dashboard", "Dashboard"),
+            ]),
+          ],
+          30
+        ), // 30% width
 
-      // Right column with settings and logs
-      createColumn(
-        "right",
-        [
-          createRow(
-            "top-right",
-            [
-              createTabSet("settings-tabs", [
-                createTab("settings-tab", "settings", "Settings"),
-              ]),
-            ],
-            50
-          ), // 50% height
+        // Right column with settings and logs
+        createColumn(
+          "right",
+          [
+            createRow(
+              "top-right",
+              [
+                createTabSet("settings-tabs", [
+                  createTab("settings-tab", "settings", "Settings"),
+                ]),
+              ],
+              50
+            ), // 50% height
 
-          createRow(
-            "bottom-right",
-            [
-              createTabSet("logs-tabs", [
-                createTab("logs-tab", "logs", "Logs"),
-              ]),
-            ],
-            50
-          ), // 50% height
-        ],
-        70
-      ), // 70% width
-    ])
+            createRow(
+              "bottom-right",
+              [
+                createTabSet("logs-tabs", [
+                  createTab("logs-tab", "logs", "Logs"),
+                ]),
+              ],
+              50
+            ), // 50% height
+          ],
+          70
+        ), // 70% width
+      ])
+    )
   );
 
-  // Factory function to create components
-  const factory = (node: any) => {
+  const factory = useCallback((node: any) => {
     switch (node.component) {
       case "dashboard":
         return <Dashboard />;
@@ -86,22 +92,18 @@ const BasicExample: React.FC = () => {
       default:
         return <div>Unknown component: {node.component}</div>;
     }
-  };
+  }, []);
 
-  const handleModelChange = (newModel: any) => {
-    // Handle model changes
-  };
-
-  const handleAction = (action: any) => {
+  const handleAction = useCallback((action: LayoutAction) => {
     // Handle actions
-  };
+  }, []);
 
   return (
     <div style={{ height: "100vh", width: "100vw" }}>
       <Layout
         model={model}
         factory={factory}
-        onModelChange={handleModelChange}
+        onModelChange={setModel}
         onAction={handleAction}
       />
     </div>

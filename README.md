@@ -1,4 +1,4 @@
-# React Flex Layout
+# Layout Manager React
 
 A modern React layout manager using flexbox with percentage-based sizing, similar to FlexLayout but simpler and more performant.
 
@@ -17,29 +17,30 @@ A modern React layout manager using flexbox with percentage-based sizing, simila
 ## Installation
 
 ```bash
-npm install react-flex-layout
+npm install layout-manager-react
 ```
 
-## Usage
+## Quick Start
 
 ```tsx
-import React from "react";
-import { Layout } from "react-flex-layout";
+import React, { useState } from "react";
+import { Layout, LayoutModel } from "layout-manager-react";
+import "layout-manager-react/dist/style.css";
 
-const MyApp = () => {
-  const layoutModel = {
+const App: React.FC = () => {
+  const [model, setModel] = useState<LayoutModel>({
     layout: {
       id: "root",
       type: "row",
       children: [
         {
-          id: "left-tabset",
+          id: "tabset-1",
           type: "tabset",
           children: [
             {
-              id: "tab1",
+              id: "tab-1",
               type: "tab",
-              component: "component1",
+              component: "dashboard",
               name: "Dashboard",
               enableClose: true,
               enableDrag: true,
@@ -53,13 +54,13 @@ const MyApp = () => {
     },
     global: {
       splitterSize: 8,
-      direction: "ltr", // or "rtl" for right-to-left
+      direction: "ltr",
     },
-  };
+  });
 
-  const factory = (node) => {
+  const factory = (node: any) => {
     switch (node.component) {
-      case "component1":
+      case "dashboard":
         return <div>Dashboard Content</div>;
       default:
         return <div>Default Content</div>;
@@ -67,95 +68,300 @@ const MyApp = () => {
   };
 
   return (
-    <Layout
-      model={layoutModel}
-      factory={factory}
-      onModelChange={(model) => {
-        // Handle model changes
-      }}
-    />
+    <div style={{ height: "100vh", width: "100vw" }}>
+      <Layout model={model} factory={factory} onModelChange={setModel} />
+    </div>
+  );
+};
+
+export default App;
+```
+
+**Important**: Don't forget to import the CSS file!
+
+```tsx
+import "layout-manager-react/dist/style.css";
+```
+
+## Usage with Helper Functions
+
+For easier layout creation, use the helper functions:
+
+```tsx
+import React, { useState } from "react";
+import {
+  Layout,
+  createLayoutModel,
+  createTab,
+  createTabSet,
+  createRow,
+  createColumn,
+  LayoutModel,
+} from "layout-manager-react";
+import "layout-manager-react/dist/style.css";
+
+const App: React.FC = () => {
+  const [model, setModel] = useState<LayoutModel>(
+    createLayoutModel(
+      createRow("root", [
+        createTabSet("left-tabs", [
+          createTab("tab-1", "dashboard", "Dashboard"),
+          createTab("tab-2", "settings", "Settings"),
+        ]),
+      ])
+    )
+  );
+
+  const factory = (node: any) => {
+    switch (node.component) {
+      case "dashboard":
+        return <div>Dashboard</div>;
+      case "settings":
+        return <div>Settings</div>;
+      default:
+        return <div>Unknown</div>;
+    }
+  };
+
+  return (
+    <div style={{ height: "100vh" }}>
+      <Layout model={model} factory={factory} onModelChange={setModel} />
+    </div>
   );
 };
 ```
 
-## API
+## API Reference
 
-### Layout Props
+### Layout Component
 
-| Prop            | Type                                    | Description                               |
-| --------------- | --------------------------------------- | ----------------------------------------- |
-| `model`         | `LayoutModel`                           | The layout model containing the structure |
-| `factory`       | `(node: LayoutNode) => React.ReactNode` | Factory function to render tab content    |
-| `onModelChange` | `(model: LayoutModel) => void`          | Callback when layout changes              |
-| `className`     | `string`                                | Additional CSS class                      |
-| `style`         | `React.CSSProperties`                   | Additional inline styles                  |
+The main layout component.
+
+#### Props
+
+| Prop            | Type                                    | Required | Description                               |
+| --------------- | --------------------------------------- | -------- | ----------------------------------------- |
+| `model`         | `LayoutModel`                           | Yes      | The layout model containing the structure |
+| `factory`       | `(node: LayoutNode) => React.ReactNode` | Yes      | Factory function to render tab content    |
+| `onModelChange` | `(model: LayoutModel) => void`          | No       | Callback when layout changes              |
+| `onAction`      | `(action: LayoutAction) => void`        | No       | Callback for layout actions               |
+| `storage`       | `StorageOptions`                        | No       | Storage configuration                     |
+| `className`     | `string`                                | No       | Additional CSS class                      |
+| `style`         | `React.CSSProperties`                   | No       | Additional inline styles                  |
 
 ### LayoutNode Types
 
-- **Row**: Horizontal container
-- **Column**: Vertical container
-- **TabSet**: Container for tabs
-- **Tab**: Individual tab content
+- **row**: Horizontal container for organizing tabsets side by side
+- **column**: Vertical container for organizing tabsets vertically
+- **tabset**: Container for tabs
+- **tab**: Individual tab content node
+
+### Helper Functions
+
+#### `createLayoutModel(layout: LayoutNode, global?: GlobalConfig): LayoutModel`
+
+Creates a complete layout model with optional global configuration.
+
+```tsx
+const model = createLayoutModel(rootNode, {
+  splitterSize: 8,
+  direction: "ltr",
+});
+```
+
+#### `createRow(id: string, children: LayoutNode[], flex?: number): LayoutNode`
+
+Creates a row node (horizontal container).
+
+```tsx
+const row = createRow("root", [tabset1, tabset2], 1);
+```
+
+#### `createColumn(id: string, children: LayoutNode[], flex?: number): LayoutNode`
+
+Creates a column node (vertical container).
+
+```tsx
+const column = createColumn("col1", [tabset1, tabset2], 0.5);
+```
+
+#### `createTabSet(id: string, children: TabNode[], flex?: number, selected?: number): LayoutNode`
+
+Creates a tabset node.
+
+```tsx
+const tabset = createTabSet("tabs", [tab1, tab2], 1, 0);
+```
+
+#### `createTab(id: string, component: string, name: string, options?: TabOptions): TabNode`
+
+Creates a tab node.
+
+```tsx
+const tab = createTab("tab1", "dashboard", "Dashboard", {
+  enableClose: true,
+  enableDrag: true,
+});
+```
 
 ## Direction Support
 
-The layout manager supports both LTR (Left-to-Right) and RTL (Right-to-Left) directions:
+The layout manager supports both LTR (Left-to-Right) and RTL (Right-to-Left) directions.
+
+### Setting Direction
+
+```tsx
+const model = createLayoutModel(layout, {
+  direction: "rtl", // or "ltr"
+});
+```
+
+### Dynamic Direction Changes
+
+```tsx
+const [direction, setDirection] = useState<"ltr" | "rtl">("ltr");
+
+const model = createLayoutModel(layout, {
+  direction,
+});
+
+// Toggle direction
+const toggleDirection = () => {
+  setDirection((prev) => (prev === "ltr" ? "rtl" : "ltr"));
+};
+```
+
+### Features
 
 - **LTR**: Default left-to-right layout
 - **RTL**: Right-to-left layout with reversed row children
 - **Dynamic**: Change direction at runtime
 - **CSS Support**: Proper RTL styling with `dir` attribute
 
-```tsx
-// Set direction in global config
-const model = createLayoutModel(layout, {
-  direction: "rtl", // or "ltr"
-});
-```
-
 ## Persistent Storage
 
-The layout manager supports automatic localStorage persistence to save user customizations:
+The layout manager supports automatic localStorage persistence to save user customizations.
+
+### Basic Storage Usage
 
 ```tsx
 <Layout
   model={model}
   factory={factory}
   storage={{
-    enabled: true, // Enable storage (default: false)
-    key: "my-layout", // Storage key (default: "default")
-    autoSave: true, // Auto-save on changes (default: true)
-    debounceMs: 500, // Debounce delay in ms (default: 500)
+    enabled: true,
+    key: "my-layout",
+    autoSave: true,
+    debounceMs: 500,
   }}
 />
 ```
 
-**Storage Features:**
+### Storage Options
+
+| Option       | Type      | Default     | Description                    |
+| ------------ | --------- | ----------- | ------------------------------ |
+| `enabled`    | `boolean` | `false`     | Enable/disable storage         |
+| `key`        | `string`  | `"default"` | Storage key for localStorage   |
+| `autoSave`   | `boolean` | `true`      | Automatically save on changes  |
+| `debounceMs` | `number`  | `500`       | Debounce delay in milliseconds |
+
+### Manual Storage Control
+
+```tsx
+import { createLayoutStorage, LayoutModel } from "layout-manager-react";
+
+const storage = createLayoutStorage({ key: "my-layout" });
+
+// Save manually
+storage.save(model);
+
+// Load manually
+const savedModel: LayoutModel | null = storage.load();
+
+// Clear storage
+storage.clear();
+
+// Check if storage exists
+if (storage.exists()) {
+  // Load saved layout
+}
+```
+
+### Storage Features
 
 - **Automatic Saving**: Changes are automatically saved to localStorage
 - **Debounced Writes**: Multiple rapid changes are batched to avoid excessive writes
 - **Custom Keys**: Use different storage keys for multiple layouts
 - **Manual Control**: Clear storage or disable auto-save as needed
 
-```tsx
-import { createLayoutStorage } from "react-flex-layout";
-
-// Manual storage control
-const storage = createLayoutStorage({ key: "my-layout" });
-storage.save(model); // Save manually
-const saved = storage.load(); // Load manually
-storage.clear(); // Clear storage
-```
-
 ## Drag & Drop
 
-Supports 4 drop zones:
+Full drag and drop support with 4 drop zones:
 
 - **Center**: Add tab to existing tabset
 - **Left**: Create new tabset to the left (50% width)
 - **Right**: Create new tabset to the right (50% width)
 - **Top/Bottom**: Create new tabset above/below (50% height)
 
+Tabs can be dragged by enabling `enableDrag: true` on the tab node.
+
+## Resizing
+
+Tabsets can be resized by dragging the splitter between them. The layout automatically recalculates flex values to maintain proportional sizing.
+
+## TypeScript Support
+
+Full TypeScript definitions are included. Import types as needed:
+
+```tsx
+import type {
+  LayoutModel,
+  LayoutNode,
+  LayoutProps,
+  LayoutAction,
+  LayoutRef,
+} from "layout-manager-react";
+```
+
+## Styling
+
+The library includes default styles, but you can customize them by overriding CSS classes:
+
+- `.react-flex-layout` - Main layout container
+- `.react-flex-layout-row` - Row container
+- `.react-flex-layout-column` - Column container
+- `.react-flex-layout-tabset` - Tabset container
+- `.react-flex-layout-tab` - Individual tab
+- `.react-flex-layout-splitter` - Resize splitter
+
+## Examples
+
+See the `examples/` directory for more complete examples:
+
+- `basic-usage.tsx` - Basic layout setup
+- `advanced-usage.tsx` - Advanced features with storage and actions
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## Peer Dependencies
+
+- `react`: >=16.8.0
+- `react-dom`: >=16.8.0
+
 ## License
 
 MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Repository
+
+[GitHub Repository](https://github.com/ashkanhooshidar/layout-manager-react)

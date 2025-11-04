@@ -6,9 +6,13 @@ import {
   createTabSet,
   createRow,
   createColumn,
-  LayoutModel,
-  LayoutAction,
-} from "react-flex-layout";
+  type LayoutModel,
+  type LayoutAction,
+} from "../src/index";
+import "../src/components/Layout.css";
+import "../src/components/TabSet.css";
+import "../src/components/Tab.css";
+import "../src/components/Splitter.css";
 
 // Sample components with different content
 const Dashboard: React.FC = () => (

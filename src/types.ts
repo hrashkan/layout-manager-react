@@ -87,7 +87,13 @@ export interface ResizeData {
   height?: number;
 }
 
-export type DropPosition = "center" | "left" | "right" | "top" | "bottom";
+export type DropPosition =
+  | "center"
+  | "left"
+  | "right"
+  | "top"
+  | "bottom"
+  | "tab";
 
 export interface DragData {
   nodeId: string;
@@ -117,12 +123,14 @@ export interface TabSetProps {
   onDragOver?: (
     e: React.DragEvent,
     tabsetId: string,
-    position?: DropPosition
+    position?: DropPosition,
+    targetIndex?: number
   ) => void;
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, tabsetId: string) => void;
   dragOverTabset?: string | null;
   dropPosition?: DropPosition;
+  dropTargetIndex?: number | null;
   direction?: Direction;
   className?: string;
   style?: React.CSSProperties;
