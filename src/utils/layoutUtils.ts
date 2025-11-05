@@ -267,3 +267,224 @@ export const removeEmptyTabsets = (node: LayoutNode): LayoutNode | null => {
 
   return node;
 };
+
+export interface ComponentRestoreData {
+  tabId: string;
+  component: string;
+  name: string;
+  tabsetId: string;
+  tabIndex?: number;
+  config?: Record<string, any>;
+}
+
+const findParentContainer = (
+  root: LayoutNode,
+  childId: string,
+  parent: LayoutNode | null = null
+): LayoutNode | null => {
+  if (!root.children) return null;
+
+  for (const child of root.children) {
+    if (child.id === childId) {
+      return parent || root;
+    }
+    if (child.children) {
+      const found = findParentContainer(child, childId, root);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+const findParentTabset = (
+  root: LayoutNode,
+  tabId: string
+): LayoutNode | null => {
+  if (!root.children) return null;
+
+  for (const child of root.children) {
+    if (child.type === "tabset" && child.children) {
+      const tab = child.children.find((c) => c.id === tabId);
+      if (tab) {
+        return child;
+      }
+    }
+    if (child.children) {
+      const found = findParentTabset(child, tabId);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+export const addTabToTabset = (
+  layout: LayoutNode,
+  tabsetId: string,
+  tab: LayoutNode
+): LayoutNode | null => {
+  const tabset = findNodeById(layout, tabsetId);
+  if (!tabset || tabset.type !== "tabset") {
+    return null;
+  }
+
+  const existingChildren = tabset.children || [];
+  const updatedChildren = [...existingChildren, tab];
+
+  const updatedTabset = {
+    ...tabset,
+    children: updatedChildren,
+    selected: updatedChildren.length - 1,
+  };
+
+  return updateNodeById(layout, tabsetId, updatedTabset);
+};
+
+export const removeTab = (
+  layout: LayoutNode,
+  tabId: string
+): { layout: LayoutNode | null; restoreData: ComponentRestoreData | null } => {
+  const parentTabset = findParentTabset(layout, tabId);
+
+  if (!parentTabset || parentTabset.type !== "tabset") {
+    return { layout, restoreData: null };
+  }
+
+  const tab = parentTabset.children?.find((child) => child.id === tabId);
+  if (!tab || tab.type !== "tab") {
+    return { layout, restoreData: null };
+  }
+
+  const tabIndex = parentTabset.children?.findIndex(
+    (child) => child.id === tabId
+  );
+
+  const updatedChildren = parentTabset.children?.filter(
+    (child) => child.id !== tabId
+  );
+
+  if (!updatedChildren || updatedChildren.length === 0) {
+    const newLayout = removeNodeById(layout, parentTabset.id);
+    const restoreData = {
+      tabId: tab.id,
+      component: tab.component || "",
+      name: tab.name || "",
+      tabsetId: parentTabset.id,
+      tabIndex: tabIndex !== undefined ? tabIndex : 0,
+      config: tab.config,
+    };
+    return {
+      layout: newLayout,
+      restoreData,
+    };
+  }
+
+  const currentSelected = parentTabset.selected ?? 0;
+  let newSelected = currentSelected;
+  if (tabIndex !== undefined && tabIndex !== -1) {
+    if (tabIndex <= currentSelected) {
+      newSelected = Math.max(0, currentSelected - 1);
+    }
+    newSelected = Math.min(newSelected, updatedChildren.length - 1);
+  }
+
+  const updatedTabset = {
+    ...parentTabset,
+    children: updatedChildren,
+    selected: updatedChildren.length > 0 ? newSelected : undefined,
+  };
+
+  const newLayout = updateNodeById(layout, parentTabset.id, updatedTabset);
+  const restoreData = {
+    tabId: tab.id,
+    component: tab.component || "",
+    name: tab.name || "",
+    tabsetId: parentTabset.id,
+    tabIndex: tabIndex !== undefined ? tabIndex : 0,
+    config: tab.config,
+  };
+  return {
+    layout: newLayout,
+    restoreData,
+  };
+};
+
+export const restoreTab = (
+  layout: LayoutNode,
+  restoreData: ComponentRestoreData,
+  initialLayout?: LayoutNode
+): LayoutNode | null => {
+  const existingTab = findNodeById(layout, restoreData.tabId);
+  if (existingTab) {
+    return layout;
+  }
+
+  let tabsetNode = findNodeById(layout, restoreData.tabsetId);
+
+  if (!tabsetNode || tabsetNode.type !== "tabset") {
+    if (!initialLayout) {
+      return null;
+    }
+
+    const parentInInitial = findParentContainer(
+      initialLayout,
+      restoreData.tabsetId
+    );
+
+    if (!parentInInitial) {
+      return null;
+    }
+
+    const parentInCurrent = findNodeById(layout, parentInInitial.id);
+
+    if (!parentInCurrent || !parentInCurrent.children) {
+      return null;
+    }
+
+    const existingTabset = parentInCurrent.children.find(
+      (child) => child.id === restoreData.tabsetId
+    );
+    if (existingTabset) {
+      tabsetNode = existingTabset;
+    } else {
+      const newTabset = createTabSet(restoreData.tabsetId, []);
+
+      const updatedParentChildren = [...parentInCurrent.children, newTabset];
+      const updatedParent = {
+        ...parentInCurrent,
+        children: updatedParentChildren,
+      };
+
+      const updatedLayout = updateNodeById(
+        layout,
+        parentInCurrent.id,
+        updatedParent
+      );
+
+      if (!updatedLayout) {
+        return null;
+      }
+
+      layout = updatedLayout;
+      tabsetNode = findNodeById(layout, restoreData.tabsetId);
+
+      if (!tabsetNode || tabsetNode.type !== "tabset") {
+        return null;
+      }
+    }
+  }
+
+  const tab = createTab(
+    restoreData.tabId,
+    restoreData.component,
+    restoreData.name,
+    restoreData.config
+  );
+
+  const result = addTabToTabset(layout, restoreData.tabsetId, tab);
+
+  return result;
+};
+
+export const tabExists = (layout: LayoutNode, tabId: string): boolean => {
+  return findNodeById(layout, tabId) !== null;
+};

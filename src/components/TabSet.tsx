@@ -27,12 +27,10 @@ export const TabSet: React.FC<TabSetProps> = ({
     return node.children?.filter((child) => child.type === "tab") || [];
   }, [node.children]);
 
-  // In RTL mode, reverse the tabs for proper visual order
   const tabsToRender = useMemo(() => {
     return direction === "rtl" ? [...tabs].reverse() : tabs;
   }, [tabs, direction]);
 
-  // Ensure selected index is within bounds
   const rawSelectedIndex = node.selected ?? 0;
   const selectedTabIndex = Math.min(
     rawSelectedIndex,
@@ -78,7 +76,6 @@ export const TabSet: React.FC<TabSetProps> = ({
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
 
-      // Calculate drop position based on mouse position
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -87,12 +84,10 @@ export const TabSet: React.FC<TabSetProps> = ({
 
       let position: DropPosition = "center";
 
-      // Check if we're over the header area (top 40px typically)
       const headerHeight = 40;
       const isOverHeader = y < headerHeight;
 
       if (isOverHeader) {
-        // Find which tab we're over
         const headerRect = (e.currentTarget as HTMLElement)
           .querySelector(".react-flex-layout-tabset-header")
           ?.getBoundingClientRect();
@@ -104,7 +99,6 @@ export const TabSet: React.FC<TabSetProps> = ({
           let targetIndex = tabs.length;
 
           if (direction === "rtl") {
-            // For RTL, check from right to left
             for (let i = tabElements.length - 1; i >= 0; i--) {
               const tabRect = tabElements[i].getBoundingClientRect();
               const tabLeft = tabRect.left - headerRect.left;
@@ -119,7 +113,6 @@ export const TabSet: React.FC<TabSetProps> = ({
                 break;
               }
             }
-            // If we're before all tabs in RTL, place at the end
             if (targetIndex === tabs.length && tabElements.length > 0) {
               const firstTabRect = tabElements[0].getBoundingClientRect();
               if (headerX > firstTabRect.right - headerRect.left) {
@@ -130,7 +123,6 @@ export const TabSet: React.FC<TabSetProps> = ({
               }
             }
           } else {
-            // For LTR, check from left to right
             for (let i = 0; i < tabElements.length; i++) {
               const tabRect = tabElements[i].getBoundingClientRect();
               const tabLeft = tabRect.left - headerRect.left;
@@ -147,7 +139,6 @@ export const TabSet: React.FC<TabSetProps> = ({
             }
           }
 
-          // If we're past all tabs, place at the end
           if (targetIndex === tabs.length) {
             targetIndex = tabs.length;
           }
@@ -158,7 +149,6 @@ export const TabSet: React.FC<TabSetProps> = ({
         }
       }
 
-      // Determine drop zone based on mouse position for content area
       if (x < width * 0.25) {
         position = "left";
       } else if (x > width * 0.75) {
@@ -171,7 +161,6 @@ export const TabSet: React.FC<TabSetProps> = ({
         position = "center";
       }
 
-      // Pass position information to the drag over handler
       onDragOver?.(e, node.id, position);
     },
     [node.id, tabs, tabsToRender, onDragOver]
@@ -204,7 +193,6 @@ export const TabSet: React.FC<TabSetProps> = ({
     maxHeight: node.maxHeight ? `${node.maxHeight}px` : undefined,
   };
 
-  // Don't render anything if tabset is empty
   if (tabs.length === 0) {
     return null;
   }

@@ -4,15 +4,15 @@ export interface LayoutNode {
   children?: LayoutNode[];
   component?: string;
   name?: string;
-  width?: number; // percentage
-  height?: number; // percentage
+  width?: number;
+  height?: number;
   flex?: number;
   minWidth?: number;
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
   config?: Record<string, any>;
-  selected?: number; // for tabsets, which tab is selected
+  selected?: number;
   enableClose?: boolean;
   enableDrag?: boolean;
   enableResize?: boolean;
@@ -30,6 +30,9 @@ export interface LayoutModel {
     direction?: Direction;
   };
   layout: LayoutNode;
+  metadata?: {
+    restoreData?: Record<string, any>;
+  };
 }
 
 export interface LayoutRef {

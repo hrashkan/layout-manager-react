@@ -23,7 +23,6 @@ export const useDragAndDrop = (
   const [dropPosition, setDropPosition] = useState<DropPosition>("center");
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
 
-  // Use ref to avoid stale closure issues
   const draggedTabRef = useRef<{
     tabsetId: string;
     tabIndex: number;
@@ -63,7 +62,6 @@ export const useDragAndDrop = (
   );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    // Only clear if we're actually leaving the tabset container, not just moving between child elements
     if (e.currentTarget === e.target) {
       setTimeout(() => {
         setDragOverTabset(null);
@@ -83,7 +81,6 @@ export const useDragAndDrop = (
 
       const { tabsetId: sourceTabsetId, tabIndex } = currentDraggedTab;
 
-      // Handle reordering within the same tabset
       if (
         sourceTabsetId === targetTabsetId &&
         dropPosition === "tab" &&
@@ -121,6 +118,7 @@ export const useDragAndDrop = (
           onModelChange({
             ...model,
             layout: updatedLayout,
+            metadata: model.metadata,
           });
         }
 
@@ -130,12 +128,10 @@ export const useDragAndDrop = (
         return;
       }
 
-      // Don't drop on the same tabset content area
       if (sourceTabsetId === targetTabsetId && dropPosition !== "tab") {
         return;
       }
 
-      // Find source and target tabsets
       const sourceTabset = findNodeById(model.layout, sourceTabsetId);
       const targetTabset = findNodeById(model.layout, targetTabsetId);
 
@@ -148,21 +144,17 @@ export const useDragAndDrop = (
         return;
       }
 
-      // Get the tab to move
       const tabToMove = sourceTabset.children[tabIndex];
       if (!tabToMove) {
         return;
       }
 
-      // Create new layout
       let updatedLayout = model.layout;
 
-      // Remove tab from source tabset
       const updatedSourceChildren = sourceTabset.children.filter(
         (_, index) => index !== tabIndex
       );
 
-      // Update source tabset with remaining children (even if empty)
       const updatedSourceLayout = updateNodeById(
         updatedLayout,
         sourceTabsetId,
@@ -177,29 +169,23 @@ export const useDragAndDrop = (
       if (!updatedSourceLayout) return;
       updatedLayout = updatedSourceLayout;
 
-      // Handle different drop positions
       if (dropPosition === "center") {
-        // Add tab to existing target tabset
-        const newTab = { ...tabToMove, id: `${tabToMove.id}-${Date.now()}` };
         const updatedTargetLayout = updateNodeById(
           updatedLayout,
           targetTabsetId,
           {
-            children: [...(targetTabset.children || []), newTab],
+            children: [...(targetTabset.children || []), tabToMove],
             selected: targetTabset.children?.length || 0,
           }
         );
         if (!updatedTargetLayout) return;
         updatedLayout = updatedTargetLayout;
       } else {
-        // Create new tabset and split the layout
-        const newTab = { ...tabToMove, id: `${tabToMove.id}-${Date.now()}` };
         const newTabset = createTabSet(
           `${targetTabsetId}-split-${Date.now()}`,
-          [newTab]
+          [tabToMove]
         );
 
-        // Find the parent of the target tabset
         const parent = findParentNode(updatedLayout, targetTabsetId);
         if (parent) {
           const targetIndex =
@@ -208,7 +194,6 @@ export const useDragAndDrop = (
             ) || 0;
 
           if (dropPosition === "left" || dropPosition === "right") {
-            // Create horizontal split
             const newRow = createRow(`${targetTabsetId}-row-${Date.now()}`, [
               dropPosition === "left" ? newTabset : targetTabset,
               dropPosition === "left" ? targetTabset : newTabset,
@@ -228,7 +213,6 @@ export const useDragAndDrop = (
             if (!updatedParentLayout) return;
             updatedLayout = updatedParentLayout;
           } else if (dropPosition === "top" || dropPosition === "bottom") {
-            // Create vertical split
             const newColumn = createColumn(
               `${targetTabsetId}-column-${Date.now()}`,
               [
@@ -254,18 +238,16 @@ export const useDragAndDrop = (
         }
       }
 
-      // Clean up empty tabsets immediately
       const cleanedLayout = removeEmptyTabsets(updatedLayout);
 
-      // Update the model with cleaned layout (only if not null)
       if (cleanedLayout) {
         onModelChange({
           ...model,
           layout: cleanedLayout,
+          metadata: model.metadata,
         });
       }
 
-      // Clear drag state
       setDraggedTab(null);
       setDragOverTabset(null);
     },

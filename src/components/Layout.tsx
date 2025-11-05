@@ -416,7 +416,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     );
                   }
 
-                  // Map back to original array positions
                   const currentOriginalIndex = isRTL
                     ? rowChildren.length - 1 - renderIndex
                     : renderIndex;
@@ -424,8 +423,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     ? rowChildren.length - 1 - nextRenderIndex
                     : nextRenderIndex;
 
-                  // For resize, we need to use the child that comes first in the original array
-                  // This ensures currentIndex and siblingIndex are sequential (currentIndex + 1)
                   const firstOriginalIndex = Math.min(
                     currentOriginalIndex,
                     nextOriginalIndex
@@ -435,9 +432,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     nextOriginalIndex
                   );
 
-                  // Verify they are sequential in original array
                   if (secondOriginalIndex !== firstOriginalIndex + 1) {
-                    // Not sequential - skip this splitter (shouldn't happen in normal layout)
                     return (
                       <React.Fragment key={child.id}>
                         {renderNode(child)}
@@ -455,7 +450,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                       <Splitter
                         direction="horizontal"
                         onResize={(delta) => {
-                          // In RTL when children are reversed, invert delta direction
                           const adjustedDelta = isRTLReversed ? -delta : delta;
                           handleResize(
                             firstChild.id,
@@ -499,7 +493,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                           handleResize(child.id, delta, "vertical")
                         }
                         onResizeStart={() => {
-                          // Reset any previous resize state for this node
                           resetResize(child.id, "vertical");
                         }}
                         size={splitterSize}

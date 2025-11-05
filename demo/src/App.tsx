@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   Layout,
   createLayoutModel,
@@ -16,6 +16,10 @@ import {
   removeEmptyTabsets,
   createLayoutStorage,
   isLocalStorageAvailable,
+  removeTab,
+  restoreTab,
+  tabExists,
+  ComponentRestoreData,
 } from "../../src/index";
 
 // Sample components for the demo
@@ -100,6 +104,110 @@ const App: React.FC = () => {
 
   const [model, setModel] = useState<LayoutModel>(initialModel);
 
+  // Store minimal restoration data in ref (no re-renders, memory efficient)
+  const restoreDataRef = useRef<Map<string, ComponentRestoreData>>(new Map());
+
+  // Component configuration mapping
+  const COMPONENT_CONFIG: Record<
+    string,
+    { tabId: string; component: string; name: string }
+  > = {
+    component1: { tabId: "tab1", component: "component1", name: "Dashboard" },
+    component2: { tabId: "tab2", component: "component2", name: "Analytics" },
+    component3: { tabId: "tab3", component: "component3", name: "Settings" },
+    component4: { tabId: "tab4", component: "component4", name: "Logs" },
+    component5: { tabId: "tab5", component: "component5", name: "Console" },
+  };
+
+  // Load restoration data from model metadata on mount and when model changes
+  useEffect(() => {
+    if (model.metadata?.restoreData) {
+      const data = model.metadata.restoreData as Record<
+        string,
+        ComponentRestoreData
+      >;
+      restoreDataRef.current = new Map(Object.entries(data));
+      console.log(`[DEBUG] Loaded restoreData from model:`, Object.keys(data));
+    }
+  }, [model.metadata?.restoreData]);
+
+  // Check if a component is visible (tab exists in layout)
+  const isComponentVisible = useCallback(
+    (componentKey: string) => {
+      const config = COMPONENT_CONFIG[componentKey];
+      if (!config) return false;
+      return tabExists(model.layout, config.tabId);
+    },
+    [model.layout]
+  );
+
+  // Toggle component visibility
+  const toggleComponent = useCallback(
+    (componentKey: string) => {
+      console.log(`[DEBUG] toggleComponent called for: ${componentKey}`);
+      const config = COMPONENT_CONFIG[componentKey];
+      if (!config) return;
+
+      const isVisible = tabExists(model.layout, config.tabId);
+      console.log(
+        `[DEBUG] Component ${componentKey} (${config.tabId}) isVisible: ${isVisible}`
+      );
+
+      if (isVisible) {
+        // Remove component
+        console.log(`[DEBUG] Removing component: ${componentKey}`);
+        const result = removeTab(model.layout, config.tabId);
+        if (result.layout && result.restoreData) {
+          restoreDataRef.current.set(config.tabId, result.restoreData);
+          const cleanedLayout = removeEmptyTabsets(result.layout);
+          if (cleanedLayout) {
+            const restoreData = Object.fromEntries(restoreDataRef.current);
+            const updatedModel = {
+              ...model,
+              layout: cleanedLayout,
+              metadata: {
+                ...model.metadata,
+                restoreData: restoreData,
+              },
+            };
+            console.log(
+              `[DEBUG] Removing ${componentKey}: stored restoreData, updated model`
+            );
+            setModel(updatedModel);
+          }
+        }
+      } else {
+        // Restore component
+        console.log(`[DEBUG] Restoring component: ${componentKey}`);
+        const restoreData = restoreDataRef.current.get(config.tabId);
+        if (restoreData) {
+          const restored = restoreTab(
+            model.layout,
+            restoreData,
+            initialModel.layout
+          );
+          if (restored) {
+            restoreDataRef.current.delete(config.tabId);
+            const restoreData = Object.fromEntries(restoreDataRef.current);
+            const updatedModel = {
+              ...model,
+              layout: restored,
+              metadata: {
+                ...model.metadata,
+                restoreData: restoreData,
+              },
+            };
+            console.log(
+              `[DEBUG] Restoring ${componentKey}: removed from restoreData, updated model`
+            );
+            setModel(updatedModel);
+          }
+        }
+      }
+    },
+    [model, initialModel.layout]
+  );
+
   const factory = useCallback((node: any) => {
     switch (node.component) {
       case "component1":
@@ -119,6 +227,8 @@ const App: React.FC = () => {
 
   const handleAction = useCallback(
     (action: LayoutAction) => {
+      console.log(`[DEBUG] handleAction called with type: ${action.type}`);
+
       if (action.type === "selectTab") {
         const { nodeId, tabIndex } = action.payload as SelectTabPayload;
         setModel((prevModel) => {
@@ -132,33 +242,90 @@ const App: React.FC = () => {
         });
       }
       if (action.type === "removeNode") {
+        console.log(
+          `[DEBUG] removeNode action - tab was closed via close button`
+        );
         const { nodeId, tabIndex } = action.payload as {
           nodeId: string;
           tabIndex: number;
         };
         const tabsetNode = findNodeById(model.layout, nodeId);
-        if (tabsetNode && tabsetNode.children) {
-          const updatedChildren = tabsetNode.children.filter(
-            (_, index) => index !== tabIndex
+        if (
+          tabsetNode &&
+          tabsetNode.children &&
+          tabsetNode.children[tabIndex]
+        ) {
+          const closedTab = tabsetNode.children[tabIndex];
+          console.log(
+            `[DEBUG] Removing tab: ${closedTab.id} (component: ${closedTab.component})`
           );
 
-          const currentSelected = tabsetNode.selected ?? 0;
-          let newSelected = currentSelected;
-          if (tabIndex <= currentSelected) {
-            newSelected = Math.max(0, currentSelected - 1);
+          // Use package utility to remove tab and get restoration data
+          const result = removeTab(model.layout, closedTab.id);
+          if (result.layout && result.restoreData) {
+            // Store minimal restoration data (memory efficient)
+            restoreDataRef.current.set(closedTab.id, result.restoreData);
+            console.log(
+              `[DEBUG] Stored restoreData for closed tab: ${closedTab.id}`
+            );
+
+            // Update model with restoration data
+            const restoreData = Object.fromEntries(restoreDataRef.current);
+            const updatedModel = {
+              ...model,
+              layout: result.layout,
+              metadata: {
+                ...model.metadata,
+                restoreData: restoreData,
+              },
+            };
+            setModel(updatedModel);
+
+            const cleanedLayout = removeEmptyTabsets(result.layout);
+            if (cleanedLayout) {
+              // Update model with cleaned layout and restoration data
+              const restoreData = Object.fromEntries(restoreDataRef.current);
+              setModel((prevModel) => ({
+                ...prevModel,
+                layout: cleanedLayout,
+                metadata: {
+                  ...prevModel.metadata,
+                  restoreData: restoreData,
+                },
+              }));
+            }
           }
-          newSelected = Math.min(newSelected, updatedChildren.length - 1);
+        }
+      }
+      if (action.type === "closeTabset") {
+        const { nodeId } = action.payload as CloseTabsetPayload;
+        const tabsetNode = findNodeById(model.layout, nodeId);
+        if (tabsetNode && tabsetNode.type === "tabset" && tabsetNode.children) {
+          // Store restoration data for all tabs in the tabset
+          const restoreDataMap = new Map<string, ComponentRestoreData>();
+          tabsetNode.children.forEach((tab) => {
+            if (tab.type === "tab") {
+              const result = removeTab(model.layout, tab.id);
+              if (result.restoreData) {
+                restoreDataRef.current.set(tab.id, result.restoreData);
+                restoreDataMap.set(tab.id, result.restoreData);
+              }
+            }
+          });
 
-          const updatedTabset = {
-            ...tabsetNode,
-            children: updatedChildren,
-            selected: updatedChildren.length > 0 ? newSelected : undefined,
+          // Update model with restoration data
+          const restoreData = Object.fromEntries(restoreDataRef.current);
+          const updatedModel = {
+            ...model,
+            metadata: {
+              ...model.metadata,
+              restoreData: restoreData,
+            },
           };
-          const updatedLayout = updateNodeById(
-            model.layout,
-            nodeId,
-            updatedTabset
-          );
+          setModel(updatedModel);
+
+          // Remove the tabset
+          const updatedLayout = updateNodeById(model.layout, nodeId, null);
           if (updatedLayout) {
             const cleanedLayout = removeEmptyTabsets(updatedLayout);
             if (cleanedLayout) {
@@ -167,19 +334,6 @@ const App: React.FC = () => {
                 layout: cleanedLayout,
               }));
             }
-          }
-        }
-      }
-      if (action.type === "closeTabset") {
-        const { nodeId } = action.payload as CloseTabsetPayload;
-        const updatedLayout = updateNodeById(model.layout, nodeId, null);
-        if (updatedLayout) {
-          const cleanedLayout = removeEmptyTabsets(updatedLayout);
-          if (cleanedLayout) {
-            setModel((prevModel) => ({
-              ...prevModel,
-              layout: cleanedLayout,
-            }));
           }
         }
       }
@@ -196,7 +350,7 @@ const App: React.FC = () => {
         }));
       }
     },
-    [model.layout]
+    [model]
   );
 
   const toggleDirection = useCallback(() => {
@@ -359,6 +513,37 @@ const App: React.FC = () => {
               Reset Layout
             </button>
           </div>
+
+          <div
+            style={{
+              marginTop: "15px",
+              borderTop: "1px solid #eee",
+              paddingTop: "10px",
+            }}
+          >
+            <h4 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>
+              Component Toggles
+            </h4>
+            {Object.entries(COMPONENT_CONFIG).map(([key, config]) => (
+              <label
+                key={key}
+                style={{
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: "6px",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={isComponentVisible(key)}
+                  onChange={() => toggleComponent(key)}
+                  style={{ marginRight: "5px" }}
+                />
+                {config.name}
+              </label>
+            ))}
+          </div>
         </div>
       </div>
       <Layout
@@ -366,13 +551,49 @@ const App: React.FC = () => {
         model={model}
         factory={factory}
         onModelChange={(newModel) => {
-          setModel(newModel);
-          if (
-            newModel.global?.direction &&
-            newModel.global.direction !== direction
-          ) {
-            setDirection(newModel.global.direction);
-            localStorage.setItem("demo-direction", newModel.global.direction);
+          // Only update if the layout actually changed (not just metadata)
+          // This prevents infinite loops when we update metadata
+          const layoutChanged =
+            JSON.stringify(model.layout) !== JSON.stringify(newModel.layout);
+          if (layoutChanged) {
+            // Preserve restoration data when layout changes from drag/drop
+            // Check if all tabs still exist (not removed, just moved)
+            const preservedRestoreData = model.metadata?.restoreData;
+            const hasRestoreData = !!preservedRestoreData;
+
+            console.log(
+              `[DEBUG] onModelChange - Layout changed, preserving restoreData: ${hasRestoreData}, keys:`,
+              hasRestoreData ? Object.keys(preservedRestoreData) : []
+            );
+
+            setModel({
+              ...newModel,
+              metadata: {
+                ...newModel.metadata,
+                // Preserve existing restoration data - drag/drop doesn't remove components
+                restoreData:
+                  preservedRestoreData || newModel.metadata?.restoreData,
+              },
+            });
+
+            if (
+              newModel.global?.direction &&
+              newModel.global.direction !== direction
+            ) {
+              setDirection(newModel.global.direction);
+              localStorage.setItem("demo-direction", newModel.global.direction);
+            }
+          } else {
+            // Layout didn't change, just update metadata if needed
+            if (newModel.metadata?.restoreData) {
+              console.log(
+                `[DEBUG] onModelChange - Only metadata changed, updating restoreData`
+              );
+              setModel((prev) => ({
+                ...prev,
+                metadata: newModel.metadata,
+              }));
+            }
           }
         }}
         onAction={(action) => {

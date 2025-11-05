@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - 2024-12-19
+
+### Added
+
+- Component removal and restoration: Remove tabs/components from the layout and restore them to their original positions
+- New utility functions: `removeTab`, `restoreTab`, `tabExists`, `addTabToTabset` for programmatic component management
+- `ComponentRestoreData` interface: Memory-efficient storage of restoration metadata (~50-100 bytes per component)
+- Layout metadata support: `LayoutModel` now includes optional `metadata` field for storing restoration data
+- Tab ID preservation: Tabs maintain their original IDs during drag-and-drop operations, preventing component loss
+- Integration with localStorage: Component removal states are persisted in the existing layout storage key
+
+### Changed
+
+- Drag-and-drop operations now preserve tab IDs instead of generating new ones, ensuring components remain identifiable
+- `useLayoutStorage` hook now synchronizes with external model updates, supporting component restoration workflows
+- `useDragAndDrop` hook preserves metadata during layout changes to maintain restoration data integrity
+
+### Fixed
+
+- Fixed issue where drag-and-drop operations would incorrectly mark components as removed
+- Fixed component restoration when parent tabsets were removed and need to be recreated
+- Improved memory efficiency by storing minimal restoration data instead of full node structures
+
 ## [0.0.5] - 2024-12-19
 
 ### Added

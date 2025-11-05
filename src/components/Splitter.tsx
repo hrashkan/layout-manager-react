@@ -22,7 +22,6 @@ export const Splitter: React.FC<SplitterProps> = ({
       setIsDragging(true);
       startPosRef.current = direction === "horizontal" ? e.clientX : e.clientY;
 
-      // Call onResizeStart to reset initial flex values
       onResizeStart?.();
 
       const handleMouseMove = (e: MouseEvent) => {
@@ -43,14 +42,12 @@ export const Splitter: React.FC<SplitterProps> = ({
     [direction, onResize, onResizeStart]
   );
 
-  // Default styles
   const defaultStyles: React.CSSProperties = {
     backgroundColor: "#ffffff",
     border: "none",
     outline: "none",
   };
 
-  // Get current state styles
   const getCurrentStyles = () => {
     if (isDragging && customStyles.active) {
       return customStyles.active;

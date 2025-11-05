@@ -19,13 +19,11 @@ export const useLayoutStorage = (
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasStorage, setHasStorage] = useState(false);
 
-  // Initialize storage
   useEffect(() => {
     storageRef.current = new LayoutStorage(storageOptions);
     setHasStorage(true);
   }, [storageOptions.key, storageOptions.autoSave, storageOptions.debounceMs]);
 
-  // Load from storage on mount
   useEffect(() => {
     if (!storageRef.current || isLoaded) return;
 
@@ -39,13 +37,46 @@ export const useLayoutStorage = (
     }
   }, [isLoaded, onLoad]);
 
-  // Save model when it changes
+  const prevLayoutRef = useRef<string>();
+
+  useEffect(() => {
+    if (!isLoaded || !storageRef.current) return;
+
+    const currentLayoutStr = JSON.stringify(model.layout);
+    const newLayoutStr = JSON.stringify(initialModel.layout);
+
+    if (
+      prevLayoutRef.current !== newLayoutStr &&
+      currentLayoutStr !== newLayoutStr
+    ) {
+      const modelUpdate: LayoutModel = { ...initialModel };
+      if (initialModel.global) {
+        modelUpdate.global = { ...initialModel.global };
+      }
+      setModel(modelUpdate);
+      prevLayoutRef.current = newLayoutStr;
+
+      if (storageRef.current.isAutoSaveEnabled()) {
+        storageRef.current.debouncedSave(modelUpdate);
+      } else {
+        storageRef.current.save(modelUpdate);
+      }
+    } else if (
+      initialModel.metadata &&
+      JSON.stringify(model.metadata) !== JSON.stringify(initialModel.metadata)
+    ) {
+      setModel((prev) => ({
+        ...prev,
+        metadata: initialModel.metadata,
+      }));
+    }
+  }, [initialModel, isLoaded, model.layout, model.metadata]);
+
   const saveModel = useCallback(
     (newModel: LayoutModel) => {
       if (!storageRef.current) return;
 
       try {
-        // For direction changes, save immediately without debounce to ensure UI updates
         if (storageRef.current.isAutoSaveEnabled()) {
           storageRef.current.debouncedSave(newModel);
         } else {
@@ -59,10 +90,8 @@ export const useLayoutStorage = (
     [onSave, onError]
   );
 
-  // Update model and save
   const updateModel = useCallback(
     (newModel: LayoutModel) => {
-      // Ensure we create a new object reference so React detects the change
       const modelUpdate: LayoutModel = { ...newModel };
       if (newModel.global) {
         modelUpdate.global = { ...newModel.global };
@@ -73,7 +102,6 @@ export const useLayoutStorage = (
     [saveModel]
   );
 
-  // Clear storage
   const clearStorage = useCallback(() => {
     if (!storageRef.current) return;
 
@@ -84,12 +112,10 @@ export const useLayoutStorage = (
     }
   }, [onError]);
 
-  // Check if storage exists
   const hasStoredData = useCallback(() => {
     return storageRef.current?.exists() ?? false;
   }, []);
 
-  // Get storage key
   const getStorageKey = useCallback(() => {
     return storageRef.current?.getStorageKey() ?? "";
   }, []);

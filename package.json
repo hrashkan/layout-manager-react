@@ -1,6 +1,6 @@
 {
     "name": "layout-manager-react",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "A modern React layout manager using flexbox with percentage-based sizing",
     "main": "./dist/index.umd.js",
     "module": "./dist/index.es.js",
@@ -29,10 +29,19 @@
     "keywords": [
         "react",
         "layout",
+        "layout manager",
+        "layout manager react",
         "flexbox",
+        "resize",
         "resizable",
+        "resizable layout",
         "drag-and-drop",
-        "typescript"
+        "drag and drop",
+        "typescript",
+        "split-pane",
+        "split-panel",
+        "split view",
+        "drag and drop"
     ],
     "author": "Ashkan Hooshidar",
     "license": "MIT",

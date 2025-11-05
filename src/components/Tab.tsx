@@ -32,11 +32,9 @@ export const Tab: React.FC<TabProps> = ({
       e.dataTransfer.setData("text/plain", node.id);
       e.dataTransfer.effectAllowed = "move";
 
-      // Add visual feedback
       e.currentTarget.classList.add("dragging");
       document.body.classList.add("dragging");
 
-      // Call the parent handler
       onDragStart?.(node.id, index);
     },
     [node.id, index, onDragStart]
@@ -47,7 +45,6 @@ export const Tab: React.FC<TabProps> = ({
       e.currentTarget.classList.remove("dragging");
       document.body.classList.remove("dragging");
 
-      // Call the parent handler
       onDragEnd?.();
     },
     [onDragEnd]

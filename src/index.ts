@@ -1,15 +1,12 @@
-// Main components
 export { Layout } from "./components/Layout";
 export { TabSet } from "./components/TabSet";
 export { Tab } from "./components/Tab";
 export { Splitter } from "./components/Splitter";
 export { DefaultCloseIcon } from "./components/DefaultCloseIcon";
 
-// Memoized components for better performance
 export { MemoizedTab } from "./components/MemoizedTab";
 export { MemoizedTabSet } from "./components/MemoizedTabSet";
 
-// Types
 export type {
   LayoutNode,
   LayoutModel,
@@ -25,7 +22,6 @@ export type {
   DragData,
 } from "./types";
 
-// Utilities
 export {
   createLayoutModel,
   createTab,
@@ -37,9 +33,13 @@ export {
   removeNodeById,
   calculateFlexValues,
   removeEmptyTabsets,
+  removeTab,
+  restoreTab,
+  tabExists,
+  addTabToTabset,
 } from "./utils/layoutUtils";
+export type { ComponentRestoreData } from "./utils/layoutUtils";
 
-// Storage utilities
 export {
   createLayoutStorage,
   isLocalStorageAvailable,
@@ -47,11 +47,9 @@ export {
 } from "./utils/storageUtils";
 export type { StorageOptions } from "./utils/storageUtils";
 
-// Storage hook
 export { useLayoutStorage } from "./hooks/useLayoutStorage";
 export type { UseLayoutStorageOptions } from "./hooks/useLayoutStorage";
 
-// CSS imports
 import "./components/Layout.css";
 import "./components/TabSet.css";
 import "./components/Tab.css";
