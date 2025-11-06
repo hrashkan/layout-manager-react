@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { LayoutModel } from "../types";
 import { LayoutStorage, StorageOptions } from "../utils/storageUtils";
 
@@ -20,6 +20,11 @@ export const useLayoutStorage = (
   const [hasStorage, setHasStorage] = useState(false);
 
   useEffect(() => {
+    if (storageRef.current) {
+      try {
+        storageRef.current.cancel?.();
+      } catch {}
+    }
     storageRef.current = new LayoutStorage(storageOptions);
     setHasStorage(true);
   }, [storageOptions.key, storageOptions.autoSave, storageOptions.debounceMs]);
@@ -39,38 +44,61 @@ export const useLayoutStorage = (
 
   const prevLayoutRef = useRef<string>();
 
+  const currentLayoutStr = useMemo(
+    () => JSON.stringify(model.layout),
+    [model.layout]
+  );
+  const initialLayoutStr = useMemo(
+    () => JSON.stringify(initialModel.layout),
+    [initialModel.layout]
+  );
+  const currentMetadataStr = useMemo(
+    () => (model.metadata ? JSON.stringify(model.metadata) : undefined),
+    [model.metadata]
+  );
+  const initialMetadataStr = useMemo(
+    () =>
+      initialModel.metadata ? JSON.stringify(initialModel.metadata) : undefined,
+    [initialModel.metadata]
+  );
+
   useEffect(() => {
     if (!isLoaded || !storageRef.current) return;
 
-    const currentLayoutStr = JSON.stringify(model.layout);
-    const newLayoutStr = JSON.stringify(initialModel.layout);
-
     if (
-      prevLayoutRef.current !== newLayoutStr &&
-      currentLayoutStr !== newLayoutStr
+      prevLayoutRef.current !== initialLayoutStr &&
+      currentLayoutStr !== initialLayoutStr
     ) {
       const modelUpdate: LayoutModel = { ...initialModel };
       if (initialModel.global) {
         modelUpdate.global = { ...initialModel.global };
       }
       setModel(modelUpdate);
-      prevLayoutRef.current = newLayoutStr;
+      prevLayoutRef.current = initialLayoutStr;
 
       if (storageRef.current.isAutoSaveEnabled()) {
         storageRef.current.debouncedSave(modelUpdate);
       } else {
         storageRef.current.save(modelUpdate);
       }
-    } else if (
-      initialModel.metadata &&
-      JSON.stringify(model.metadata) !== JSON.stringify(initialModel.metadata)
-    ) {
+      return;
+    }
+
+    if (initialModel.metadata && currentMetadataStr !== initialMetadataStr) {
       setModel((prev) => ({
         ...prev,
         metadata: initialModel.metadata,
       }));
     }
-  }, [initialModel, isLoaded, model.layout, model.metadata]);
+  }, [
+    isLoaded,
+    storageRef,
+    initialModel,
+    currentLayoutStr,
+    initialLayoutStr,
+    currentMetadataStr,
+    initialMetadataStr,
+  ]);
 
   const saveModel = useCallback(
     (newModel: LayoutModel) => {

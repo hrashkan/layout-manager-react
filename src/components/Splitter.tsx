@@ -1,4 +1,10 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { SplitterProps } from "../types";
 import "./Splitter.css";
 
@@ -13,6 +19,10 @@ export const Splitter: React.FC<SplitterProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const startPosRef = useRef<number>(0);
+  const lastPosRef = useRef<number>(0);
+  const rafPendingRef = useRef<boolean>(false);
+  const moveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
+  const upHandlerRef = useRef<(() => void) | null>(null);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -21,23 +31,35 @@ export const Splitter: React.FC<SplitterProps> = ({
 
       setIsDragging(true);
       startPosRef.current = direction === "horizontal" ? e.clientX : e.clientY;
+      lastPosRef.current = startPosRef.current;
 
       onResizeStart?.();
 
       const handleMouseMove = (e: MouseEvent) => {
-        const currentPos = direction === "horizontal" ? e.clientX : e.clientY;
-        const delta = currentPos - startPosRef.current;
-        onResize(delta);
+        lastPosRef.current = direction === "horizontal" ? e.clientX : e.clientY;
+        if (!rafPendingRef.current) {
+          rafPendingRef.current = true;
+          requestAnimationFrame(() => {
+            rafPendingRef.current = false;
+            const delta = lastPosRef.current - startPosRef.current;
+            onResize(delta);
+          });
+        }
       };
 
       const handleMouseUp = () => {
         setIsDragging(false);
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
+        moveHandlerRef.current = null;
+        upHandlerRef.current = null;
+        rafPendingRef.current = false;
       };
 
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
+      moveHandlerRef.current = handleMouseMove;
+      upHandlerRef.current = handleMouseUp;
     },
     [direction, onResize, onResizeStart]
   );
@@ -48,28 +70,38 @@ export const Splitter: React.FC<SplitterProps> = ({
     outline: "none",
   };
 
-  const getCurrentStyles = () => {
-    if (isDragging && customStyles.active) {
-      return customStyles.active;
-    }
-
-    if (customStyles.default) {
-      return customStyles.default;
-    }
+  const currentStyles = useMemo<React.CSSProperties>(() => {
+    if (isDragging && customStyles.active) return customStyles.active;
+    if (customStyles.default) return customStyles.default;
     return defaultStyles;
-  };
+  }, [isDragging, customStyles.active, customStyles.default]);
 
-  const splitterStyle: React.CSSProperties = {
-    ...style,
-    width: direction === "horizontal" ? `${size}px` : "100%",
-    height: direction === "vertical" ? `${size}px` : "100%",
-    minWidth: direction === "horizontal" ? `${size}px` : undefined,
-    minHeight: direction === "vertical" ? `${size}px` : undefined,
-    flexShrink: 0,
-    cursor: direction === "horizontal" ? "col-resize" : "row-resize",
-    ...getCurrentStyles(),
-    transition: isDragging ? "none" : "all 0.2s ease",
-  };
+  const splitterStyle: React.CSSProperties = useMemo(() => {
+    const isHorizontal = direction === "horizontal";
+    return {
+      ...style,
+      width: isHorizontal ? `${size}px` : "100%",
+      height: !isHorizontal ? `${size}px` : "100%",
+      minWidth: isHorizontal ? `${size}px` : undefined,
+      minHeight: !isHorizontal ? `${size}px` : undefined,
+      flexShrink: 0,
+      cursor: isHorizontal ? "col-resize" : "row-resize",
+      ...currentStyles,
+      transition: isDragging ? "none" : "all 0.2s ease",
+    } as React.CSSProperties;
+  }, [direction, size, style, currentStyles, isDragging]);
+
+  useEffect(() => {
+    return () => {
+      if (moveHandlerRef.current) {
+        document.removeEventListener("mousemove", moveHandlerRef.current);
+      }
+      if (upHandlerRef.current) {
+        document.removeEventListener("mouseup", upHandlerRef.current);
+      }
+      rafPendingRef.current = false;
+    };
+  }, []);
 
   return (
     <div

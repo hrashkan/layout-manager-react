@@ -127,7 +127,6 @@ const App: React.FC = () => {
         ComponentRestoreData
       >;
       restoreDataRef.current = new Map(Object.entries(data));
-      console.log(`[DEBUG] Loaded restoreData from model:`, Object.keys(data));
     }
   }, [model.metadata?.restoreData]);
 
@@ -144,18 +143,12 @@ const App: React.FC = () => {
   // Toggle component visibility
   const toggleComponent = useCallback(
     (componentKey: string) => {
-      console.log(`[DEBUG] toggleComponent called for: ${componentKey}`);
       const config = COMPONENT_CONFIG[componentKey];
       if (!config) return;
 
       const isVisible = tabExists(model.layout, config.tabId);
-      console.log(
-        `[DEBUG] Component ${componentKey} (${config.tabId}) isVisible: ${isVisible}`
-      );
 
       if (isVisible) {
-        // Remove component
-        console.log(`[DEBUG] Removing component: ${componentKey}`);
         const result = removeTab(model.layout, config.tabId);
         if (result.layout && result.restoreData) {
           restoreDataRef.current.set(config.tabId, result.restoreData);
@@ -170,15 +163,11 @@ const App: React.FC = () => {
                 restoreData: restoreData,
               },
             };
-            console.log(
-              `[DEBUG] Removing ${componentKey}: stored restoreData, updated model`
-            );
+
             setModel(updatedModel);
           }
         }
       } else {
-        // Restore component
-        console.log(`[DEBUG] Restoring component: ${componentKey}`);
         const restoreData = restoreDataRef.current.get(config.tabId);
         if (restoreData) {
           const restored = restoreTab(
@@ -197,9 +186,7 @@ const App: React.FC = () => {
                 restoreData: restoreData,
               },
             };
-            console.log(
-              `[DEBUG] Restoring ${componentKey}: removed from restoreData, updated model`
-            );
+
             setModel(updatedModel);
           }
         }
@@ -227,8 +214,6 @@ const App: React.FC = () => {
 
   const handleAction = useCallback(
     (action: LayoutAction) => {
-      console.log(`[DEBUG] handleAction called with type: ${action.type}`);
-
       if (action.type === "selectTab") {
         const { nodeId, tabIndex } = action.payload as SelectTabPayload;
         setModel((prevModel) => {
@@ -242,9 +227,6 @@ const App: React.FC = () => {
         });
       }
       if (action.type === "removeNode") {
-        console.log(
-          `[DEBUG] removeNode action - tab was closed via close button`
-        );
         const { nodeId, tabIndex } = action.payload as {
           nodeId: string;
           tabIndex: number;
@@ -256,18 +238,12 @@ const App: React.FC = () => {
           tabsetNode.children[tabIndex]
         ) {
           const closedTab = tabsetNode.children[tabIndex];
-          console.log(
-            `[DEBUG] Removing tab: ${closedTab.id} (component: ${closedTab.component})`
-          );
 
           // Use package utility to remove tab and get restoration data
           const result = removeTab(model.layout, closedTab.id);
           if (result.layout && result.restoreData) {
             // Store minimal restoration data (memory efficient)
             restoreDataRef.current.set(closedTab.id, result.restoreData);
-            console.log(
-              `[DEBUG] Stored restoreData for closed tab: ${closedTab.id}`
-            );
 
             // Update model with restoration data
             const restoreData = Object.fromEntries(restoreDataRef.current);
@@ -561,11 +537,6 @@ const App: React.FC = () => {
             const preservedRestoreData = model.metadata?.restoreData;
             const hasRestoreData = !!preservedRestoreData;
 
-            console.log(
-              `[DEBUG] onModelChange - Layout changed, preserving restoreData: ${hasRestoreData}, keys:`,
-              hasRestoreData ? Object.keys(preservedRestoreData) : []
-            );
-
             setModel({
               ...newModel,
               metadata: {
@@ -586,9 +557,6 @@ const App: React.FC = () => {
           } else {
             // Layout didn't change, just update metadata if needed
             if (newModel.metadata?.restoreData) {
-              console.log(
-                `[DEBUG] onModelChange - Only metadata changed, updating restoreData`
-              );
               setModel((prev) => ({
                 ...prev,
                 metadata: newModel.metadata,

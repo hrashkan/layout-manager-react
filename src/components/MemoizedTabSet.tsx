@@ -5,6 +5,25 @@ import { TabSetProps } from "../types";
 export const MemoizedTabSet = memo<TabSetProps>(
   TabSet,
   (prevProps, nextProps) => {
+    if (prevProps.className !== nextProps.className) return false;
+    if (prevProps.direction !== nextProps.direction) return false;
+    if (prevProps.dragOverTabset !== nextProps.dragOverTabset) return false;
+    if (prevProps.dropPosition !== nextProps.dropPosition) return false;
+    if (prevProps.dropTargetIndex !== nextProps.dropTargetIndex) return false;
+    if (prevProps.factory !== nextProps.factory) return false;
+    if (prevProps.onTabSelect !== nextProps.onTabSelect) return false;
+    if (prevProps.onTabClose !== nextProps.onTabClose) return false;
+    if (prevProps.onTabDragStart !== nextProps.onTabDragStart) return false;
+    if (prevProps.onTabDragEnd !== nextProps.onTabDragEnd) return false;
+    if (prevProps.onDragOver !== nextProps.onDragOver) return false;
+    if (prevProps.onDragLeave !== nextProps.onDragLeave) return false;
+    if (prevProps.onDrop !== nextProps.onDrop) return false;
+    if (prevProps.closeIcon !== nextProps.closeIcon) return false;
+    if (prevProps.closeButtonClassName !== nextProps.closeButtonClassName)
+      return false;
+    if (prevProps.style !== nextProps.style) return false;
+    if (prevProps.children !== nextProps.children) return false;
+
     if (prevProps.node !== nextProps.node) {
       if (prevProps.node.id !== nextProps.node.id) return false;
       if (prevProps.node.selected !== nextProps.node.selected) return false;
@@ -38,19 +57,6 @@ export const MemoizedTabSet = memo<TabSetProps>(
         }
       }
     }
-
-    if (prevProps.className !== nextProps.className) return false;
-    if (prevProps.direction !== nextProps.direction) return false;
-    if (prevProps.dragOverTabset !== nextProps.dragOverTabset) return false;
-    if (prevProps.dropPosition !== nextProps.dropPosition) return false;
-    if (prevProps.factory !== nextProps.factory) return false;
-    if (prevProps.onTabSelect !== nextProps.onTabSelect) return false;
-    if (prevProps.onTabClose !== nextProps.onTabClose) return false;
-    if (prevProps.onTabDragStart !== nextProps.onTabDragStart) return false;
-    if (prevProps.onTabDragEnd !== nextProps.onTabDragEnd) return false;
-    if (prevProps.onDragOver !== nextProps.onDragOver) return false;
-    if (prevProps.onDragLeave !== nextProps.onDragLeave) return false;
-    if (prevProps.onDrop !== nextProps.onDrop) return false;
 
     return true;
   }

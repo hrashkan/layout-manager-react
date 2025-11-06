@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { TabSetProps, DropPosition } from "../types";
 import { Tab } from "./Tab";
 import "./TabSet.css";
@@ -27,6 +27,15 @@ export const TabSet: React.FC<TabSetProps> = ({
     return node.children?.filter((child) => child.type === "tab") || [];
   }, [node.children]);
 
+  const idToIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    for (let i = 0; i < tabs.length; i++) {
+      const t = tabs[i];
+      if (t && t.id) map.set(t.id, i);
+    }
+    return map;
+  }, [tabs]);
+
   const tabsToRender = useMemo(() => {
     return direction === "rtl" ? [...tabs].reverse() : tabs;
   }, [tabs, direction]);
@@ -40,43 +49,43 @@ export const TabSet: React.FC<TabSetProps> = ({
 
   const handleTabSelect = useCallback(
     (tabId: string) => {
-      const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
-      if (tabIndex !== -1) {
+      const tabIndex = idToIndex.get(tabId);
+      if (tabIndex !== undefined && tabIndex !== -1) {
         onTabSelect?.(node.id, tabIndex);
       }
     },
-    [node.id, tabs, onTabSelect]
+    [node.id, idToIndex, onTabSelect]
   );
 
   const handleTabClose = useCallback(
     (tabId: string) => {
-      const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
-      if (tabIndex !== -1) {
+      const tabIndex = idToIndex.get(tabId);
+      if (tabIndex !== undefined && tabIndex !== -1) {
         onTabClose?.(node.id, tabIndex);
       }
     },
-    [node.id, tabs, onTabClose]
+    [node.id, idToIndex, onTabClose]
   );
 
   const handleTabDragStart = useCallback(
     (tabId: string, tabIndex?: number) => {
-      const actualIndex =
-        tabIndex !== undefined
-          ? tabIndex
-          : tabs.findIndex((tab) => tab.id === tabId);
-      if (actualIndex !== -1) {
-        onTabDragStart?.(node.id, actualIndex);
+      const derivedIndex =
+        tabIndex !== undefined ? tabIndex : idToIndex.get(tabId) ?? -1;
+      if (derivedIndex !== -1) {
+        onTabDragStart?.(node.id, derivedIndex);
       }
     },
-    [node.id, tabs, onTabDragStart]
+    [node.id, idToIndex, onTabDragStart]
   );
+
+  const headerRef = useRef<HTMLDivElement | null>(null);
 
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
 
-      const rect = e.currentTarget.getBoundingClientRect();
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const width = rect.width;
@@ -88,59 +97,60 @@ export const TabSet: React.FC<TabSetProps> = ({
       const isOverHeader = y < headerHeight;
 
       if (isOverHeader) {
-        const headerRect = (e.currentTarget as HTMLElement)
-          .querySelector(".react-flex-layout-tabset-header")
-          ?.getBoundingClientRect();
-        if (headerRect) {
+        const headerEl = headerRef.current;
+        if (headerEl) {
+          const headerRect = headerEl.getBoundingClientRect();
           const headerX = e.clientX - headerRect.left;
-          const tabElements = (e.currentTarget as HTMLElement).querySelectorAll(
+          const tabElements = headerEl.querySelectorAll(
             ".react-flex-layout-tab"
           );
           let targetIndex = tabs.length;
 
           if (direction === "rtl") {
             for (let i = tabElements.length - 1; i >= 0; i--) {
-              const tabRect = tabElements[i].getBoundingClientRect();
+              const tabRect = (
+                tabElements[i] as HTMLElement
+              ).getBoundingClientRect();
               const tabLeft = tabRect.left - headerRect.left;
               const tabRight = tabRect.right - headerRect.left;
               const tabCenter = (tabLeft + tabRight) / 2;
 
               if (headerX > tabCenter) {
-                const originalIndex = tabs.findIndex(
-                  (t) => t.id === tabsToRender[i].id
-                );
-                targetIndex = originalIndex;
+                const originalIndex = idToIndex.get(tabsToRender[i].id);
+                if (originalIndex !== undefined && originalIndex !== -1) {
+                  targetIndex = originalIndex;
+                }
                 break;
               }
             }
             if (targetIndex === tabs.length && tabElements.length > 0) {
-              const firstTabRect = tabElements[0].getBoundingClientRect();
+              const firstTabRect = (
+                tabElements[0] as HTMLElement
+              ).getBoundingClientRect();
               if (headerX > firstTabRect.right - headerRect.left) {
-                const originalIndex = tabs.findIndex(
-                  (t) => t.id === tabsToRender[0].id
-                );
-                targetIndex = originalIndex;
+                const originalIndex = idToIndex.get(tabsToRender[0].id);
+                if (originalIndex !== undefined && originalIndex !== -1) {
+                  targetIndex = originalIndex;
+                }
               }
             }
           } else {
             for (let i = 0; i < tabElements.length; i++) {
-              const tabRect = tabElements[i].getBoundingClientRect();
+              const tabRect = (
+                tabElements[i] as HTMLElement
+              ).getBoundingClientRect();
               const tabLeft = tabRect.left - headerRect.left;
               const tabRight = tabRect.right - headerRect.left;
               const tabCenter = (tabLeft + tabRight) / 2;
 
               if (headerX < tabCenter) {
-                const originalIndex = tabs.findIndex(
-                  (t) => t.id === tabsToRender[i].id
-                );
-                targetIndex = originalIndex;
+                const originalIndex = idToIndex.get(tabsToRender[i].id);
+                if (originalIndex !== undefined && originalIndex !== -1) {
+                  targetIndex = originalIndex;
+                }
                 break;
               }
             }
-          }
-
-          if (targetIndex === tabs.length) {
-            targetIndex = tabs.length;
           }
 
           position = "tab";
@@ -163,7 +173,7 @@ export const TabSet: React.FC<TabSetProps> = ({
 
       onDragOver?.(e, node.id, position);
     },
-    [node.id, tabs, tabsToRender, onDragOver]
+    [node.id, direction, tabs.length, tabsToRender, idToIndex, onDragOver]
   );
 
   const handleDragLeave = useCallback(
@@ -208,9 +218,9 @@ export const TabSet: React.FC<TabSetProps> = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="react-flex-layout-tabset-header">
+      <div className="react-flex-layout-tabset-header" ref={headerRef}>
         {tabsToRender.map((tab) => {
-          const originalIndex = tabs.findIndex((t) => t.id === tab.id);
+          const originalIndex = idToIndex.get(tab.id) ?? -1;
           const isActive = originalIndex === selectedTabIndex;
           const showDropIndicatorBefore =
             isDragOver &&

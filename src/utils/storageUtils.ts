@@ -13,24 +13,32 @@ export class LayoutStorage {
   private autoSave: boolean;
   private debounceMs: number;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
+  private lastSavedString: string | null = null;
+  private isAvailable: boolean;
 
   constructor(options: StorageOptions = {}) {
     this.storageKey = `${STORAGE_PREFIX}-${options.key || "default"}`;
     this.autoSave = options.autoSave !== false;
     this.debounceMs = options.debounceMs || 500;
+    this.isAvailable = isLocalStorageAvailable();
   }
 
   save(model: LayoutModel): void {
+    if (!this.isAvailable) return;
     try {
       const serialized = JSON.stringify(model);
+      if (serialized === this.lastSavedString) return;
       localStorage.setItem(this.storageKey, serialized);
+      this.lastSavedString = serialized;
     } catch (error) {}
   }
 
   load(): LayoutModel | null {
+    if (!this.isAvailable) return null;
     try {
       const serialized = localStorage.getItem(this.storageKey);
       if (serialized) {
+        this.lastSavedString = serialized;
         return JSON.parse(serialized) as LayoutModel;
       }
     } catch (error) {}
@@ -38,17 +46,21 @@ export class LayoutStorage {
   }
 
   clear(): void {
+    if (!this.isAvailable) return;
     try {
       localStorage.removeItem(this.storageKey);
+      this.lastSavedString = null;
     } catch (error) {}
   }
 
   exists(): boolean {
+    if (!this.isAvailable) return false;
     return localStorage.getItem(this.storageKey) !== null;
   }
 
   debouncedSave(model: LayoutModel): void {
     if (!this.autoSave) return;
+    if (!this.isAvailable) return;
 
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
@@ -65,6 +77,13 @@ export class LayoutStorage {
 
   isAutoSaveEnabled(): boolean {
     return this.autoSave;
+  }
+
+  cancel(): void {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
   }
 }
 

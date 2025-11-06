@@ -135,24 +135,28 @@ export const updateNodeById = (
   }
 
   if (node.children) {
-    let hasChildChanges = false;
-    const updatedChildren = node.children
-      .map((child) => {
-        const updated = updateNodeById(child, id, updates);
-        if (updated !== child) {
-          hasChildChanges = true;
+    let newChildren: LayoutNode[] | null = null;
+    const children = node.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const updated = updateNodeById(child, id, updates);
+      if (updated !== child) {
+        if (newChildren === null) {
+          newChildren = children.slice(0, i);
         }
-        return updated;
-      })
-      .filter((child): child is LayoutNode => child !== null);
+      }
+      if (newChildren !== null && updated !== null) {
+        newChildren.push(updated);
+      }
+    }
 
-    if (!hasChildChanges) {
+    if (newChildren === null) {
       return node;
     }
 
     return {
       ...node,
-      children: updatedChildren,
+      children: newChildren,
     };
   }
 
@@ -160,18 +164,33 @@ export const updateNodeById = (
 };
 
 export const removeNodeById = (node: LayoutNode, id: string): LayoutNode => {
-  if (node.children) {
-    const filteredChildren = node.children
-      .filter((child) => child.id !== id)
-      .map((child) => removeNodeById(child, id));
-
-    return {
-      ...node,
-      children: filteredChildren,
-    };
+  if (!node.children) {
+    return node;
   }
 
-  return node;
+  let newChildren: LayoutNode[] | null = null;
+  const children = node.children;
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    if (child.id === id) {
+      if (newChildren === null) newChildren = children.slice(0, i);
+      continue;
+    }
+    const updated = removeNodeById(child, id);
+    if (updated !== child) {
+      if (newChildren === null) newChildren = children.slice(0, i);
+    }
+    if (newChildren !== null) newChildren.push(updated);
+  }
+
+  if (newChildren === null) {
+    return node;
+  }
+
+  return {
+    ...node,
+    children: newChildren,
+  };
 };
 
 export const calculateFlexValues = (children: LayoutNode[]): LayoutNode[] => {
@@ -190,49 +209,60 @@ export const removeEmptyTabsets = (node: LayoutNode): LayoutNode | null => {
   }
 
   if (node.children) {
-    const originalChildrenCount = node.children.length;
-    const processedChildren = node.children
-      .map(removeEmptyTabsets)
-      .filter((child): child is LayoutNode => child !== null);
+    const originalChildren = node.children;
+    const originalChildrenCount = originalChildren.length;
+    let processedChildren: LayoutNode[] | null = null;
 
-    const childrenWereRemoved =
-      processedChildren.length < originalChildrenCount;
+    for (let i = 0; i < originalChildren.length; i++) {
+      const child = originalChildren[i];
+      const processed = removeEmptyTabsets(child);
+      if (processed !== child) {
+        if (processedChildren === null) {
+          processedChildren = originalChildren.slice(0, i) as LayoutNode[];
+        }
+      }
+      if (processedChildren !== null && processed !== null) {
+        processedChildren.push(processed);
+      }
+    }
 
-    if (processedChildren.length === 0) {
+    const finalChildren = processedChildren ?? originalChildren;
+
+    const childrenWereRemoved = finalChildren.length < originalChildrenCount;
+
+    if (finalChildren.length === 0) {
       return null;
     }
 
     if (
       (node.type === "row" || node.type === "column") &&
-      processedChildren.length > 0
+      finalChildren.length > 0
     ) {
-      const totalFlex = processedChildren.reduce(
+      const totalFlex = finalChildren.reduce(
         (sum, child) => sum + (child.flex || 0),
         0
       );
 
       const mustNormalize =
-        childrenWereRemoved ||
-        totalFlex < 0.999 ||
-        processedChildren.length === 1;
+        childrenWereRemoved || totalFlex < 0.999 || finalChildren.length === 1;
 
       if (mustNormalize) {
         let updatedChildren: LayoutNode[];
 
-        if (processedChildren.length === 1) {
-          updatedChildren = processedChildren.map((child) => ({
+        if (finalChildren.length === 1) {
+          updatedChildren = finalChildren.map((child) => ({
             ...child,
             flex: 1,
           }));
         } else if (totalFlex === 0 || totalFlex < 0.001) {
-          const equalFlex = 1 / processedChildren.length;
-          updatedChildren = processedChildren.map((child) => ({
+          const equalFlex = 1 / finalChildren.length;
+          updatedChildren = finalChildren.map((child) => ({
             ...child,
             flex: equalFlex,
           }));
         } else {
           const scaleFactor = 1 / totalFlex;
-          updatedChildren = processedChildren.map((child) => ({
+          updatedChildren = finalChildren.map((child) => ({
             ...child,
             flex: (child.flex || 0) * scaleFactor,
           }));
@@ -245,22 +275,20 @@ export const removeEmptyTabsets = (node: LayoutNode): LayoutNode | null => {
       }
 
       if (
-        processedChildren.length !== originalChildrenCount ||
-        processedChildren.some(
-          (child, index) => child !== node.children?.[index]
-        )
+        finalChildren.length !== originalChildrenCount ||
+        finalChildren.some((child, index) => child !== originalChildren[index])
       ) {
         return {
           ...node,
-          children: processedChildren,
+          children: finalChildren,
         };
       }
     }
 
-    if (processedChildren !== node.children) {
+    if (processedChildren !== null) {
       return {
         ...node,
-        children: processedChildren,
+        children: finalChildren,
       };
     }
   }

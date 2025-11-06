@@ -9,6 +9,9 @@ export const useLayoutResize = (
   const initialFlexRef = useRef<{
     [key: string]: { current: number; sibling: number };
   }>({});
+  const lastAppliedRef = useRef<{
+    [key: string]: { current: number; sibling: number } | undefined;
+  }>({});
 
   const handleResize = useCallback(
     (nodeId: string, delta: number, direction: "horizontal" | "vertical") => {
@@ -66,19 +69,31 @@ export const useLayoutResize = (
         const newCurrentFlex = (newCurrentPixels / newTotalPixels) * totalFlex;
         const newSiblingFlex = (newSiblingPixels / newTotalPixels) * totalFlex;
 
+        const prevApplied = lastAppliedRef.current[resizeKey];
+        const EPS = 0.0001;
+        if (
+          prevApplied &&
+          Math.abs(prevApplied.current - newCurrentFlex) < EPS &&
+          Math.abs(prevApplied.sibling - newSiblingFlex) < EPS
+        ) {
+          return;
+        }
+
+        const newChildren = parent.children.slice();
+        const currentChild = newChildren[currentIndex];
+        const siblingChild = newChildren[siblingIndex];
+        newChildren[currentIndex] = { ...currentChild, flex: newCurrentFlex };
+        newChildren[siblingIndex] = { ...siblingChild, flex: newSiblingFlex };
+
         const updatedLayout = updateNodeById(model.layout, parent.id, {
-          children: parent.children.map((child, index) => {
-            if (index === currentIndex) {
-              return { ...child, flex: newCurrentFlex };
-            }
-            if (index === siblingIndex) {
-              return { ...child, flex: newSiblingFlex };
-            }
-            return child;
-          }),
+          children: newChildren,
         });
 
         if (updatedLayout) {
+          lastAppliedRef.current[resizeKey] = {
+            current: newCurrentFlex,
+            sibling: newSiblingFlex,
+          };
           onModelChange({
             ...model,
             layout: updatedLayout,
@@ -93,6 +108,7 @@ export const useLayoutResize = (
     (nodeId: string, direction: "horizontal" | "vertical") => {
       const resizeKey = `${nodeId}-${direction}`;
       delete initialFlexRef.current[resizeKey];
+      delete lastAppliedRef.current[resizeKey];
     },
     []
   );

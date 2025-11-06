@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { TabProps } from "../types";
 import { DefaultCloseIcon } from "./DefaultCloseIcon";
 import "./Tab.css";
@@ -15,6 +15,8 @@ export const Tab: React.FC<TabProps> = ({
   closeIcon,
   closeButtonClassName = "",
 }) => {
+  const isDraggingRef = useRef(false);
+
   const handleClick = useCallback(() => {
     onSelect?.(node.id);
   }, [node.id, onSelect]);
@@ -35,6 +37,8 @@ export const Tab: React.FC<TabProps> = ({
       e.currentTarget.classList.add("dragging");
       document.body.classList.add("dragging");
 
+      isDraggingRef.current = true;
+
       onDragStart?.(node.id, index);
     },
     [node.id, index, onDragStart]
@@ -45,15 +49,28 @@ export const Tab: React.FC<TabProps> = ({
       e.currentTarget.classList.remove("dragging");
       document.body.classList.remove("dragging");
 
+      isDraggingRef.current = false;
+
       onDragEnd?.();
     },
     [onDragEnd]
   );
 
+  useEffect(() => {
+    return () => {
+      if (isDraggingRef.current) {
+        document.body.classList.remove("dragging");
+        isDraggingRef.current = false;
+      }
+    };
+  }, []);
+
+  const mergedStyle = useMemo(() => ({ ...style, cursor: "grab" }), [style]);
+
   return (
     <div
       className={`react-flex-layout-tab ${className}`}
-      style={{ ...style, cursor: "grab" }}
+      style={mergedStyle}
       onClick={handleClick}
       draggable={true}
       onDragStart={handleDragStart}

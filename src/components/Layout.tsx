@@ -535,6 +535,15 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       }
     }, [storage?.enabled, pendingDirection]);
 
+    useEffect(() => {
+      if (storage?.enabled && pendingDirection !== null) {
+        const storedDir = storedModel?.global?.direction || "ltr";
+        if (storedDir === pendingDirection) {
+          setPendingDirection(null);
+        }
+      }
+    }, [storage?.enabled, pendingDirection, storedModel?.global?.direction]);
+
     const renderedLayout = useMemo(
       () => renderNode(currentModel.layout),
       [renderNode, currentModel.layout]
