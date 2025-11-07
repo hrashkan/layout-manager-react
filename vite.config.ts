@@ -38,7 +38,9 @@ export default defineConfig({
           "react/jsx-dev-runtime": "React",
         },
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === "style.css") return "style.css";
+          if (assetInfo.name && assetInfo.name.endsWith(".css")) {
+            return "style.css";
+          }
           return assetInfo.name || "asset";
         },
       },
