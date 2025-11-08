@@ -41,6 +41,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       storage,
       closeIcon,
       closeButtonClassName,
+      scrollLeftIcon,
+      scrollRightIcon,
     },
     ref
   ) => {
@@ -433,6 +435,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 direction={direction}
                 closeIcon={closeIcon}
                 closeButtonClassName={closeButtonClassName}
+                scrollLeftIcon={scrollLeftIcon}
+                scrollRightIcon={scrollRightIcon}
               />
             );
 

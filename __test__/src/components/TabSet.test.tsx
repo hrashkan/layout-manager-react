@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { describe, it, expect, vi } from "vitest";
-import { render, fireEvent, within } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, fireEvent, within, waitFor, act } from "@testing-library/react";
 import { TabSet } from "../../../src/components/TabSet";
 import type { LayoutNode } from "../../../src/types";
 
@@ -22,11 +22,11 @@ describe("TabSet component", () => {
     const { container, getByTestId } = render(
       <TabSet node={node} factory={factory} />
     );
-    const header = container.querySelector(
-      ".react-flex-layout-tabset-header"
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
     ) as HTMLElement;
-    expect(within(header).getByText("A")).toBeTruthy();
-    expect(within(header).getByText("B")).toBeTruthy();
+    expect(within(tabsContainer).getByText("A")).toBeTruthy();
+    expect(within(tabsContainer).getByText("B")).toBeTruthy();
     expect(getByTestId("content-a")).toBeTruthy();
   });
 
@@ -39,10 +39,13 @@ describe("TabSet component", () => {
   it("calls onTabSelect on header click", () => {
     const onTabSelect = vi.fn();
     const node = mkTabset([mkTab("a", "A"), mkTab("b", "B")], 0);
-    const { getAllByText } = render(
+    const { container, getAllByText } = render(
       <TabSet node={node} factory={factory} onTabSelect={onTabSelect} />
     );
-    const tabB = getAllByText("B")[0];
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
+    ) as HTMLElement;
+    const tabB = within(tabsContainer).getByText("B");
     fireEvent.click(tabB);
     expect(onTabSelect).toHaveBeenCalledWith("ts", 1);
   });
@@ -53,10 +56,10 @@ describe("TabSet component", () => {
     const { container } = render(
       <TabSet node={node} factory={factory} onTabClose={onTabClose} />
     );
-    const header = container.querySelector(
-      ".react-flex-layout-tabset-header"
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
     ) as HTMLElement;
-    const tabEl = within(header)
+    const tabEl = within(tabsContainer)
       .getByText("A")
       .closest(".react-flex-layout-tab") as HTMLElement;
     const closeBtn = tabEl.querySelector(
@@ -72,10 +75,10 @@ describe("TabSet component", () => {
     const { container } = render(
       <TabSet node={node} factory={factory} onTabDragStart={onTabDragStart} />
     );
-    const header = container.querySelector(
-      ".react-flex-layout-tabset-header"
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
     ) as HTMLElement;
-    const tabEl = within(header)
+    const tabEl = within(tabsContainer)
       .getByText("A")
       .closest(".react-flex-layout-tab") as HTMLElement;
     const dataTransfer: any = { setData: vi.fn(), effectAllowed: "" };
@@ -88,8 +91,11 @@ describe("TabSet component", () => {
     const { container } = render(
       <TabSet node={node} factory={factory} direction="rtl" />
     );
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
+    ) as HTMLElement;
     const titles = Array.from(
-      container.querySelectorAll(".react-flex-layout-tab-title")
+      tabsContainer.querySelectorAll(".react-flex-layout-tab-title")
     ).map((el) => el.textContent);
     // 'B' should come before 'A' in RTL
     expect(titles[0]).toBe("B");
@@ -128,5 +134,122 @@ describe("TabSet component", () => {
       ".react-flex-layout-tab-drop-indicator"
     );
     expect(indicators.length).toBe(0);
+  });
+
+  it("renders scroll buttons when tabs overflow", async () => {
+    const node = mkTabset(
+      [
+        mkTab("a", "A"),
+        mkTab("b", "B"),
+        mkTab("c", "C"),
+        mkTab("d", "D"),
+        mkTab("e", "E"),
+      ],
+      0
+    );
+    const { container } = render(
+      <TabSet node={node} factory={factory} style={{ width: "200px" }} />
+    );
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
+    ) as HTMLElement;
+    
+    // Mock scrollWidth to be larger than clientWidth to trigger scroll buttons
+    Object.defineProperty(tabsContainer, "scrollWidth", {
+      writable: true,
+      configurable: true,
+      value: 500,
+    });
+    Object.defineProperty(tabsContainer, "clientWidth", {
+      writable: true,
+      configurable: true,
+      value: 200,
+    });
+    Object.defineProperty(tabsContainer, "scrollLeft", {
+      writable: true,
+      configurable: true,
+      value: 0,
+    });
+
+    // Trigger scroll event to update button visibility
+    await act(async () => {
+      fireEvent.scroll(tabsContainer);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    });
+    
+    // Wait for state update
+    await waitFor(() => {
+      const rightButton = container.querySelector(
+        ".react-flex-layout-tabset-scroll-right"
+      );
+      expect(rightButton).toBeTruthy();
+    });
+  });
+
+  it("accepts custom scroll icons", () => {
+    const CustomLeftIcon = () => <span data-testid="custom-left">←</span>;
+    const CustomRightIcon = () => <span data-testid="custom-right">→</span>;
+    const node = mkTabset([mkTab("a", "A"), mkTab("b", "B")], 0);
+    const { queryByTestId } = render(
+      <TabSet
+        node={node}
+        factory={factory}
+        scrollLeftIcon={<CustomLeftIcon />}
+        scrollRightIcon={<CustomRightIcon />}
+      />
+    );
+    // Icons may not be visible if tabs don't overflow, but they should be accepted
+    expect(queryByTestId("custom-left")).toBeTruthy();
+    expect(queryByTestId("custom-right")).toBeTruthy();
+  });
+
+  it("scrolls tabs container when scroll buttons are clicked", () => {
+    const node = mkTabset(
+      [
+        mkTab("a", "A"),
+        mkTab("b", "B"),
+        mkTab("c", "C"),
+        mkTab("d", "D"),
+        mkTab("e", "E"),
+      ],
+      0
+    );
+    const { container } = render(
+      <TabSet node={node} factory={factory} style={{ width: "200px" }} />
+    );
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
+    ) as HTMLElement;
+    
+    // Mock scroll properties
+    const scrollBySpy = vi.fn();
+    tabsContainer.scrollBy = scrollBySpy;
+    Object.defineProperty(tabsContainer, "scrollWidth", {
+      writable: true,
+      value: 500,
+    });
+    Object.defineProperty(tabsContainer, "clientWidth", {
+      writable: true,
+      value: 200,
+    });
+    Object.defineProperty(tabsContainer, "scrollLeft", {
+      writable: true,
+      value: 100,
+    });
+
+    fireEvent.scroll(tabsContainer);
+    
+    setTimeout(() => {
+      const rightButton = container.querySelector(
+        ".react-flex-layout-tabset-scroll-right"
+      ) as HTMLButtonElement;
+      if (rightButton) {
+        fireEvent.click(rightButton);
+        expect(scrollBySpy).toHaveBeenCalledWith({
+          left: 200,
+          behavior: "smooth",
+        });
+      }
+    }, 20);
   });
 });

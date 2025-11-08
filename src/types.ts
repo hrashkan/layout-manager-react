@@ -59,6 +59,8 @@ export interface LayoutProps {
   };
   closeIcon?: React.ReactElement;
   closeButtonClassName?: string;
+  scrollLeftIcon?: React.ReactElement;
+  scrollRightIcon?: React.ReactElement;
 }
 
 export interface SelectTabPayload {
@@ -143,6 +145,8 @@ export interface TabSetProps {
   style?: React.CSSProperties;
   closeIcon?: React.ReactElement;
   closeButtonClassName?: string;
+  scrollLeftIcon?: React.ReactElement;
+  scrollRightIcon?: React.ReactElement;
 }
 
 export interface SplitterProps {

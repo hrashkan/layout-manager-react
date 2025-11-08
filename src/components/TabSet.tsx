@@ -1,7 +1,43 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import { TabSetProps, DropPosition } from "../types";
 import { Tab } from "./Tab";
 import "./TabSet.css";
+
+const DefaultScrollLeftIcon: React.FC = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+const DefaultScrollRightIcon: React.FC = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
 
 export const TabSet: React.FC<TabSetProps> = ({
   node,
@@ -22,6 +58,8 @@ export const TabSet: React.FC<TabSetProps> = ({
   style = {},
   closeIcon,
   closeButtonClassName,
+  scrollLeftIcon,
+  scrollRightIcon,
 }) => {
   const tabs = useMemo(() => {
     return node.children?.filter((child) => child.type === "tab") || [];
@@ -79,6 +117,10 @@ export const TabSet: React.FC<TabSetProps> = ({
   );
 
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const tabsContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
@@ -192,6 +234,75 @@ export const TabSet: React.FC<TabSetProps> = ({
 
   const isDragOver = dragOverTabset === node.id;
 
+  const checkScrollButtons = useCallback(() => {
+    const container = tabsContainerRef.current;
+    if (!container) {
+      setShowLeftArrow(false);
+      setShowRightArrow(false);
+      return;
+    }
+
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setShowLeftArrow(scrollLeft > 1);
+    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(checkScrollButtons, 10);
+  }, [checkScrollButtons]);
+
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container || selectedTabIndex < 0) return;
+
+    requestAnimationFrame(() => {
+      const tabElements = container.children;
+      const selectedTab = tabElements[selectedTabIndex] as HTMLElement;
+      if (!selectedTab) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const tabRect = selectedTab.getBoundingClientRect();
+      const scrollLeft = container.scrollLeft;
+
+      if (tabRect.left < containerRect.left) {
+        container.scrollTo({
+          left: scrollLeft - (containerRect.left - tabRect.left) - 10,
+          behavior: "smooth",
+        });
+      } else if (tabRect.right > containerRect.right) {
+        container.scrollTo({
+          left: scrollLeft + (tabRect.right - containerRect.right) + 10,
+          behavior: "smooth",
+        });
+      }
+    });
+  }, [selectedTabIndex, tabsToRender.length]);
+
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+
+    requestAnimationFrame(checkScrollButtons);
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(checkScrollButtons);
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [checkScrollButtons, handleScroll, tabsToRender.length]);
+
   const tabSetStyle: React.CSSProperties = {
     ...style,
     width: node.width ? `${node.width}%` : undefined,
@@ -219,40 +330,76 @@ export const TabSet: React.FC<TabSetProps> = ({
       onDrop={handleDrop}
     >
       <div className="react-flex-layout-tabset-header" ref={headerRef}>
-        {tabsToRender.map((tab) => {
-          const originalIndex = idToIndex.get(tab.id) ?? -1;
-          const isActive = originalIndex === selectedTabIndex;
-          const showDropIndicatorBefore =
-            isDragOver &&
+        {showLeftArrow && (
+          <button
+            className="react-flex-layout-tabset-scroll-button react-flex-layout-tabset-scroll-left"
+            onClick={() => {
+              const container = tabsContainerRef.current;
+              if (container) {
+                container.scrollBy({ left: -200, behavior: "smooth" });
+              }
+            }}
+            type="button"
+            aria-label="Scroll left"
+          >
+            {scrollLeftIcon || <DefaultScrollLeftIcon />}
+          </button>
+        )}
+        <div
+          ref={tabsContainerRef}
+          className="react-flex-layout-tabset-tabs-container"
+          onScroll={handleScroll}
+        >
+          {tabsToRender.map((tab) => {
+            const originalIndex = idToIndex.get(tab.id) ?? -1;
+            const isActive = originalIndex === selectedTabIndex;
+            const showDropIndicatorBefore =
+              isDragOver &&
+              dropPosition === "tab" &&
+              dropTargetIndex !== null &&
+              originalIndex === dropTargetIndex;
+
+            return (
+              <React.Fragment key={tab.id}>
+                {showDropIndicatorBefore && (
+                  <div className="react-flex-layout-tab-drop-indicator" />
+                )}
+                <Tab
+                  node={tab}
+                  index={originalIndex}
+                  onSelect={handleTabSelect}
+                  onClose={handleTabClose}
+                  onDragStart={handleTabDragStart}
+                  onDragEnd={onTabDragEnd}
+                  className={isActive ? "active" : ""}
+                  closeIcon={closeIcon}
+                  closeButtonClassName={closeButtonClassName}
+                />
+              </React.Fragment>
+            );
+          })}
+          {isDragOver &&
             dropPosition === "tab" &&
             dropTargetIndex !== null &&
-            originalIndex === dropTargetIndex;
-
-          return (
-            <React.Fragment key={tab.id}>
-              {showDropIndicatorBefore && (
-                <div className="react-flex-layout-tab-drop-indicator" />
-              )}
-              <Tab
-                node={tab}
-                index={originalIndex}
-                onSelect={handleTabSelect}
-                onClose={handleTabClose}
-                onDragStart={handleTabDragStart}
-                onDragEnd={onTabDragEnd}
-                className={isActive ? "active" : ""}
-                closeIcon={closeIcon}
-                closeButtonClassName={closeButtonClassName}
-              />
-            </React.Fragment>
-          );
-        })}
-        {isDragOver &&
-          dropPosition === "tab" &&
-          dropTargetIndex !== null &&
-          dropTargetIndex === tabs.length && (
-            <div className="react-flex-layout-tab-drop-indicator" />
-          )}
+            dropTargetIndex === tabs.length && (
+              <div className="react-flex-layout-tab-drop-indicator" />
+            )}
+        </div>
+        {showRightArrow && (
+          <button
+            className="react-flex-layout-tabset-scroll-button react-flex-layout-tabset-scroll-right"
+            onClick={() => {
+              const container = tabsContainerRef.current;
+              if (container) {
+                container.scrollBy({ left: 200, behavior: "smooth" });
+              }
+            }}
+            type="button"
+            aria-label="Scroll right"
+          >
+            {scrollRightIcon || <DefaultScrollRightIcon />}
+          </button>
+        )}
       </div>
       <div className="react-flex-layout-tabset-content">
         {selectedTab && (factory ? factory(selectedTab) : children)}
