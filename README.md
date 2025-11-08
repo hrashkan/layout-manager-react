@@ -400,7 +400,10 @@ const CustomCloseIcon = () => (
   </svg>
 );
 
-<Layout model={model} factory={factory} closeIcon={<CustomCloseIcon />} />;
+// ⚠️ Important: Memoize closeIcon to prevent unnecessary re-renders
+const memoizedCloseIcon = useMemo(() => <CustomCloseIcon />, []);
+
+<Layout model={model} factory={factory} closeIcon={memoizedCloseIcon} />;
 ```
 
 ### Custom Close Button Styling

@@ -71,22 +71,40 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       : onModelChange
       ? model
       : internalModel;
+
+    // Use refs to keep callbacks stable
+    const onModelChangeRef = useRef(onModelChange);
+    const storageRef = useRef(storage);
+    const updateStoredModelRef = useRef(updateStoredModel);
+
+    useEffect(() => {
+      onModelChangeRef.current = onModelChange;
+    }, [onModelChange]);
+
+    useEffect(() => {
+      storageRef.current = storage;
+    }, [storage]);
+
+    useEffect(() => {
+      updateStoredModelRef.current = updateStoredModel;
+    }, [updateStoredModel]);
+
     const handleModelChange = useCallback(
       (newModel: LayoutModel) => {
-        if (storage?.enabled) {
-          updateStoredModel(newModel);
-          if (onModelChange) {
-            onModelChange(newModel);
+        if (storageRef.current?.enabled) {
+          updateStoredModelRef.current(newModel);
+          if (onModelChangeRef.current) {
+            onModelChangeRef.current(newModel);
           }
         } else {
-          if (onModelChange) {
-            onModelChange(newModel);
+          if (onModelChangeRef.current) {
+            onModelChangeRef.current(newModel);
           } else {
             setInternalModel(newModel);
           }
         }
       },
-      [onModelChange, storage?.enabled, updateStoredModel]
+      [] // No dependencies - uses refs
     );
 
     const { handleResize, resetResize } = useLayoutResize(
@@ -114,9 +132,19 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       internalModelRef.current = internalModel;
     }, [internalModel]);
 
+    const modelRef = useRef<LayoutModel>(model);
+    useEffect(() => {
+      modelRef.current = model;
+    }, [model]);
+
+    const onActionRef = useRef(onAction);
+    useEffect(() => {
+      onActionRef.current = onAction;
+    }, [onAction]);
+
     const handleAction = useCallback(
       (action: LayoutAction) => {
-        if (storage?.enabled) {
+        if (storageRef.current?.enabled) {
           const currentStoredModel = storedModelRef.current;
 
           if (action.type === "changeDirection") {
@@ -216,16 +244,31 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
           };
 
           const updatedModel = updateModel(currentStoredModel);
-          updateStoredModel(updatedModel);
-          if (onModelChange) {
-            onModelChange(updatedModel);
+          updateStoredModelRef.current(updatedModel);
+          if (onModelChangeRef.current) {
+            onModelChangeRef.current(updatedModel);
           }
-          onAction?.(action);
+          onActionRef.current?.(action);
         } else {
-          onAction?.(action);
+          // When storage is disabled but onModelChange is provided, handle changeDirection
+          if (action.type === "changeDirection" && onModelChangeRef.current) {
+            const { direction: newDirection } = action.payload as {
+              direction: Direction;
+            };
+            const currentModel = modelRef.current;
+            const updatedModel: LayoutModel = {
+              ...currentModel,
+              global: {
+                ...currentModel.global,
+                direction: newDirection,
+              },
+            };
+            onModelChangeRef.current(updatedModel);
+          }
+          onActionRef.current?.(action);
         }
 
-        if (!storage?.enabled && !onModelChange) {
+        if (!storageRef.current?.enabled && !onModelChangeRef.current) {
           const currentInternalModel = internalModelRef.current;
           const updateModel = (prevModel: LayoutModel): LayoutModel => {
             switch (action.type) {
@@ -300,6 +343,17 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                   }
                 }
                 return prevModel;
+              case "changeDirection":
+                const { direction: newDirection } = action.payload as {
+                  direction: Direction;
+                };
+                return {
+                  ...prevModel,
+                  global: {
+                    ...prevModel.global,
+                    direction: newDirection,
+                  },
+                };
               default:
                 return prevModel;
             }
@@ -309,7 +363,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
           setInternalModel(updatedModel);
         }
       },
-      [onAction, onModelChange, storage?.enabled, updateStoredModel]
+      [] // No dependencies - uses refs
     );
 
     useImperativeHandle(

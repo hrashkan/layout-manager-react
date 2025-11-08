@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.10] - 2025-11-08
+
+### Performance
+
+- **Major re-render optimization**: Only the affected tabset re-renders when changing tabs, instead of all tabsets
+- **Stable callbacks**: All event handlers (`onTabSelect`, `onTabClose`, `onDrop`, etc.) are now stable using refs, preventing unnecessary re-renders
+- **Memoized props**: `closeIcon` prop should be memoized in parent components to prevent re-renders (see README)
+- **Improved memo comparison**: Enhanced `MemoizedTabSet` comparison function to efficiently detect actual changes vs reference changes
+- **Optimized node comparison**: Smart comparison logic that only re-renders when node properties actually change, not just references
+
+### Fixed
+
+- Fixed direction switching not working when localStorage is disabled
+- Fixed `changeDirection` action handling when storage is disabled but `onModelChange` is provided
+
+### Changed
+
+- Callbacks are now stable across renders, significantly reducing unnecessary component re-renders
+- Better performance for applications with multiple tabsets or complex layouts
+
 ## [0.0.9] - 2025-11-08
 
 ### Fixed
@@ -34,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ensure distributed CSS is consistently exported as `dist/style.css`
 
-## [0.0.7] - 2024-12-19
+## [0.0.7] - 2025-12-06
 
 ### Added
 
@@ -57,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed component restoration when parent tabsets were removed and need to be recreated
 - Improved memory efficiency by storing minimal restoration data instead of full node structures
 
-## [0.0.5] - 2024-12-19
+## [0.0.5] - 2025-12-05
 
 ### Added
 
@@ -76,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed drop zone transition animations for center-to-top and center-to-left directions
 - Ensured all drop zone position changes use consistent CSS properties for proper animation
 
-## [0.0.4] - 2024-12-19
+## [0.0.4] - 2025-12-05
 
 ### Added
 
@@ -88,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved package.json exports configuration to include CSS file
 
-## [0.0.3] - 2024-12-19
+## [0.0.3] - 2025-12-05
 
 ### Fixed
 
@@ -101,7 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Vite build configuration to externalize all React-related modules (`react`, `react-dom`, `react/jsx-runtime`, `react/jsx-dev-runtime`)
 - Reduced bundle size significantly by removing bundled React code (ES: 55.5 kB → 33.6 kB, UMD: 33.7 kB → 19.6 kB)
 
-## [0.0.2] - 2024-12-19
+## [0.0.2] - 2025-12-05
 
 ### Added
 
@@ -130,7 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memoized callbacks to prevent unnecessary re-renders
 - Improved `MemoizedTabSet` comparison function for better memoization
 
-## [0.0.1] - 2024-12-18
+## [0.0.1] - 2025-12-04
 
 ### Added
 

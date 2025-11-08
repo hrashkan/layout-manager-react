@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from "react";
 import {
   Layout,
   createLayoutModel,
@@ -388,6 +394,9 @@ const App: React.FC = () => {
     setModel(initialModel);
   }, [initialModel]);
 
+  // Memoize closeIcon to prevent unnecessary re-renders
+  const memoizedCloseIcon = useMemo(() => <CustomCloseIcon />, []);
+
   return (
     <div style={{ height: "100vh", width: "100vw" }}>
       <div
@@ -604,7 +613,7 @@ const App: React.FC = () => {
           autoSave: true,
           debounceMs: 500,
         }}
-        closeIcon={<CustomCloseIcon />}
+        closeIcon={memoizedCloseIcon}
         closeButtonClassName="demo-custom-close-button"
       />
     </div>

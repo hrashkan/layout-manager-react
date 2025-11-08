@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { LayoutModel, DropPosition } from "../types";
 import {
   findNodeById,
@@ -27,6 +27,28 @@ export const useDragAndDrop = (
     tabsetId: string;
     tabIndex: number;
   } | null>(null);
+
+  // Use refs to keep callbacks stable
+  const modelRef = useRef(model);
+  const onModelChangeRef = useRef(onModelChange);
+  const dropPositionRef = useRef(dropPosition);
+  const dropTargetIndexRef = useRef(dropTargetIndex);
+
+  useEffect(() => {
+    modelRef.current = model;
+  }, [model]);
+
+  useEffect(() => {
+    onModelChangeRef.current = onModelChange;
+  }, [onModelChange]);
+
+  useEffect(() => {
+    dropPositionRef.current = dropPosition;
+  }, [dropPosition]);
+
+  useEffect(() => {
+    dropTargetIndexRef.current = dropTargetIndex;
+  }, [dropTargetIndex]);
 
   const handleDragStart = useCallback((tabsetId: string, tabIndex: number) => {
     const dragData = { tabsetId, tabIndex };
@@ -74,8 +96,12 @@ export const useDragAndDrop = (
     (e: React.DragEvent, targetTabsetId: string) => {
       e.preventDefault();
       const currentDraggedTab = draggedTabRef.current;
+      const currentModel = modelRef.current;
+      const currentOnModelChange = onModelChangeRef.current;
+      const currentDropPosition = dropPositionRef.current;
+      const currentDropTargetIndex = dropTargetIndexRef.current;
 
-      if (!currentDraggedTab || !onModelChange) {
+      if (!currentDraggedTab || !currentOnModelChange) {
         return;
       }
 
@@ -83,42 +109,49 @@ export const useDragAndDrop = (
 
       if (
         sourceTabsetId === targetTabsetId &&
-        dropPosition === "tab" &&
-        dropTargetIndex !== null
+        currentDropPosition === "tab" &&
+        currentDropTargetIndex !== null
       ) {
-        const sourceTabset = findNodeById(model.layout, sourceTabsetId);
+        const sourceTabset = findNodeById(currentModel.layout, sourceTabsetId);
         if (!sourceTabset || !sourceTabset.children) {
           return;
         }
 
         const tabToMove = sourceTabset.children[tabIndex];
-        if (!tabToMove || tabIndex === dropTargetIndex) {
+        if (!tabToMove || tabIndex === currentDropTargetIndex) {
           return;
         }
 
         const newChildren = [...sourceTabset.children];
         newChildren.splice(tabIndex, 1);
-        newChildren.splice(dropTargetIndex, 0, tabToMove);
+        newChildren.splice(currentDropTargetIndex, 0, tabToMove);
 
         let newSelected = sourceTabset.selected ?? 0;
-        if (tabIndex < newSelected && dropTargetIndex >= newSelected) {
+        if (tabIndex < newSelected && currentDropTargetIndex >= newSelected) {
           newSelected = Math.max(0, newSelected - 1);
-        } else if (tabIndex > newSelected && dropTargetIndex <= newSelected) {
+        } else if (
+          tabIndex > newSelected &&
+          currentDropTargetIndex <= newSelected
+        ) {
           newSelected = Math.min(newSelected + 1, newChildren.length - 1);
         } else if (tabIndex === newSelected) {
-          newSelected = dropTargetIndex;
+          newSelected = currentDropTargetIndex;
         }
 
-        const updatedLayout = updateNodeById(model.layout, sourceTabsetId, {
-          children: newChildren,
-          selected: newSelected,
-        });
+        const updatedLayout = updateNodeById(
+          currentModel.layout,
+          sourceTabsetId,
+          {
+            children: newChildren,
+            selected: newSelected,
+          }
+        );
 
         if (updatedLayout) {
-          onModelChange({
-            ...model,
+          currentOnModelChange({
+            ...currentModel,
             layout: updatedLayout,
-            metadata: model.metadata,
+            metadata: currentModel.metadata,
           });
         }
 
@@ -128,12 +161,12 @@ export const useDragAndDrop = (
         return;
       }
 
-      if (sourceTabsetId === targetTabsetId && dropPosition !== "tab") {
+      if (sourceTabsetId === targetTabsetId && currentDropPosition !== "tab") {
         return;
       }
 
-      const sourceTabset = findNodeById(model.layout, sourceTabsetId);
-      const targetTabset = findNodeById(model.layout, targetTabsetId);
+      const sourceTabset = findNodeById(currentModel.layout, sourceTabsetId);
+      const targetTabset = findNodeById(currentModel.layout, targetTabsetId);
 
       if (
         !sourceTabset ||
@@ -149,7 +182,7 @@ export const useDragAndDrop = (
         return;
       }
 
-      let updatedLayout = model.layout;
+      let updatedLayout = currentModel.layout;
 
       const updatedSourceChildren = sourceTabset.children.filter(
         (_, index) => index !== tabIndex
@@ -169,7 +202,7 @@ export const useDragAndDrop = (
       if (!updatedSourceLayout) return;
       updatedLayout = updatedSourceLayout;
 
-      if (dropPosition === "center") {
+      if (currentDropPosition === "center") {
         const updatedTargetLayout = updateNodeById(
           updatedLayout,
           targetTabsetId,
@@ -193,10 +226,13 @@ export const useDragAndDrop = (
               (child) => child.id === targetTabsetId
             ) || 0;
 
-          if (dropPosition === "left" || dropPosition === "right") {
+          if (
+            currentDropPosition === "left" ||
+            currentDropPosition === "right"
+          ) {
             const newRow = createRow(`${targetTabsetId}-row-${Date.now()}`, [
-              dropPosition === "left" ? newTabset : targetTabset,
-              dropPosition === "left" ? targetTabset : newTabset,
+              currentDropPosition === "left" ? newTabset : targetTabset,
+              currentDropPosition === "left" ? targetTabset : newTabset,
             ]);
 
             const updatedParentLayout = updateNodeById(
@@ -212,12 +248,15 @@ export const useDragAndDrop = (
             );
             if (!updatedParentLayout) return;
             updatedLayout = updatedParentLayout;
-          } else if (dropPosition === "top" || dropPosition === "bottom") {
+          } else if (
+            currentDropPosition === "top" ||
+            currentDropPosition === "bottom"
+          ) {
             const newColumn = createColumn(
               `${targetTabsetId}-column-${Date.now()}`,
               [
-                dropPosition === "top" ? newTabset : targetTabset,
-                dropPosition === "top" ? targetTabset : newTabset,
+                currentDropPosition === "top" ? newTabset : targetTabset,
+                currentDropPosition === "top" ? targetTabset : newTabset,
               ]
             );
 
@@ -241,17 +280,17 @@ export const useDragAndDrop = (
       const cleanedLayout = removeEmptyTabsets(updatedLayout);
 
       if (cleanedLayout) {
-        onModelChange({
-          ...model,
+        currentOnModelChange({
+          ...currentModel,
           layout: cleanedLayout,
-          metadata: model.metadata,
+          metadata: currentModel.metadata,
         });
       }
 
       setDraggedTab(null);
       setDragOverTabset(null);
     },
-    [model, onModelChange, dropPosition, dropTargetIndex]
+    [] // No dependencies - uses refs
   );
 
   return {
