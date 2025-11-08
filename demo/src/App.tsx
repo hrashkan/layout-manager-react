@@ -63,16 +63,28 @@ const CustomCloseIcon: React.FC = () => (
 );
 
 const App: React.FC = () => {
-  const [direction, setDirection] = useState<"ltr" | "rtl">(() => {
-    const saved = localStorage.getItem("demo-direction");
-    return (saved as "ltr" | "rtl") || "ltr";
-  });
   const layoutRef = useRef<LayoutRef>(null);
   const [storageEnabled, setStorageEnabled] = useState(() => {
     const saved = localStorage.getItem("demo-storage-enabled");
     return saved ? JSON.parse(saved) : true;
   });
   const [storageKey, setStorageKey] = useState("demo-layout");
+
+  // Try to load direction from storage first, fallback to "ltr"
+  const getInitialDirection = (): "ltr" | "rtl" => {
+    if (storageEnabled && isLocalStorageAvailable()) {
+      const storage = createLayoutStorage({ key: storageKey });
+      const savedModel = storage.load();
+      if (savedModel?.global?.direction) {
+        return savedModel.global.direction;
+      }
+    }
+    return "ltr";
+  };
+
+  const [direction, setDirection] = useState<"ltr" | "rtl">(
+    getInitialDirection
+  );
 
   const initialModel = createLayoutModel(
     createRow("root", [
@@ -103,6 +115,13 @@ const App: React.FC = () => {
   );
 
   const [model, setModel] = useState<LayoutModel>(initialModel);
+
+  // Sync direction from model when it's loaded from storage
+  useEffect(() => {
+    if (model.global?.direction && model.global.direction !== direction) {
+      setDirection(model.global.direction);
+    }
+  }, [model.global?.direction]);
 
   // Store minimal restoration data in ref (no re-renders, memory efficient)
   const restoreDataRef = useRef<Map<string, ComponentRestoreData>>(new Map());
@@ -158,6 +177,10 @@ const App: React.FC = () => {
             const updatedModel = {
               ...model,
               layout: cleanedLayout,
+              global: {
+                ...model.global,
+                direction: direction, // Use direction state to ensure latest value
+              },
               metadata: {
                 ...model.metadata,
                 restoreData: restoreData,
@@ -181,6 +204,10 @@ const App: React.FC = () => {
             const updatedModel = {
               ...model,
               layout: restored,
+              global: {
+                ...model.global,
+                direction: direction, // Use direction state to ensure latest value
+              },
               metadata: {
                 ...model.metadata,
                 restoreData: restoreData,
@@ -192,7 +219,7 @@ const App: React.FC = () => {
         }
       }
     },
-    [model, initialModel.layout]
+    [model, initialModel.layout, direction]
   );
 
   const factory = useCallback((node: any) => {
@@ -241,34 +268,29 @@ const App: React.FC = () => {
 
           // Use package utility to remove tab and get restoration data
           const result = removeTab(model.layout, closedTab.id);
+
           if (result.layout && result.restoreData) {
             // Store minimal restoration data (memory efficient)
             restoreDataRef.current.set(closedTab.id, result.restoreData);
-
-            // Update model with restoration data
-            const restoreData = Object.fromEntries(restoreDataRef.current);
-            const updatedModel = {
-              ...model,
-              layout: result.layout,
-              metadata: {
-                ...model.metadata,
-                restoreData: restoreData,
-              },
-            };
-            setModel(updatedModel);
 
             const cleanedLayout = removeEmptyTabsets(result.layout);
             if (cleanedLayout) {
               // Update model with cleaned layout and restoration data
               const restoreData = Object.fromEntries(restoreDataRef.current);
-              setModel((prevModel) => ({
-                ...prevModel,
+              const updatedModel = {
+                ...model,
                 layout: cleanedLayout,
+                global: {
+                  ...model.global,
+                  direction: direction, // Use direction state to ensure latest value
+                },
                 metadata: {
-                  ...prevModel.metadata,
+                  ...model.metadata,
                   restoreData: restoreData,
                 },
-              }));
+              };
+
+              setModel(updatedModel);
             }
           }
         }
@@ -308,6 +330,10 @@ const App: React.FC = () => {
               setModel((prevModel) => ({
                 ...prevModel,
                 layout: cleanedLayout,
+                global: {
+                  ...prevModel.global,
+                  direction: direction, // Use direction state to ensure latest value
+                },
               }));
             }
           }
@@ -326,30 +352,18 @@ const App: React.FC = () => {
         }));
       }
     },
-    [model]
+    [model, direction]
   );
 
   const toggleDirection = useCallback(() => {
     const newDirection = direction === "ltr" ? "rtl" : "ltr";
     setDirection(newDirection);
-    localStorage.setItem("demo-direction", newDirection);
 
-    if (storageEnabled) {
-      if (layoutRef.current) {
-        layoutRef.current.handleAction({
-          type: "changeDirection",
-          payload: { direction: newDirection },
-        });
-      } else {
-        const updatedModel: LayoutModel = {
-          ...model,
-          global: {
-            ...model.global,
-            direction: newDirection as "ltr" | "rtl",
-          },
-        };
-        setModel(updatedModel);
-      }
+    if (layoutRef.current) {
+      layoutRef.current.handleAction({
+        type: "changeDirection",
+        payload: { direction: newDirection },
+      });
     } else {
       const updatedModel: LayoutModel = {
         ...model,
@@ -360,7 +374,7 @@ const App: React.FC = () => {
       };
       setModel(updatedModel);
     }
-  }, [direction, storageEnabled, model]);
+  }, [direction, model]);
 
   const clearStorage = useCallback(() => {
     if (isLocalStorageAvailable()) {
@@ -531,14 +545,28 @@ const App: React.FC = () => {
           // This prevents infinite loops when we update metadata
           const layoutChanged =
             JSON.stringify(model.layout) !== JSON.stringify(newModel.layout);
+
+          // Always sync direction first, regardless of layout change
+          if (
+            newModel.global?.direction &&
+            newModel.global.direction !== direction
+          ) {
+            setDirection(newModel.global.direction);
+          }
+
           if (layoutChanged) {
             // Preserve restoration data when layout changes from drag/drop
             // Check if all tabs still exist (not removed, just moved)
             const preservedRestoreData = model.metadata?.restoreData;
-            const hasRestoreData = !!preservedRestoreData;
+            // Use direction state which is now synced above
+            const currentDirection = direction;
 
             setModel({
               ...newModel,
+              global: {
+                ...newModel.global,
+                direction: newModel.global?.direction || currentDirection, // Preserve direction
+              },
               metadata: {
                 ...newModel.metadata,
                 // Preserve existing restoration data - drag/drop doesn't remove components
@@ -546,20 +574,21 @@ const App: React.FC = () => {
                   preservedRestoreData || newModel.metadata?.restoreData,
               },
             });
-
-            if (
-              newModel.global?.direction &&
-              newModel.global.direction !== direction
-            ) {
-              setDirection(newModel.global.direction);
-              localStorage.setItem("demo-direction", newModel.global.direction);
-            }
           } else {
             // Layout didn't change, just update metadata if needed
-            if (newModel.metadata?.restoreData) {
+            // Also preserve direction
+            const currentDirection = direction;
+            if (newModel.metadata?.restoreData || newModel.global?.direction) {
               setModel((prev) => ({
                 ...prev,
-                metadata: newModel.metadata,
+                global: {
+                  ...prev.global,
+                  direction:
+                    newModel.global?.direction ||
+                    prev.global?.direction ||
+                    currentDirection, // Preserve direction
+                },
+                metadata: newModel.metadata || prev.metadata,
               }));
             }
           }

@@ -25,4 +25,6 @@ coverage/
 *.test.tsx
 *.spec.ts
 *.spec.tsx
+*.d.ts.map
+dist/.vite
 

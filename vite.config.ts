@@ -18,6 +18,7 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "umd"],
     },
+    minify: true,
     rollupOptions: {
       external: (id) => {
         // Externalize React and all React-related modules
@@ -46,5 +47,6 @@ export default defineConfig({
       },
     },
     cssCodeSplit: false,
+    cssMinify: true,
   },
 });
