@@ -8,7 +8,7 @@ export default defineConfig({
     cwd: "demo",
     timeout: 120_000,
   },
-  testDir: "e2e",
+  testDir: "__test__/e2e",
   reporter: [["list"]],
   use: {
     baseURL: "http://localhost:5173",
@@ -16,5 +16,3 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });
-
-
