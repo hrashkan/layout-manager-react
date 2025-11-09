@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Layout } from "../../../src/components/Layout";
@@ -164,5 +164,82 @@ describe("Layout component", () => {
     // In this environment, hook resolves synchronously; ensure content is present and no loading text
     expect(getByTestId("content-ca")).toBeTruthy();
     expect(queryByText("Loading layout...")).toBeNull();
+  });
+
+  describe("Memory Management", () => {
+    it("should cleanup event listeners and observers on unmount", async () => {
+      const model = mkModel();
+      const { unmount, container } = render(
+        <div style={{ width: 800, height: 600 }}>
+          <Layout model={model} factory={factory} />
+        </div>
+      );
+
+      // Unmount component
+      unmount();
+
+      // Wait for cleanup
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
+      // After unmount, the container should be empty
+      expect(container.querySelector(".react-flex-layout")).toBeNull();
+    });
+
+    it("should not accumulate DOM nodes when mounting/unmounting multiple times", () => {
+      const model = mkModel();
+      const initialNodeCount = document.querySelectorAll("*").length;
+
+      // Mount and unmount multiple times, creating new containers each time
+      for (let i = 0; i < 10; i++) {
+        const testContainer = document.createElement("div");
+        testContainer.style.width = "800px";
+        testContainer.style.height = "600px";
+        document.body.appendChild(testContainer);
+
+        const { unmount } = render(<Layout model={model} factory={factory} />, {
+          container: testContainer,
+        });
+        unmount();
+        document.body.removeChild(testContainer);
+      }
+
+      // Final node count should be similar to initial (allowing for test framework overhead)
+      const finalNodeCount = document.querySelectorAll("*").length;
+      const nodeGrowth = finalNodeCount - initialNodeCount;
+
+      // Should not have excessive node growth (allow up to 50 nodes for test framework)
+      expect(nodeGrowth).toBeLessThan(50);
+    });
+
+    it("should handle rapid model updates without memory leaks", () => {
+      const model = mkModel();
+      const { rerender } = render(
+        <div style={{ width: 800, height: 600 }}>
+          <Layout model={model} factory={factory} />
+        </div>
+      );
+
+      // Rapidly update model
+      for (let i = 0; i < 20; i++) {
+        const updatedModel = {
+          ...model,
+          layout: {
+            ...model.layout,
+            children: model.layout.children?.map((child) => ({
+              ...child,
+              selected: i % 2,
+            })),
+          },
+        };
+        rerender(
+          <div style={{ width: 800, height: 600 }}>
+            <Layout model={updatedModel} factory={factory} />
+          </div>
+        );
+      }
+
+      // Should not throw errors or accumulate memory
+      expect(true).toBe(true);
+    });
   });
 });

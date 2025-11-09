@@ -28,7 +28,6 @@ export const useDragAndDrop = (
     tabIndex: number;
   } | null>(null);
 
-  // Use refs to keep callbacks stable
   const modelRef = useRef(model);
   const onModelChangeRef = useRef(onModelChange);
   const dropPositionRef = useRef(dropPosition);
@@ -290,7 +289,7 @@ export const useDragAndDrop = (
       setDraggedTab(null);
       setDragOverTabset(null);
     },
-    [] // No dependencies - uses refs
+    []
   );
 
   return {

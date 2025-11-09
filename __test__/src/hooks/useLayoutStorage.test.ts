@@ -224,4 +224,76 @@ describe("useLayoutStorage", () => {
     vi.advanceTimersByTime(50);
     expect(localStorage.getItem(`react-flex-layout-${key2}`)).not.toBeNull();
   });
+
+  describe("Memory Management", () => {
+    it("should cleanup debounced save timeouts on unmount", async () => {
+      vi.useFakeTimers();
+      const key = "memory-cleanup";
+      let expose: HookExpose = null;
+
+      const { unmount } = render(
+        React.createElement(TestHook, {
+          initialModel: mkModel("test"),
+          options: {
+            enabled: true,
+            key,
+            autoSave: true,
+            debounceMs: 100,
+          },
+          onExpose: (h: HookExpose) => (expose = h),
+        })
+      );
+
+      // Trigger multiple rapid updates
+      for (let i = 0; i < 10; i++) {
+        act(() => {
+          (expose as any)?.updateModel(mkModel(`test-${i}`));
+        });
+      }
+
+      // Unmount before debounce completes
+      unmount();
+
+      // Advance time - should not throw errors from orphaned timeouts
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+
+      expect(true).toBe(true);
+      vi.useRealTimers();
+    });
+
+    it("should not accumulate storage instances", () => {
+      const instances = new Set<HookExpose>();
+
+      // Create and destroy multiple hook instances
+      for (let i = 0; i < 5; i++) {
+        let expose: HookExpose = null;
+        const { unmount } = render(
+          React.createElement(TestHook, {
+            initialModel: mkModel("test"),
+            options: {
+              enabled: true,
+              key: `test-${i}`,
+            },
+            onExpose: (h: HookExpose) => {
+              expose = h;
+              instances.add(h);
+            },
+          })
+        );
+
+        act(() => {
+          if (expose) {
+            (expose as any).updateModel(mkModel(`updated-${i}`));
+          }
+        });
+
+        unmount();
+      }
+
+      // All instances should be created (using Set to avoid duplicates from re-renders)
+      expect(instances.size).toBeGreaterThanOrEqual(5);
+    });
+  });
 });

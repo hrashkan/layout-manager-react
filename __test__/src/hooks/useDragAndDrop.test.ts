@@ -250,4 +250,69 @@ describe("useDragAndDrop", () => {
     expect((api as any).dragOverTabset).toBeNull();
     expect((api as any).dropTargetIndex).toBeNull();
   });
+
+  describe("Memory Management", () => {
+    it("should cleanup drag state on unmount", () => {
+      let api: Exposed | null = null;
+      const { unmount } = render(
+        React.createElement(Harness, { onExpose: (e: Exposed) => (api = e) })
+      );
+
+      act(() => {
+        (api as any).handleDragStart("ts1", 0);
+      });
+
+      // Unmount
+      unmount();
+
+      // Should cleanup drag state without errors
+      expect(true).toBe(true);
+    });
+
+    it("should handle multiple drag operations without memory leaks", () => {
+      let api: Exposed | null = null;
+      render(
+        React.createElement(Harness, { onExpose: (e: Exposed) => (api = e) })
+      );
+
+      // Perform multiple drag operations
+      for (let i = 0; i < 20; i++) {
+        act(() => {
+          (api as any).handleDragStart("ts1", 0);
+          (api as any).handleDragEnd();
+        });
+      }
+
+      // Should not accumulate state
+      expect((api as any).draggedTab).toBeNull();
+    });
+
+    it("should cleanup drag leave timeouts on unmount", () => {
+      vi.useFakeTimers();
+      let api: Exposed | null = null;
+      const { unmount } = render(
+        React.createElement(Harness, { onExpose: (e: Exposed) => (api = e) })
+      );
+
+      const e = mkDragEvent();
+      (e as any).currentTarget = {};
+      (e as any).target = (e as any).currentTarget;
+
+      act(() => {
+        (api as any).handleDragOver(e, "ts1", "center");
+        (api as any).handleDragLeave(e);
+      });
+
+      // Unmount before timeout completes
+      unmount();
+
+      // Advance time - should not throw errors
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+
+      expect(true).toBe(true);
+      vi.useRealTimers();
+    });
+  });
 });

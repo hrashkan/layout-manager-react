@@ -1,6 +1,6 @@
 {
     "name": "layout-manager-react",
-    "version": "0.0.11",
+    "version": "0.0.10",
     "description": "A modern React layout manager using flexbox with percentage-based sizing",
     "main": "./dist/index.umd.js",
     "module": "./dist/index.es.js",
@@ -27,6 +27,7 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
+        "test:memory": "vitest run --reporter=verbose __test__/src/memory.test.tsx",
         "e2e": "playwright test",
         "e2e:headed": "playwright test --headed",
         "e2e:install": "playwright install --with-deps",
