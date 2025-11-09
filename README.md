@@ -2,6 +2,10 @@
 
 A modern React layout manager using flexbox with percentage-based sizing, similar to FlexLayout but simpler and more performant.
 
+## 🚀 Live Demo
+
+Try it out: **[https://hrashkan.github.io/layout-manager-demo/](https://hrashkan.github.io/layout-manager-demo/)**
+
 ## Features
 
 - 🎯 **Flexbox-based**: Uses CSS flexbox instead of absolute positioning
@@ -20,7 +24,15 @@ A modern React layout manager using flexbox with percentage-based sizing, simila
 npm install layout-manager-react
 ```
 
-**Bundle Size**: Check the package size on [Bundlephobia](https://bundlephobia.com/package/layout-manager-react@0.0.11)
+To update to the latest version:
+
+```bash
+npm install layout-manager-react@latest
+# or
+npm update layout-manager-react
+```
+
+**Bundle Size**: Check the package size on [Bundlephobia](https://bundlephobia.com/package/layout-manager-react@0.0.12)
 
 ## Quick Start
 
@@ -432,6 +444,8 @@ Apply custom CSS classes to close buttons:
 ```
 
 ## Examples
+
+- **Live Demo**: [https://hrashkan.github.io/layout-manager-demo/](https://hrashkan.github.io/layout-manager-demo/) - Interactive demo with all features
 
 See the `examples/` directory for more complete examples:
 
