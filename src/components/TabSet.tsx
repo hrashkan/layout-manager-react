@@ -122,6 +122,30 @@ export const TabSet: React.FC<TabSetProps> = ({
   const [showRightArrow, setShowRightArrow] = useState(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Use ref for stable callback to prevent effect re-runs
+  const checkScrollButtonsRef = useRef<() => void>();
+  checkScrollButtonsRef.current = () => {
+    const container = tabsContainerRef.current;
+    if (!container) {
+      setShowLeftArrow(false);
+      setShowRightArrow(false);
+      return;
+    }
+
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setShowLeftArrow(scrollLeft > 1);
+    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
+  };
+
+  const handleScroll = useCallback(() => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      checkScrollButtonsRef.current?.();
+    }, 10);
+  }, []); // Empty deps - stable reference
+
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -202,9 +226,9 @@ export const TabSet: React.FC<TabSetProps> = ({
       }
 
       if (x < width * 0.25) {
-        position = "left";
+        position = direction === "rtl" ? "right" : "left";
       } else if (x > width * 0.75) {
-        position = "right";
+        position = direction === "rtl" ? "left" : "right";
       } else if (y < height * 0.25) {
         position = "top";
       } else if (y > height * 0.75) {
@@ -234,31 +258,12 @@ export const TabSet: React.FC<TabSetProps> = ({
 
   const isDragOver = dragOverTabset === node.id;
 
-  const checkScrollButtons = useCallback(() => {
-    const container = tabsContainerRef.current;
-    if (!container) {
-      setShowLeftArrow(false);
-      setShowRightArrow(false);
-      return;
-    }
-
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    setShowLeftArrow(scrollLeft > 1);
-    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
-  }, []);
-
-  const handleScroll = useCallback(() => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    scrollTimeoutRef.current = setTimeout(checkScrollButtons, 10);
-  }, [checkScrollButtons]);
-
   useEffect(() => {
     const container = tabsContainerRef.current;
     if (!container || selectedTabIndex < 0) return;
 
-    requestAnimationFrame(() => {
+    let rafId: number;
+    rafId = requestAnimationFrame(() => {
       const tabElements = container.children;
       const selectedTab = tabElements[selectedTabIndex] as HTMLElement;
       if (!selectedTab) return;
@@ -279,29 +284,47 @@ export const TabSet: React.FC<TabSetProps> = ({
         });
       }
     });
+
+    return () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, [selectedTabIndex, tabsToRender.length]);
 
   useEffect(() => {
     const container = tabsContainerRef.current;
     if (!container) return;
 
-    requestAnimationFrame(checkScrollButtons);
+    const rafIdRef = { current: 0 };
+    rafIdRef.current = requestAnimationFrame(() => {
+      checkScrollButtonsRef.current?.();
+    });
 
     container.addEventListener("scroll", handleScroll, { passive: true });
 
     const resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(checkScrollButtons);
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      rafIdRef.current = requestAnimationFrame(() => {
+        checkScrollButtonsRef.current?.();
+      });
     });
     resizeObserver.observe(container);
 
     return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
       container.removeEventListener("scroll", handleScroll);
       resizeObserver.disconnect();
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
       }
     };
-  }, [checkScrollButtons, handleScroll, tabsToRender.length]);
+  }, [handleScroll, tabsToRender.length]); // Removed checkScrollButtons from deps
 
   const tabSetStyle: React.CSSProperties = {
     ...style,
@@ -318,6 +341,17 @@ export const TabSet: React.FC<TabSetProps> = ({
     return null;
   }
 
+  // Swap left/right for visual indicator in RTL mode
+  const visualDropPosition =
+    isDragOver && dropPosition
+      ? direction === "rtl" &&
+        (dropPosition === "left" || dropPosition === "right")
+        ? dropPosition === "left"
+          ? "right"
+          : "left"
+        : dropPosition
+      : undefined;
+
   return (
     <div
       className={`react-flex-layout-tabset ${
@@ -325,7 +359,7 @@ export const TabSet: React.FC<TabSetProps> = ({
       } ${className}`}
       style={tabSetStyle}
       data-tabset-id={node.id}
-      data-drop-position={isDragOver ? dropPosition : undefined}
+      data-drop-position={visualDropPosition}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}

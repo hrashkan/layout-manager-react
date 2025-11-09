@@ -109,6 +109,40 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       currentModel,
       handleModelChange
     );
+
+    // Memoize resize handlers per node to prevent Splitter re-renders
+    const resizeHandlersRef = useRef<
+      Map<
+        string,
+        {
+          onResize: (delta: number) => void;
+          onResizeStart: () => void;
+        }
+      >
+    >(new Map());
+
+    const getResizeHandler = useCallback(
+      (
+        nodeId: string,
+        direction: "horizontal" | "vertical",
+        isRTLReversed?: boolean
+      ) => {
+        const key = `${nodeId}-${direction}-${isRTLReversed ? "rtl" : "ltr"}`;
+        if (!resizeHandlersRef.current.has(key)) {
+          resizeHandlersRef.current.set(key, {
+            onResize: (delta: number) => {
+              const adjustedDelta = isRTLReversed ? -delta : delta;
+              handleResize(nodeId, adjustedDelta, direction);
+            },
+            onResizeStart: () => {
+              resetResize(nodeId, direction);
+            },
+          });
+        }
+        return resizeHandlersRef.current.get(key)!;
+      },
+      [handleResize, resetResize]
+    );
     const {
       dragOverTabset,
       dropPosition,
@@ -488,22 +522,18 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                   const isRTLReversed =
                     isRTL && currentOriginalIndex > nextOriginalIndex;
 
+                  const horizontalHandlers = getResizeHandler(
+                    firstChild.id,
+                    "horizontal",
+                    isRTLReversed
+                  );
                   return (
                     <React.Fragment key={child.id}>
                       {renderNode(child)}
                       <Splitter
                         direction="horizontal"
-                        onResize={(delta) => {
-                          const adjustedDelta = isRTLReversed ? -delta : delta;
-                          handleResize(
-                            firstChild.id,
-                            adjustedDelta,
-                            "horizontal"
-                          );
-                        }}
-                        onResizeStart={() => {
-                          resetResize(firstChild.id, "horizontal");
-                        }}
+                        onResize={horizontalHandlers.onResize}
+                        onResizeStart={horizontalHandlers.onResizeStart}
                         size={splitterSize}
                       />
                     </React.Fragment>
@@ -527,23 +557,25 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                   maxHeight: node.maxHeight ? `${node.maxHeight}px` : undefined,
                 }}
               >
-                {node.children?.map((child, index) => (
-                  <React.Fragment key={child.id}>
-                    {renderNode(child)}
-                    {index < (node.children?.length || 0) - 1 && (
-                      <Splitter
-                        direction="vertical"
-                        onResize={(delta) =>
-                          handleResize(child.id, delta, "vertical")
-                        }
-                        onResizeStart={() => {
-                          resetResize(child.id, "vertical");
-                        }}
-                        size={splitterSize}
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
+                {node.children?.map((child, index) => {
+                  const verticalHandlers =
+                    index < (node.children?.length || 0) - 1
+                      ? getResizeHandler(child.id, "vertical")
+                      : null;
+                  return (
+                    <React.Fragment key={child.id}>
+                      {renderNode(child)}
+                      {verticalHandlers && (
+                        <Splitter
+                          direction="vertical"
+                          onResize={verticalHandlers.onResize}
+                          onResizeStart={verticalHandlers.onResizeStart}
+                          size={splitterSize}
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             );
 
@@ -570,6 +602,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         dropPosition,
         closeIcon,
         closeButtonClassName,
+        getResizeHandler,
       ]
     );
 

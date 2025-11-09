@@ -1,10 +1,10 @@
-import { jsxs as be, jsx as w } from "react/jsx-runtime";
-import Te, { useRef as I, useCallback as T, useEffect as W, useMemo as ue, useState as ce, memo as Ce, forwardRef as ke, useImperativeHandle as Ae } from "react";
-const Be = ({
+import { jsxs as me, jsx as L } from "react/jsx-runtime";
+import Re, { useRef as C, useCallback as D, useEffect as k, useMemo as ue, useState as ce, memo as Le, forwardRef as Fe, useImperativeHandle as Be } from "react";
+const Me = ({
   size: e = 16,
   color: t = "#666",
   className: n = ""
-}) => /* @__PURE__ */ be(
+}) => /* @__PURE__ */ me(
   "svg",
   {
     width: e,
@@ -17,69 +17,69 @@ const Be = ({
     strokeLinejoin: "round",
     className: n,
     children: [
-      /* @__PURE__ */ w("line", { x1: "18", y1: "6", x2: "6", y2: "18" }),
-      /* @__PURE__ */ w("line", { x1: "6", y1: "6", x2: "18", y2: "18" })
+      /* @__PURE__ */ L("line", { x1: "18", y1: "6", x2: "6", y2: "18" }),
+      /* @__PURE__ */ L("line", { x1: "6", y1: "6", x2: "18", y2: "18" })
     ]
   }
-), Re = ({
+), Ne = ({
   node: e,
   index: t,
   onClose: n,
   onSelect: r,
   onDragStart: a,
   onDragEnd: c,
-  className: i = "",
-  style: f = {},
+  className: l = "",
+  style: m = {},
   closeIcon: o,
-  closeButtonClassName: d = ""
+  closeButtonClassName: h = ""
 }) => {
-  const y = I(!1), x = T(() => {
+  const y = C(!1), S = D(() => {
     r?.(e.id);
-  }, [e.id, r]), S = T(
-    (L) => {
-      L.stopPropagation(), n?.(e.id);
+  }, [e.id, r]), x = D(
+    (R) => {
+      R.stopPropagation(), n?.(e.id);
     },
     [e.id, n]
-  ), D = T(
-    (L) => {
-      L.dataTransfer.setData("text/plain", e.id), L.dataTransfer.effectAllowed = "move", L.currentTarget.classList.add("dragging"), document.body.classList.add("dragging"), y.current = !0, a?.(e.id, t);
+  ), v = D(
+    (R) => {
+      R.dataTransfer.setData("text/plain", e.id), R.dataTransfer.effectAllowed = "move", R.currentTarget.classList.add("dragging"), document.body.classList.add("dragging"), y.current = !0, a?.(e.id, t);
     },
     [e.id, t, a]
-  ), p = T(
-    (L) => {
-      L.currentTarget.classList.remove("dragging"), document.body.classList.remove("dragging"), y.current = !1, c?.();
+  ), $ = D(
+    (R) => {
+      R.currentTarget.classList.remove("dragging"), document.body.classList.remove("dragging"), y.current = !1, c?.();
     },
     [c]
   );
-  W(() => () => {
+  k(() => () => {
     y.current && (document.body.classList.remove("dragging"), y.current = !1);
   }, []);
-  const k = ue(() => ({ ...f, cursor: "grab" }), [f]);
-  return /* @__PURE__ */ be(
+  const E = ue(() => ({ ...m, cursor: "grab" }), [m]);
+  return /* @__PURE__ */ me(
     "div",
     {
-      className: `react-flex-layout-tab ${i}`,
-      style: k,
-      onClick: x,
+      className: `react-flex-layout-tab ${l}`,
+      style: E,
+      onClick: S,
       draggable: !0,
-      onDragStart: D,
-      onDragEnd: p,
+      onDragStart: v,
+      onDragEnd: $,
       children: [
-        /* @__PURE__ */ w("span", { className: "react-flex-layout-tab-title", children: e.name || "Untitled" }),
-        /* @__PURE__ */ w(
+        /* @__PURE__ */ L("span", { className: "react-flex-layout-tab-title", children: e.name || "Untitled" }),
+        /* @__PURE__ */ L(
           "button",
           {
-            className: `react-flex-layout-tab-close ${d}`.trim(),
-            onClick: S,
+            className: `react-flex-layout-tab-close ${h}`.trim(),
+            onClick: x,
             type: "button",
             "aria-label": "Close tab",
-            children: o || /* @__PURE__ */ w(Be, {})
+            children: o || /* @__PURE__ */ L(Me, {})
           }
         )
       ]
     }
   );
-}, Fe = () => /* @__PURE__ */ w(
+}, Ke = () => /* @__PURE__ */ L(
   "svg",
   {
     width: "16",
@@ -90,9 +90,9 @@ const Be = ({
     strokeWidth: "2",
     strokeLinecap: "round",
     strokeLinejoin: "round",
-    children: /* @__PURE__ */ w("polyline", { points: "15 18 9 12 15 6" })
+    children: /* @__PURE__ */ L("polyline", { points: "15 18 9 12 15 6" })
   }
-), Ke = () => /* @__PURE__ */ w(
+), _e = () => /* @__PURE__ */ L(
   "svg",
   {
     width: "16",
@@ -103,150 +103,163 @@ const Be = ({
     strokeWidth: "2",
     strokeLinecap: "round",
     strokeLinejoin: "round",
-    children: /* @__PURE__ */ w("polyline", { points: "9 18 15 12 9 6" })
+    children: /* @__PURE__ */ L("polyline", { points: "9 18 15 12 9 6" })
   }
-), Me = ({
+), je = ({
   node: e,
   children: t,
   factory: n,
   onTabSelect: r,
   onTabClose: a,
   onTabDragStart: c,
-  onTabDragEnd: i,
-  onDragOver: f,
+  onTabDragEnd: l,
+  onDragOver: m,
   onDragLeave: o,
-  onDrop: d,
+  onDrop: h,
   dragOverTabset: y,
-  dropPosition: x,
-  dropTargetIndex: S,
-  direction: D = "ltr",
-  className: p = "",
-  style: k = {},
-  closeIcon: L,
-  closeButtonClassName: P,
-  scrollLeftIcon: C,
-  scrollRightIcon: N
+  dropPosition: S,
+  dropTargetIndex: x,
+  direction: v = "ltr",
+  className: $ = "",
+  style: E = {},
+  closeIcon: R,
+  closeButtonClassName: X,
+  scrollLeftIcon: O,
+  scrollRightIcon: _
 }) => {
-  const u = ue(() => e.children?.filter((s) => s.type === "tab") || [], [e.children]), b = ue(() => {
+  const g = ue(() => e.children?.filter((s) => s.type === "tab") || [], [e.children]), b = ue(() => {
     const s = /* @__PURE__ */ new Map();
-    for (let v = 0; v < u.length; v++) {
-      const K = u[v];
-      K && K.id && s.set(K.id, v);
+    for (let f = 0; f < g.length; f++) {
+      const K = g[f];
+      K && K.id && s.set(K.id, f);
     }
     return s;
-  }, [u]), m = ue(() => D === "rtl" ? [...u].reverse() : u, [u, D]), h = e.selected ?? 0, $ = Math.min(
-    h,
-    Math.max(0, u.length - 1)
-  ), E = u[$], A = T(
+  }, [g]), T = ue(() => v === "rtl" ? [...g].reverse() : g, [g, v]), d = e.selected ?? 0, p = Math.min(
+    d,
+    Math.max(0, g.length - 1)
+  ), w = g[p], j = D(
     (s) => {
-      const v = b.get(s);
-      v !== void 0 && v !== -1 && r?.(e.id, v);
+      const f = b.get(s);
+      f !== void 0 && f !== -1 && r?.(e.id, f);
     },
     [e.id, b, r]
-  ), ne = T(
+  ), G = D(
     (s) => {
-      const v = b.get(s);
-      v !== void 0 && v !== -1 && a?.(e.id, v);
+      const f = b.get(s);
+      f !== void 0 && f !== -1 && a?.(e.id, f);
     },
     [e.id, b, a]
-  ), ee = T(
-    (s, v) => {
-      const K = v !== void 0 ? v : b.get(s) ?? -1;
+  ), q = D(
+    (s, f) => {
+      const K = f !== void 0 ? f : b.get(s) ?? -1;
       K !== -1 && c?.(e.id, K);
     },
     [e.id, b, c]
-  ), te = I(null), M = I(null), [he, U] = ce(!1), [me, ge] = ce(!1), oe = I(null), B = T(
+  ), U = C(null), B = C(null), [de, M] = ce(!1), [ye, be] = ce(!1), ie = C(null), W = C();
+  W.current = () => {
+    const s = B.current;
+    if (!s) {
+      M(!1), be(!1);
+      return;
+    }
+    const { scrollLeft: f, scrollWidth: K, clientWidth: le } = s;
+    M(f > 1), be(f < K - le - 1);
+  };
+  const A = D(() => {
+    ie.current && clearTimeout(ie.current), ie.current = setTimeout(() => {
+      W.current?.();
+    }, 10);
+  }, []), te = D(
     (s) => {
       s.preventDefault(), s.dataTransfer.dropEffect = "move";
-      const v = s.currentTarget.getBoundingClientRect(), K = s.clientX - v.left, l = s.clientY - v.top, z = v.width, Y = v.height;
-      let j = "center";
-      if (l < 40) {
-        const re = te.current;
-        if (re) {
-          const Z = re.getBoundingClientRect(), ie = s.clientX - Z.left, G = re.querySelectorAll(
+      const f = s.currentTarget.getBoundingClientRect(), K = s.clientX - f.left, le = s.clientY - f.top, i = f.width, I = f.height;
+      let z = "center";
+      if (le < 40) {
+        const Z = U.current;
+        if (Z) {
+          const J = Z.getBoundingClientRect(), ae = s.clientX - J.left, V = Z.querySelectorAll(
             ".react-flex-layout-tab"
           );
-          let H = u.length;
-          if (D === "rtl") {
-            for (let V = G.length - 1; V >= 0; V--) {
-              const q = G[V].getBoundingClientRect(), fe = q.left - Z.left, O = q.right - Z.left, le = (fe + O) / 2;
-              if (ie > le) {
-                const X = b.get(m[V].id);
-                X !== void 0 && X !== -1 && (H = X);
+          let P = g.length;
+          if (v === "rtl") {
+            for (let N = V.length - 1; N >= 0; N--) {
+              const re = V[N].getBoundingClientRect(), oe = re.left - J.left, he = re.right - J.left, F = (oe + he) / 2;
+              if (ae > F) {
+                const ee = b.get(T[N].id);
+                ee !== void 0 && ee !== -1 && (P = ee);
                 break;
               }
             }
-            if (H === u.length && G.length > 0) {
-              const V = G[0].getBoundingClientRect();
-              if (ie > V.right - Z.left) {
-                const q = b.get(m[0].id);
-                q !== void 0 && q !== -1 && (H = q);
+            if (P === g.length && V.length > 0) {
+              const N = V[0].getBoundingClientRect();
+              if (ae > N.right - J.left) {
+                const re = b.get(T[0].id);
+                re !== void 0 && re !== -1 && (P = re);
               }
             }
           } else
-            for (let V = 0; V < G.length; V++) {
-              const q = G[V].getBoundingClientRect(), fe = q.left - Z.left, O = q.right - Z.left, le = (fe + O) / 2;
-              if (ie < le) {
-                const X = b.get(m[V].id);
-                X !== void 0 && X !== -1 && (H = X);
+            for (let N = 0; N < V.length; N++) {
+              const re = V[N].getBoundingClientRect(), oe = re.left - J.left, he = re.right - J.left, F = (oe + he) / 2;
+              if (ae < F) {
+                const ee = b.get(T[N].id);
+                ee !== void 0 && ee !== -1 && (P = ee);
                 break;
               }
             }
-          j = "tab", f?.(s, e.id, j, H);
+          z = "tab", m?.(s, e.id, z, P);
           return;
         }
       }
-      K < z * 0.25 ? j = "left" : K > z * 0.75 ? j = "right" : l < Y * 0.25 ? j = "top" : l > Y * 0.75 ? j = "bottom" : j = "center", f?.(s, e.id, j);
+      K < i * 0.25 ? z = v === "rtl" ? "right" : "left" : K > i * 0.75 ? z = v === "rtl" ? "left" : "right" : le < I * 0.25 ? z = "top" : le > I * 0.75 ? z = "bottom" : z = "center", m?.(s, e.id, z);
     },
-    [e.id, D, u.length, m, b, f]
-  ), F = T(
+    [e.id, v, g.length, T, b, m]
+  ), H = D(
     (s) => {
       o?.(s);
     },
     [o]
-  ), _ = T(
+  ), Y = D(
     (s) => {
-      d?.(s, e.id);
+      h?.(s, e.id);
     },
-    [e.id, d]
-  ), R = y === e.id, J = T(() => {
-    const s = M.current;
-    if (!s) {
-      U(!1), ge(!1);
-      return;
-    }
-    const { scrollLeft: v, scrollWidth: K, clientWidth: l } = s;
-    U(v > 1), ge(v < K - l - 1);
-  }, []), ae = T(() => {
-    oe.current && clearTimeout(oe.current), oe.current = setTimeout(J, 10);
-  }, [J]);
-  W(() => {
-    const s = M.current;
-    !s || $ < 0 || requestAnimationFrame(() => {
-      const K = s.children[$];
-      if (!K) return;
-      const l = s.getBoundingClientRect(), z = K.getBoundingClientRect(), Y = s.scrollLeft;
-      z.left < l.left ? s.scrollTo({
-        left: Y - (l.left - z.left) - 10,
+    [e.id, h]
+  ), Se = y === e.id;
+  k(() => {
+    const s = B.current;
+    if (!s || p < 0) return;
+    let f;
+    return f = requestAnimationFrame(() => {
+      const le = s.children[p];
+      if (!le) return;
+      const i = s.getBoundingClientRect(), I = le.getBoundingClientRect(), z = s.scrollLeft;
+      I.left < i.left ? s.scrollTo({
+        left: z - (i.left - I.left) - 10,
         behavior: "smooth"
-      }) : z.right > l.right && s.scrollTo({
-        left: Y + (z.right - l.right) + 10,
+      }) : I.right > i.right && s.scrollTo({
+        left: z + (I.right - i.right) + 10,
         behavior: "smooth"
       });
-    });
-  }, [$, m.length]), W(() => {
-    const s = M.current;
-    if (!s) return;
-    requestAnimationFrame(J), s.addEventListener("scroll", ae, { passive: !0 });
-    const v = new ResizeObserver(() => {
-      requestAnimationFrame(J);
-    });
-    return v.observe(s), () => {
-      s.removeEventListener("scroll", ae), v.disconnect(), oe.current && clearTimeout(oe.current);
+    }), () => {
+      f && cancelAnimationFrame(f);
     };
-  }, [J, ae, m.length]);
-  const ve = {
-    ...k,
+  }, [p, T.length]), k(() => {
+    const s = B.current;
+    if (!s) return;
+    const f = { current: 0 };
+    f.current = requestAnimationFrame(() => {
+      W.current?.();
+    }), s.addEventListener("scroll", A, { passive: !0 });
+    const K = new ResizeObserver(() => {
+      f.current && cancelAnimationFrame(f.current), f.current = requestAnimationFrame(() => {
+        W.current?.();
+      });
+    });
+    return K.observe(s), () => {
+      f.current && cancelAnimationFrame(f.current), s.removeEventListener("scroll", A), K.disconnect(), ie.current && (clearTimeout(ie.current), ie.current = null);
+    };
+  }, [A, T.length]);
+  const De = {
+    ...E,
     width: e.width ? `${e.width}%` : void 0,
     height: e.height ? `${e.height}%` : void 0,
     flex: `${e.flex || 1} 1 0%`,
@@ -255,82 +268,85 @@ const Be = ({
     maxWidth: e.maxWidth ? `${e.maxWidth}px` : void 0,
     maxHeight: e.maxHeight ? `${e.maxHeight}px` : void 0
   };
-  return u.length === 0 ? null : /* @__PURE__ */ be(
+  if (g.length === 0)
+    return null;
+  const fe = Se && S ? v === "rtl" && (S === "left" || S === "right") ? S === "left" ? "right" : "left" : S : void 0;
+  return /* @__PURE__ */ me(
     "div",
     {
-      className: `react-flex-layout-tabset ${R ? "drag-over" : ""} ${p}`,
-      style: ve,
+      className: `react-flex-layout-tabset ${Se ? "drag-over" : ""} ${$}`,
+      style: De,
       "data-tabset-id": e.id,
-      "data-drop-position": R ? x : void 0,
-      onDragOver: B,
-      onDragLeave: F,
-      onDrop: _,
+      "data-drop-position": fe,
+      onDragOver: te,
+      onDragLeave: H,
+      onDrop: Y,
       children: [
-        /* @__PURE__ */ be("div", { className: "react-flex-layout-tabset-header", ref: te, children: [
-          he && /* @__PURE__ */ w(
+        /* @__PURE__ */ me("div", { className: "react-flex-layout-tabset-header", ref: U, children: [
+          de && /* @__PURE__ */ L(
             "button",
             {
               className: "react-flex-layout-tabset-scroll-button react-flex-layout-tabset-scroll-left",
               onClick: () => {
-                const s = M.current;
+                const s = B.current;
                 s && s.scrollBy({ left: -200, behavior: "smooth" });
               },
               type: "button",
               "aria-label": "Scroll left",
-              children: C || /* @__PURE__ */ w(Fe, {})
+              children: O || /* @__PURE__ */ L(Ke, {})
             }
           ),
-          /* @__PURE__ */ be(
+          /* @__PURE__ */ me(
             "div",
             {
-              ref: M,
+              ref: B,
               className: "react-flex-layout-tabset-tabs-container",
-              onScroll: ae,
+              onScroll: A,
               children: [
-                m.map((s) => {
-                  const v = b.get(s.id) ?? -1, K = v === $, l = R && x === "tab" && S !== null && v === S;
-                  return /* @__PURE__ */ be(Te.Fragment, { children: [
-                    l && /* @__PURE__ */ w("div", { className: "react-flex-layout-tab-drop-indicator" }),
-                    /* @__PURE__ */ w(
-                      Re,
+                T.map((s) => {
+                  const f = b.get(s.id) ?? -1, K = f === p, le = Se && S === "tab" && x !== null && f === x;
+                  return /* @__PURE__ */ me(Re.Fragment, { children: [
+                    le && /* @__PURE__ */ L("div", { className: "react-flex-layout-tab-drop-indicator" }),
+                    /* @__PURE__ */ L(
+                      Ne,
                       {
                         node: s,
-                        index: v,
-                        onSelect: A,
-                        onClose: ne,
-                        onDragStart: ee,
-                        onDragEnd: i,
+                        index: f,
+                        onSelect: j,
+                        onClose: G,
+                        onDragStart: q,
+                        onDragEnd: l,
                         className: K ? "active" : "",
-                        closeIcon: L,
-                        closeButtonClassName: P
+                        closeIcon: R,
+                        closeButtonClassName: X
                       }
                     )
                   ] }, s.id);
                 }),
-                R && x === "tab" && S !== null && S === u.length && /* @__PURE__ */ w("div", { className: "react-flex-layout-tab-drop-indicator" })
+                Se && S === "tab" && x !== null && x === g.length && /* @__PURE__ */ L("div", { className: "react-flex-layout-tab-drop-indicator" })
               ]
             }
           ),
-          me && /* @__PURE__ */ w(
+          ye && /* @__PURE__ */ L(
             "button",
             {
               className: "react-flex-layout-tabset-scroll-button react-flex-layout-tabset-scroll-right",
               onClick: () => {
-                const s = M.current;
+                const s = B.current;
                 s && s.scrollBy({ left: 200, behavior: "smooth" });
               },
               type: "button",
               "aria-label": "Scroll right",
-              children: N || /* @__PURE__ */ w(Ke, {})
+              children: _ || /* @__PURE__ */ L(_e, {})
             }
           )
         ] }),
-        /* @__PURE__ */ w("div", { className: "react-flex-layout-tabset-content", children: E && (n ? n(E) : t) })
+        /* @__PURE__ */ L("div", { className: "react-flex-layout-tabset-content", children: w && (n ? n(w) : t) })
       ]
     }
   );
-}, Ie = Ce(
-  Me,
+}, ze = Le(
+  je,
   (e, t) => {
     if (e.className !== t.className || e.direction !== t.direction || e.dragOverTabset !== t.dragOverTabset || e.dropPosition !== t.dropPosition || e.dropTargetIndex !== t.dropTargetIndex || e.factory !== t.factory || e.onTabSelect !== t.onTabSelect || e.onTabClose !== t.onTabClose || e.onTabDragStart !== t.onTabDragStart || e.onTabDragEnd !== t.onTabDragEnd || e.onDragOver !== t.onDragOver || e.onDragLeave !== t.onDragLeave || e.onDrop !== t.onDrop || e.closeIcon !== t.closeIcon || e.closeButtonClassName !== t.closeButtonClassName || e.style !== t.style || e.children !== t.children) return !1;
     if (e.node === t.node) {
@@ -343,8 +359,8 @@ const Be = ({
         if (n.length !== r.length) return !1;
         for (let a = 0; a < n.length; a++)
           if (n[a] !== r[a]) {
-            const c = n[a], i = r[a];
-            if (c.id !== i.id || c.type !== i.type || c.name !== i.name || c.component !== i.component || c.enableClose !== i.enableClose || c.enableDrag !== i.enableDrag)
+            const c = n[a], l = r[a];
+            if (c.id !== l.id || c.type !== l.type || c.name !== l.name || c.component !== l.component || c.enableClose !== l.enableClose || c.enableDrag !== l.enableDrag)
               return !1;
           }
       }
@@ -352,60 +368,60 @@ const Be = ({
     return !0;
   }
 );
-Ie.displayName = "MemoizedTabSet";
-const Le = ({
+ze.displayName = "MemoizedTabSet";
+const qe = ({
   direction: e,
   onResize: t,
   onResizeStart: n,
   size: r = 8,
   className: a = "",
   style: c = {},
-  customStyles: i = {}
+  customStyles: l = {}
 }) => {
-  const [f, o] = ce(!1), d = I(0), y = I(0), x = I(!1), S = I(null), D = I(null), p = T(
-    (C) => {
-      C.preventDefault(), C.stopPropagation(), o(!0), d.current = e === "horizontal" ? C.clientX : C.clientY, y.current = d.current, n?.();
-      const N = (b) => {
-        y.current = e === "horizontal" ? b.clientX : b.clientY, x.current || (x.current = !0, requestAnimationFrame(() => {
-          x.current = !1;
-          const m = y.current - d.current;
-          t(m);
+  const [m, o] = ce(!1), h = C(0), y = C(0), S = C(!1), x = C(null), v = C(null), $ = D(
+    (O) => {
+      O.preventDefault(), O.stopPropagation(), o(!0), h.current = e === "horizontal" ? O.clientX : O.clientY, y.current = h.current, n?.();
+      const _ = (b) => {
+        y.current = e === "horizontal" ? b.clientX : b.clientY, S.current || (S.current = !0, requestAnimationFrame(() => {
+          S.current = !1;
+          const T = y.current - h.current;
+          t(T);
         }));
-      }, u = () => {
-        o(!1), document.removeEventListener("mousemove", N), document.removeEventListener("mouseup", u), S.current = null, D.current = null, x.current = !1;
+      }, g = () => {
+        o(!1), document.removeEventListener("mousemove", _), document.removeEventListener("mouseup", g), x.current = null, v.current = null, S.current = !1;
       };
-      document.addEventListener("mousemove", N), document.addEventListener("mouseup", u), S.current = N, D.current = u;
+      document.addEventListener("mousemove", _), document.addEventListener("mouseup", g), x.current = _, v.current = g;
     },
     [e, t, n]
-  ), k = {
+  ), E = {
     backgroundColor: "#ffffff",
     border: "none",
     outline: "none"
-  }, L = ue(() => f && i.active ? i.active : i.default ? i.default : k, [f, i.active, i.default]), P = ue(() => {
-    const C = e === "horizontal";
+  }, R = ue(() => m && l.active ? l.active : l.default ? l.default : E, [m, l.active, l.default]), X = ue(() => {
+    const O = e === "horizontal";
     return {
       ...c,
-      width: C ? `${r}px` : "100%",
-      height: C ? "100%" : `${r}px`,
-      minWidth: C ? `${r}px` : void 0,
-      minHeight: C ? void 0 : `${r}px`,
+      width: O ? `${r}px` : "100%",
+      height: O ? "100%" : `${r}px`,
+      minWidth: O ? `${r}px` : void 0,
+      minHeight: O ? void 0 : `${r}px`,
       flexShrink: 0,
-      cursor: C ? "col-resize" : "row-resize",
-      ...L,
-      transition: f ? "none" : "all 0.2s ease"
+      cursor: O ? "col-resize" : "row-resize",
+      ...R,
+      transition: m ? "none" : "all 0.2s ease"
     };
-  }, [e, r, c, L, f]);
-  return W(() => () => {
-    S.current && document.removeEventListener("mousemove", S.current), D.current && document.removeEventListener("mouseup", D.current), x.current = !1;
-  }, []), /* @__PURE__ */ w(
+  }, [e, r, c, R, m]);
+  return k(() => () => {
+    x.current && document.removeEventListener("mousemove", x.current), v.current && document.removeEventListener("mouseup", v.current), S.current = !1;
+  }, []), /* @__PURE__ */ L(
     "div",
     {
       className: `react-flex-layout-splitter ${a}`,
-      style: P,
-      onMouseDown: p
+      style: X,
+      onMouseDown: $
     }
   );
-}, tt = (e, t) => ({
+}, Ie = Le(qe, (e, t) => e.direction === t.direction && e.size === t.size && e.onResize === t.onResize && e.onResizeStart === t.onResizeStart && e.className === t.className && e.style === t.style && e.customStyles === t.customStyles), lt = (e, t) => ({
   global: {
     enableClose: !0,
     enableDrag: !0,
@@ -416,7 +432,7 @@ const Le = ({
     ...t
   },
   layout: e
-}), _e = (e, t, n, r) => ({
+}), Je = (e, t, n, r) => ({
   id: e,
   type: "tab",
   component: t,
@@ -424,24 +440,24 @@ const Le = ({
   config: r,
   enableClose: !0,
   enableDrag: !0
-}), pe = (e, t, n = 0) => ({
+}), $e = (e, t, n = 0) => ({
   id: e,
   type: "tabset",
   children: t,
   selected: n,
   enableClose: !0,
   enableDrag: !0
-}), je = (e, t, n, r) => ({
+}), Xe = (e, t, n, r) => ({
   id: e,
   type: "row",
-  children: ze(t),
+  children: Ee(t),
   width: n,
   height: r,
   enableResize: !0
-}), qe = (e, t, n, r) => ({
+}), Ue = (e, t, n, r) => ({
   id: e,
   type: "column",
-  children: ze(t),
+  children: Ee(t),
   width: n,
   height: r,
   enableResize: !0
@@ -455,14 +471,14 @@ const Le = ({
         return r;
     }
   return null;
-}, Ne = (e, t) => {
+}, pe = (e, t) => {
   if (!e.children)
     return null;
   for (const n of e.children)
     if (n.id === t)
       return e;
   for (const n of e.children) {
-    const r = Ne(n, t);
+    const r = pe(n, t);
     if (r)
       return r;
   }
@@ -477,8 +493,8 @@ const Le = ({
     let r = null;
     const a = e.children;
     for (let c = 0; c < a.length; c++) {
-      const i = a[c], f = Q(i, t, n);
-      f !== i && r === null && (r = a.slice(0, c)), r !== null && f !== null && r.push(f);
+      const l = a[c], m = Q(l, t, n);
+      m !== l && r === null && (r = a.slice(0, c)), r !== null && m !== null && r.push(m);
     }
     return r === null ? e : {
       ...e,
@@ -486,7 +502,7 @@ const Le = ({
     };
   }
   return e;
-}, $e = (e, t) => {
+}, He = (e, t) => {
   if (!e.children)
     return e;
   let n = null;
@@ -497,52 +513,52 @@ const Le = ({
       n === null && (n = r.slice(0, a));
       continue;
     }
-    const i = $e(c, t);
-    i !== c && n === null && (n = r.slice(0, a)), n !== null && n.push(i);
+    const l = He(c, t);
+    l !== c && n === null && (n = r.slice(0, a)), n !== null && n.push(l);
   }
   return n === null ? e : {
     ...e,
     children: n
   };
-}, ze = (e) => e.map((t) => ({
+}, Ee = (e) => e.map((t) => ({
   ...t,
   flex: t.flex || 1 / e.length
-})), xe = (e) => {
+})), ve = (e) => {
   if (e.type === "tabset" && (!e.children || e.children.length === 0))
     return null;
   if (e.children) {
     const t = e.children, n = t.length;
     let r = null;
-    for (let i = 0; i < t.length; i++) {
-      const f = t[i], o = xe(f);
-      o !== f && r === null && (r = t.slice(0, i)), r !== null && o !== null && r.push(o);
+    for (let l = 0; l < t.length; l++) {
+      const m = t[l], o = ve(m);
+      o !== m && r === null && (r = t.slice(0, l)), r !== null && o !== null && r.push(o);
     }
     const a = r ?? t, c = a.length < n;
     if (a.length === 0)
       return null;
     if ((e.type === "row" || e.type === "column") && a.length > 0) {
-      const i = a.reduce(
-        (o, d) => o + (d.flex || 0),
+      const l = a.reduce(
+        (o, h) => o + (h.flex || 0),
         0
       );
-      if (c || i < 0.999 || a.length === 1) {
+      if (c || l < 0.999 || a.length === 1) {
         let o;
         if (a.length === 1)
-          o = a.map((d) => ({
-            ...d,
+          o = a.map((h) => ({
+            ...h,
             flex: 1
           }));
-        else if (i === 0 || i < 1e-3) {
-          const d = 1 / a.length;
+        else if (l === 0 || l < 1e-3) {
+          const h = 1 / a.length;
           o = a.map((y) => ({
             ...y,
-            flex: d
+            flex: h
           }));
         } else {
-          const d = 1 / i;
+          const h = 1 / l;
           o = a.map((y) => ({
             ...y,
-            flex: (y.flex || 0) * d
+            flex: (y.flex || 0) * h
           }));
         }
         return {
@@ -550,7 +566,7 @@ const Le = ({
           children: o
         };
       }
-      if (a.length !== n || a.some((o, d) => o !== t[d]))
+      if (a.length !== n || a.some((o, h) => o !== t[h]))
         return {
           ...e,
           children: a
@@ -563,52 +579,52 @@ const Le = ({
       };
   }
   return e;
-}, Ee = (e, t, n = null) => {
+}, Oe = (e, t, n = null) => {
   if (!e.children) return null;
   for (const r of e.children) {
     if (r.id === t)
       return n || e;
     if (r.children) {
-      const a = Ee(r, t, e);
+      const a = Oe(r, t, e);
       if (a) return a;
     }
   }
   return null;
-}, He = (e, t) => {
+}, We = (e, t) => {
   if (!e.children) return null;
   for (const n of e.children) {
     if (n.type === "tabset" && n.children && n.children.find((a) => a.id === t))
       return n;
     if (n.children) {
-      const r = He(n, t);
+      const r = We(n, t);
       if (r) return r;
     }
   }
   return null;
-}, Je = (e, t, n) => {
+}, Ye = (e, t, n) => {
   const r = se(e, t);
   if (!r || r.type !== "tabset")
     return null;
-  const c = [...r.children || [], n], i = {
+  const c = [...r.children || [], n], l = {
     ...r,
     children: c,
     selected: c.length - 1
   };
-  return Q(e, t, i);
-}, nt = (e, t) => {
-  const n = He(e, t);
+  return Q(e, t, l);
+}, it = (e, t) => {
+  const n = We(e, t);
   if (!n || n.type !== "tabset")
     return { layout: e, restoreData: null };
-  const r = n.children?.find((x) => x.id === t);
+  const r = n.children?.find((S) => S.id === t);
   if (!r || r.type !== "tab")
     return { layout: e, restoreData: null };
   const a = n.children?.findIndex(
-    (x) => x.id === t
+    (S) => S.id === t
   ), c = n.children?.filter(
-    (x) => x.id !== t
+    (S) => S.id !== t
   );
   if (!c || c.length === 0) {
-    const x = $e(e, n.id), S = {
+    const S = He(e, n.id), x = {
       tabId: r.id,
       component: r.component || "",
       name: r.name || "",
@@ -617,18 +633,18 @@ const Le = ({
       config: r.config
     };
     return {
-      layout: x,
-      restoreData: S
+      layout: S,
+      restoreData: x
     };
   }
-  const i = n.selected ?? 0;
-  let f = i;
-  a !== void 0 && a !== -1 && (a <= i && (f = Math.max(0, i - 1)), f = Math.min(f, c.length - 1));
+  const l = n.selected ?? 0;
+  let m = l;
+  a !== void 0 && a !== -1 && (a <= l && (m = Math.max(0, l - 1)), m = Math.min(m, c.length - 1));
   const o = {
     ...n,
     children: c,
-    selected: c.length > 0 ? f : void 0
-  }, d = Q(e, n.id, o), y = {
+    selected: c.length > 0 ? m : void 0
+  }, h = Q(e, n.id, o), y = {
     tabId: r.id,
     component: r.component || "",
     name: r.name || "",
@@ -637,261 +653,268 @@ const Le = ({
     config: r.config
   };
   return {
-    layout: d,
+    layout: h,
     restoreData: y
   };
-}, rt = (e, t, n) => {
+}, at = (e, t, n) => {
   if (se(e, t.tabId))
     return e;
   let a = se(e, t.tabsetId);
   if (!a || a.type !== "tabset") {
     if (!n)
       return null;
-    const f = Ee(
+    const m = Oe(
       n,
       t.tabsetId
     );
-    if (!f)
+    if (!m)
       return null;
-    const o = se(e, f.id);
+    const o = se(e, m.id);
     if (!o || !o.children)
       return null;
-    const d = o.children.find(
+    const h = o.children.find(
       (y) => y.id === t.tabsetId
     );
-    if (d)
-      a = d;
+    if (h)
+      a = h;
     else {
-      const y = pe(t.tabsetId, []), x = [...o.children, y], S = {
+      const y = $e(t.tabsetId, []), S = [...o.children, y], x = {
         ...o,
-        children: x
-      }, D = Q(
+        children: S
+      }, v = Q(
         e,
         o.id,
-        S
+        x
       );
-      if (!D || (e = D, a = se(e, t.tabsetId), !a || a.type !== "tabset"))
+      if (!v || (e = v, a = se(e, t.tabsetId), !a || a.type !== "tabset"))
         return null;
     }
   }
-  const c = _e(
+  const c = Je(
     t.tabId,
     t.component,
     t.name,
     t.config
   );
-  return Je(e, t.tabsetId, c);
-}, it = (e, t) => se(e, t) !== null, Xe = (e, t) => {
-  const n = I({}), r = I({}), a = T(
-    (i, f, o) => {
-      if (!t) return;
-      const d = Oe(e.layout, i);
-      if (!d || !d.children) return;
-      const y = d.children.findIndex(
-        (m) => m.id === i
-      ), x = y + 1;
-      if (x >= d.children.length) return;
-      const S = `${i}-${o}`;
-      if (!n.current[S]) {
-        const m = d.children[y], h = d.children[x];
-        n.current[S] = {
-          current: m.flex || 1,
-          sibling: h.flex || 1
+  return Ye(e, t.tabsetId, c);
+}, ct = (e, t) => se(e, t) !== null, Ge = (e, t) => {
+  const n = C({}), r = C({}), a = C(e), c = C(t);
+  k(() => {
+    a.current = e;
+  }, [e]), k(() => {
+    c.current = t;
+  }, [t]);
+  const l = D(
+    (o, h, y) => {
+      if (!c.current) return;
+      const S = a.current, x = ke(S.layout, o);
+      if (!x || !x.children) return;
+      const v = x.children.findIndex(
+        (w) => w.id === o
+      ), $ = v + 1;
+      if ($ >= x.children.length) return;
+      const E = `${o}-${y}`;
+      if (!n.current[E]) {
+        const w = x.children[v], j = x.children[$];
+        n.current[E] = {
+          current: w.flex || 1,
+          sibling: j.flex || 1
         };
       }
-      const D = n.current[S], p = D.current + D.sibling, k = o === "horizontal" ? window.innerWidth : window.innerHeight, L = D.current / p * k, P = D.sibling / p * k, C = 100;
-      let N = L + f, u = P - f;
-      if (N < C) {
-        const m = C - N;
-        N = C, u -= m;
+      const R = n.current[E], X = R.current + R.sibling, O = y === "horizontal" ? window.innerWidth : window.innerHeight, _ = R.current / X * O, g = R.sibling / X * O, b = 100;
+      let T = _ + h, d = g - h;
+      if (T < b) {
+        const w = b - T;
+        T = b, d -= w;
       }
-      if (u < C) {
-        const m = C - u;
-        u = C, N -= m;
+      if (d < b) {
+        const w = b - d;
+        d = b, T -= w;
       }
-      const b = N + u;
-      if (b > 0) {
-        const m = N / b * p, h = u / b * p, $ = r.current[S], E = 1e-4;
-        if ($ && Math.abs($.current - m) < E && Math.abs($.sibling - h) < E)
+      const p = T + d;
+      if (p > 0) {
+        const w = T / p * X, j = d / p * X, G = r.current[E], q = 1e-4;
+        if (G && Math.abs(G.current - w) < q && Math.abs(G.sibling - j) < q)
           return;
-        const A = d.children.slice(), ne = A[y], ee = A[x];
-        A[y] = { ...ne, flex: m }, A[x] = { ...ee, flex: h };
-        const te = Q(e.layout, d.id, {
-          children: A
+        const U = x.children.slice(), B = U[v], de = U[$];
+        U[v] = { ...B, flex: w }, U[$] = { ...de, flex: j };
+        const M = Q(S.layout, x.id, {
+          children: U
         });
-        te && (r.current[S] = {
-          current: m,
-          sibling: h
-        }, t({
-          ...e,
-          layout: te
+        M && (r.current[E] = {
+          current: w,
+          sibling: j
+        }, c.current({
+          ...S,
+          layout: M
         }));
       }
     },
-    [e, t]
-  ), c = T(
-    (i, f) => {
-      const o = `${i}-${f}`;
-      delete n.current[o], delete r.current[o];
+    []
+    // Empty deps - stable reference, uses refs internally
+  ), m = D(
+    (o, h) => {
+      const y = `${o}-${h}`;
+      delete n.current[y], delete r.current[y];
     },
     []
   );
-  return { handleResize: a, resetResize: c };
-}, Oe = (e, t) => {
+  return { handleResize: l, resetResize: m };
+}, ke = (e, t) => {
   if (!e.children) return null;
   for (const n of e.children) {
     if (n.id === t)
       return e;
-    const r = Oe(n, t);
+    const r = ke(n, t);
     if (r) return r;
   }
   return null;
-}, Ue = (e, t) => {
-  const [n, r] = ce(null), [a, c] = ce(null), [i, f] = ce("center"), [o, d] = ce(null), y = I(null), x = I(e), S = I(t), D = I(i), p = I(o);
-  W(() => {
-    x.current = e;
-  }, [e]), W(() => {
-    S.current = t;
-  }, [t]), W(() => {
-    D.current = i;
-  }, [i]), W(() => {
-    p.current = o;
+}, Ve = (e, t) => {
+  const [n, r] = ce(null), [a, c] = ce(null), [l, m] = ce("center"), [o, h] = ce(null), y = C(null), S = C(e), x = C(t), v = C(l), $ = C(o);
+  k(() => {
+    S.current = e;
+  }, [e]), k(() => {
+    x.current = t;
+  }, [t]), k(() => {
+    v.current = l;
+  }, [l]), k(() => {
+    $.current = o;
   }, [o]);
-  const k = T((u, b) => {
-    const m = { tabsetId: u, tabIndex: b };
-    r(m), y.current = m;
-  }, []), L = T(() => {
-    r(null), y.current = null, c(null), d(null);
-  }, []), P = T(
-    (u, b, m = "center", h) => {
-      u.preventDefault(), u.dataTransfer.dropEffect = "move", c(b), f(m), h !== void 0 ? d(h) : m !== "tab" && d(null);
+  const E = D((g, b) => {
+    const T = { tabsetId: g, tabIndex: b };
+    r(T), y.current = T;
+  }, []), R = D(() => {
+    r(null), y.current = null, c(null), h(null);
+  }, []), X = D(
+    (g, b, T = "center", d) => {
+      g.preventDefault(), g.dataTransfer.dropEffect = "move", c(b), m(T), d !== void 0 ? h(d) : T !== "tab" && h(null);
     },
     []
-  ), C = T((u) => {
-    u.currentTarget === u.target && setTimeout(() => {
-      c(null), d(null);
+  ), O = D((g) => {
+    g.currentTarget === g.target && setTimeout(() => {
+      c(null), h(null);
     }, 50);
-  }, []), N = T(
-    (u, b) => {
-      u.preventDefault();
-      const m = y.current, h = x.current, $ = S.current, E = D.current, A = p.current;
-      if (!m || !$)
+  }, []), _ = D(
+    (g, b) => {
+      g.preventDefault();
+      const T = y.current, d = S.current, p = x.current, w = v.current, j = $.current;
+      if (!T || !p)
         return;
-      const { tabsetId: ne, tabIndex: ee } = m;
-      if (ne === b && E === "tab" && A !== null) {
-        const B = se(h.layout, ne);
-        if (!B || !B.children)
+      const { tabsetId: G, tabIndex: q } = T;
+      if (G === b && w === "tab" && j !== null) {
+        const W = se(d.layout, G);
+        if (!W || !W.children)
           return;
-        const F = B.children[ee];
-        if (!F || ee === A)
+        const A = W.children[q];
+        if (!A || q === j)
           return;
-        const _ = [...B.children];
-        _.splice(ee, 1), _.splice(A, 0, F);
-        let R = B.selected ?? 0;
-        ee < R && A >= R ? R = Math.max(0, R - 1) : ee > R && A <= R ? R = Math.min(R + 1, _.length - 1) : ee === R && (R = A);
-        const J = Q(
-          h.layout,
-          ne,
+        const te = [...W.children];
+        te.splice(q, 1), te.splice(j, 0, A);
+        let H = W.selected ?? 0;
+        q < H && j >= H ? H = Math.max(0, H - 1) : q > H && j <= H ? H = Math.min(H + 1, te.length - 1) : q === H && (H = j);
+        const Y = Q(
+          d.layout,
+          G,
           {
-            children: _,
-            selected: R
+            children: te,
+            selected: H
           }
         );
-        J && $({
-          ...h,
-          layout: J,
-          metadata: h.metadata
-        }), r(null), c(null), d(null);
+        Y && p({
+          ...d,
+          layout: Y,
+          metadata: d.metadata
+        }), r(null), c(null), h(null);
         return;
       }
-      if (ne === b && E !== "tab")
+      if (G === b && w !== "tab")
         return;
-      const te = se(h.layout, ne), M = se(h.layout, b);
-      if (!te || !M || !te.children || !M.children)
+      const U = se(d.layout, G), B = se(d.layout, b);
+      if (!U || !B || !U.children || !B.children)
         return;
-      const he = te.children[ee];
-      if (!he)
+      const de = U.children[q];
+      if (!de)
         return;
-      let U = h.layout;
-      const me = te.children.filter(
-        (B, F) => F !== ee
-      ), ge = Q(
-        U,
-        ne,
+      let M = d.layout;
+      const ye = U.children.filter(
+        (W, A) => A !== q
+      ), be = Q(
+        M,
+        G,
         {
-          children: me,
+          children: ye,
           selected: Math.min(
-            te.selected || 0,
-            me.length - 1
+            U.selected || 0,
+            ye.length - 1
           )
         }
       );
-      if (!ge) return;
-      if (U = ge, E === "center") {
-        const B = Q(
-          U,
+      if (!be) return;
+      if (M = be, w === "center") {
+        const W = Q(
+          M,
           b,
           {
-            children: [...M.children || [], he],
-            selected: M.children?.length || 0
+            children: [...B.children || [], de],
+            selected: B.children?.length || 0
           }
         );
-        if (!B) return;
-        U = B;
+        if (!W) return;
+        M = W;
       } else {
-        const B = pe(
+        const W = $e(
           `${b}-split-${Date.now()}`,
-          [he]
-        ), F = Ne(U, b);
-        if (F) {
-          const _ = F.children?.findIndex(
-            (R) => R.id === b
+          [de]
+        ), A = pe(M, b);
+        if (A) {
+          const te = A.children?.findIndex(
+            (H) => H.id === b
           ) || 0;
-          if (E === "left" || E === "right") {
-            const R = je(`${b}-row-${Date.now()}`, [
-              E === "left" ? B : M,
-              E === "left" ? M : B
-            ]), J = Q(
-              U,
-              F.id,
+          if (w === "left" || w === "right") {
+            const H = Xe(`${b}-row-${Date.now()}`, [
+              w === "left" ? W : B,
+              w === "left" ? B : W
+            ]), Y = Q(
+              M,
+              A.id,
               {
                 children: [
-                  ...F.children?.slice(0, _) || [],
-                  R,
-                  ...F.children?.slice(_ + 1) || []
+                  ...A.children?.slice(0, te) || [],
+                  H,
+                  ...A.children?.slice(te + 1) || []
                 ]
               }
             );
-            if (!J) return;
-            U = J;
-          } else if (E === "top" || E === "bottom") {
-            const R = qe(
+            if (!Y) return;
+            M = Y;
+          } else if (w === "top" || w === "bottom") {
+            const H = Ue(
               `${b}-column-${Date.now()}`,
               [
-                E === "top" ? B : M,
-                E === "top" ? M : B
+                w === "top" ? W : B,
+                w === "top" ? B : W
               ]
-            ), J = Q(
-              U,
-              F.id,
+            ), Y = Q(
+              M,
+              A.id,
               {
                 children: [
-                  ...F.children?.slice(0, _) || [],
-                  R,
-                  ...F.children?.slice(_ + 1) || []
+                  ...A.children?.slice(0, te) || [],
+                  H,
+                  ...A.children?.slice(te + 1) || []
                 ]
               }
             );
-            if (!J) return;
-            U = J;
+            if (!Y) return;
+            M = Y;
           }
         }
       }
-      const oe = xe(U);
-      oe && $({
-        ...h,
-        layout: oe,
-        metadata: h.metadata
+      const ie = ve(M);
+      ie && p({
+        ...d,
+        layout: ie,
+        metadata: d.metadata
       }), r(null), c(null);
     },
     []
@@ -899,16 +922,16 @@ const Le = ({
   return {
     draggedTab: n,
     dragOverTabset: a,
-    dropPosition: i,
+    dropPosition: l,
     dropTargetIndex: o,
-    handleDragStart: k,
-    handleDragEnd: L,
-    handleDragOver: P,
-    handleDragLeave: C,
-    handleDrop: N
+    handleDragStart: E,
+    handleDragEnd: R,
+    handleDragOver: X,
+    handleDragLeave: O,
+    handleDrop: _
   };
-}, Ye = "react-flex-layout";
-class We {
+}, Qe = "react-flex-layout";
+class Ae {
   storageKey;
   autoSave;
   debounceMs;
@@ -916,7 +939,7 @@ class We {
   lastSavedString = null;
   isAvailable;
   constructor(t = {}) {
-    this.storageKey = `${Ye}-${t.key || "default"}`, this.autoSave = t.autoSave !== !1, this.debounceMs = t.debounceMs || 500, this.isAvailable = Ge();
+    this.storageKey = `${Qe}-${t.key || "default"}`, this.autoSave = t.autoSave !== !1, this.debounceMs = t.debounceMs || 500, this.isAvailable = Ze();
   }
   save(t) {
     if (this.isAvailable)
@@ -962,95 +985,95 @@ class We {
     this.saveTimeout && (clearTimeout(this.saveTimeout), this.saveTimeout = null);
   }
 }
-const lt = (e) => new We(e), Ge = () => {
+const st = (e) => new Ae(e), Ze = () => {
   try {
     const e = "__localStorage_test__";
     return localStorage.setItem(e, e), localStorage.removeItem(e), !0;
   } catch {
     return !1;
   }
-}, Ve = (e, t = {}) => {
-  const { onLoad: n, onSave: r, onError: a, ...c } = t, i = I(null), [f, o] = ce(e), [d, y] = ce(!1), [x, S] = ce(!1);
-  W(() => {
-    if (i.current)
+}, Pe = (e, t = {}) => {
+  const { onLoad: n, onSave: r, onError: a, ...c } = t, l = C(null), [m, o] = ce(e), [h, y] = ce(!1), [S, x] = ce(!1);
+  k(() => {
+    if (l.current)
       try {
-        i.current.cancel?.();
+        l.current.cancel?.();
       } catch {
       }
-    i.current = new We(c), S(!0);
-  }, [c.key, c.autoSave, c.debounceMs]), W(() => {
-    if (!i.current || d) return;
-    const h = i.current.load();
-    h ? (o(h), y(!0), n?.(h)) : y(!0);
-  }, [d, n]);
-  const D = I(), p = ue(
-    () => JSON.stringify(f.layout),
-    [f.layout]
-  ), k = ue(
+    l.current = new Ae(c), x(!0);
+  }, [c.key, c.autoSave, c.debounceMs]), k(() => {
+    if (!l.current || h) return;
+    const d = l.current.load();
+    d ? (o(d), y(!0), n?.(d)) : y(!0);
+  }, [h, n]);
+  const v = C(), $ = ue(
+    () => JSON.stringify(m.layout),
+    [m.layout]
+  ), E = ue(
     () => JSON.stringify(e.layout),
     [e.layout]
-  ), L = ue(
-    () => f.metadata ? JSON.stringify(f.metadata) : void 0,
-    [f.metadata]
-  ), P = ue(
+  ), R = ue(
+    () => m.metadata ? JSON.stringify(m.metadata) : void 0,
+    [m.metadata]
+  ), X = ue(
     () => e.metadata ? JSON.stringify(e.metadata) : void 0,
     [e.metadata]
   );
-  W(() => {
-    if (!(!d || !i.current)) {
-      if (D.current !== k && p !== k) {
-        const h = { ...e };
-        e.global && (h.global = { ...e.global }), o(h), D.current = k, i.current.isAutoSaveEnabled() ? i.current.debouncedSave(h) : i.current.save(h);
+  k(() => {
+    if (!(!h || !l.current)) {
+      if (v.current !== E && $ !== E) {
+        const d = { ...e };
+        e.global && (d.global = { ...e.global }), o(d), v.current = E, l.current.isAutoSaveEnabled() ? l.current.debouncedSave(d) : l.current.save(d);
         return;
       }
-      e.metadata && L !== P && o((h) => ({
-        ...h,
+      e.metadata && R !== X && o((d) => ({
+        ...d,
         metadata: e.metadata
       }));
     }
   }, [
-    d,
-    i,
+    h,
+    l,
     e,
-    p,
-    k,
-    L,
-    P
+    $,
+    E,
+    R,
+    X
   ]);
-  const C = T(
-    (h) => {
-      if (i.current)
+  const O = D(
+    (d) => {
+      if (l.current)
         try {
-          i.current.isAutoSaveEnabled() ? i.current.debouncedSave(h) : i.current.save(h), r?.(h);
-        } catch ($) {
-          a?.($);
+          l.current.isAutoSaveEnabled() ? l.current.debouncedSave(d) : l.current.save(d), r?.(d);
+        } catch (p) {
+          a?.(p);
         }
     },
     [r, a]
-  ), N = T(
-    (h) => {
-      const $ = { ...h };
-      h.global && ($.global = { ...h.global }), o($), C($);
+  ), _ = D(
+    (d) => {
+      const p = { ...d };
+      d.global && (p.global = { ...d.global }), o(p), O(p);
     },
-    [C]
-  ), u = T(() => {
-    if (i.current)
+    [O]
+  ), g = D(() => {
+    if (l.current)
       try {
-        i.current.clear();
-      } catch (h) {
-        a?.(h);
+        l.current.clear();
+      } catch (d) {
+        a?.(d);
       }
-  }, [a]), b = T(() => i.current?.exists() ?? !1, []), m = T(() => i.current?.getStorageKey() ?? "", []);
+  }, [a]), b = D(() => l.current?.exists() ?? !1, []), T = D(() => l.current?.getStorageKey() ?? "", []);
   return {
-    model: f,
-    updateModel: N,
-    clearStorage: u,
+    model: m,
+    updateModel: _,
+    clearStorage: g,
     hasStoredData: b,
-    getStorageKey: m,
-    isLoaded: d,
-    hasStorage: x
+    getStorageKey: T,
+    isLoaded: h,
+    hasStorage: S
   };
-}, Qe = ke(
+}, et = Fe(
   ({
     model: e,
     factory: t,
@@ -1058,443 +1081,454 @@ const lt = (e) => new We(e), Ge = () => {
     onAction: r,
     className: a = "",
     style: c = {},
-    storage: i,
-    closeIcon: f,
+    storage: l,
+    closeIcon: m,
     closeButtonClassName: o,
-    scrollLeftIcon: d,
+    scrollLeftIcon: h,
     scrollRightIcon: y
-  }, x) => {
-    const [S, D] = ce(e), [p, k] = ce(
+  }, S) => {
+    const [x, v] = ce(e), [$, E] = ce(
       null
     ), {
-      model: L,
-      updateModel: P,
-      isLoaded: C
-    } = Ve(e, {
-      key: i?.key,
-      autoSave: i?.autoSave,
-      debounceMs: i?.debounceMs,
-      onLoad: (l) => {
-        n ? n(l) : D(l);
+      model: R,
+      updateModel: X,
+      isLoaded: O
+    } = Pe(e, {
+      key: l?.key,
+      autoSave: l?.autoSave,
+      debounceMs: l?.debounceMs,
+      onLoad: (i) => {
+        n ? n(i) : v(i);
       }
-    }), N = i?.enabled ? L : n ? e : S, u = I(n), b = I(i), m = I(P);
-    W(() => {
-      u.current = n;
-    }, [n]), W(() => {
-      b.current = i;
-    }, [i]), W(() => {
-      m.current = P;
-    }, [P]);
-    const h = T((l) => {
-      b.current?.enabled ? (m.current(l), u.current && u.current(l)) : u.current ? u.current(l) : D(l);
-    }, []), { handleResize: $, resetResize: E } = Xe(
-      N,
-      h
+    }), _ = l?.enabled ? R : n ? e : x, g = C(n), b = C(l), T = C(X);
+    k(() => {
+      g.current = n;
+    }, [n]), k(() => {
+      b.current = l;
+    }, [l]), k(() => {
+      T.current = X;
+    }, [X]);
+    const d = D((i) => {
+      b.current?.enabled ? (T.current(i), g.current && g.current(i)) : g.current ? g.current(i) : v(i);
+    }, []), { handleResize: p, resetResize: w } = Ge(
+      _,
+      d
+    ), j = C(/* @__PURE__ */ new Map()), G = D(
+      (i, I, z) => {
+        const ne = `${i}-${I}-${z ? "rtl" : "ltr"}`;
+        return j.current.has(ne) || j.current.set(ne, {
+          onResize: (u) => {
+            const Z = z ? -u : u;
+            p(i, Z, I);
+          },
+          onResizeStart: () => {
+            w(i, I);
+          }
+        }), j.current.get(ne);
+      },
+      [p, w]
     ), {
-      dragOverTabset: A,
-      dropPosition: ne,
-      dropTargetIndex: ee,
-      handleDragStart: te,
+      dragOverTabset: q,
+      dropPosition: U,
+      dropTargetIndex: B,
+      handleDragStart: de,
       handleDragEnd: M,
-      handleDragOver: he,
-      handleDragLeave: U,
-      handleDrop: me
-    } = Ue(N, h), ge = I(L);
-    W(() => {
-      ge.current = L;
-    }, [L]);
-    const oe = I(S);
-    W(() => {
-      oe.current = S;
-    }, [S]);
-    const B = I(e);
-    W(() => {
-      B.current = e;
+      handleDragOver: ye,
+      handleDragLeave: be,
+      handleDrop: ie
+    } = Ve(_, d), W = C(R);
+    k(() => {
+      W.current = R;
+    }, [R]);
+    const A = C(x);
+    k(() => {
+      A.current = x;
+    }, [x]);
+    const te = C(e);
+    k(() => {
+      te.current = e;
     }, [e]);
-    const F = I(r);
-    W(() => {
-      F.current = r;
+    const H = C(r);
+    k(() => {
+      H.current = r;
     }, [r]);
-    const _ = T((l) => {
+    const Y = D((i) => {
       if (b.current?.enabled) {
-        const z = ge.current;
-        if (l.type === "changeDirection") {
-          const { direction: g } = l.payload;
-          k(g);
+        const I = W.current;
+        if (i.type === "changeDirection") {
+          const { direction: u } = i.payload;
+          E(u);
         }
-        const j = ((g) => {
-          switch (l.type) {
+        const ne = ((u) => {
+          switch (i.type) {
             case "selectTab":
-              const { nodeId: de, tabIndex: re } = l.payload, Z = Q(g.layout, de, {
-                selected: re
+              const { nodeId: Z, tabIndex: J } = i.payload, ae = Q(u.layout, Z, {
+                selected: J
               });
-              return !Z || Z === g.layout ? g : {
-                ...g,
-                layout: Z
+              return !ae || ae === u.layout ? u : {
+                ...u,
+                layout: ae
               };
             case "removeNode":
-              const { nodeId: ie, tabIndex: G } = l.payload, H = se(g.layout, ie);
-              if (H && H.children) {
-                const O = H.children.filter(
-                  (ye, we) => we !== G
-                ), le = H.selected ?? 0;
-                let X = le;
-                G <= le && (X = Math.max(0, le - 1)), X = Math.min(X, O.length - 1);
-                const De = {
-                  ...H,
-                  children: O,
-                  selected: O.length > 0 ? X : void 0
-                }, Se = Q(
-                  g.layout,
-                  ie,
-                  De
+              const { nodeId: V, tabIndex: P } = i.payload, N = se(u.layout, V);
+              if (N && N.children) {
+                const F = N.children.filter(
+                  (xe, Ce) => Ce !== P
+                ), ee = N.selected ?? 0;
+                let ge = ee;
+                P <= ee && (ge = Math.max(0, ee - 1)), ge = Math.min(ge, F.length - 1);
+                const we = {
+                  ...N,
+                  children: F,
+                  selected: F.length > 0 ? ge : void 0
+                }, Te = Q(
+                  u.layout,
+                  V,
+                  we
                 );
-                if (Se) {
-                  const ye = xe(Se);
-                  if (ye)
+                if (Te) {
+                  const xe = ve(Te);
+                  if (xe)
                     return {
-                      ...g,
-                      layout: ye
+                      ...u,
+                      layout: xe
                     };
                 }
               }
-              return g;
+              return u;
             case "closeTabset":
-              const { nodeId: V } = l.payload, q = Q(
-                g.layout,
-                V,
+              const { nodeId: re } = i.payload, oe = Q(
+                u.layout,
+                re,
                 null
               );
-              if (q) {
-                const O = xe(q);
-                if (O)
+              if (oe) {
+                const F = ve(oe);
+                if (F)
                   return {
-                    ...g,
-                    layout: O
+                    ...u,
+                    layout: F
                   };
               }
-              return g;
+              return u;
             case "changeDirection":
-              const { direction: fe } = l.payload;
+              const { direction: he } = i.payload;
               return {
-                ...g,
+                ...u,
                 global: {
-                  ...g.global,
-                  direction: fe
+                  ...u.global,
+                  direction: he
                 }
               };
             default:
-              return g;
+              return u;
           }
-        })(z);
-        m.current(j), u.current && u.current(j), F.current?.(l);
+        })(I);
+        T.current(ne), g.current && g.current(ne), H.current?.(i);
       } else {
-        if (l.type === "changeDirection" && u.current) {
-          const { direction: z } = l.payload, Y = B.current, j = {
-            ...Y,
+        if (i.type === "changeDirection" && g.current) {
+          const { direction: I } = i.payload, z = te.current, ne = {
+            ...z,
             global: {
-              ...Y.global,
-              direction: z
+              ...z.global,
+              direction: I
             }
           };
-          u.current(j);
+          g.current(ne);
         }
-        F.current?.(l);
+        H.current?.(i);
       }
-      if (!b.current?.enabled && !u.current) {
-        const z = oe.current, j = ((g) => {
-          switch (l.type) {
+      if (!b.current?.enabled && !g.current) {
+        const I = A.current, ne = ((u) => {
+          switch (i.type) {
             case "selectTab":
-              const { nodeId: de, tabIndex: re } = l.payload, Z = Q(g.layout, de, {
-                selected: re
+              const { nodeId: Z, tabIndex: J } = i.payload, ae = Q(u.layout, Z, {
+                selected: J
               });
-              return !Z || Z === g.layout ? g : {
-                ...g,
-                layout: Z
+              return !ae || ae === u.layout ? u : {
+                ...u,
+                layout: ae
               };
             case "removeNode":
-              const { nodeId: ie, tabIndex: G } = l.payload, H = se(g.layout, ie);
-              if (H && H.children) {
-                const O = H.children.filter(
-                  (ye, we) => we !== G
-                ), le = H.selected ?? 0;
-                let X = le;
-                G <= le && (X = Math.max(0, le - 1)), X = Math.min(X, O.length - 1);
-                const De = {
-                  ...H,
-                  children: O,
-                  selected: O.length > 0 ? X : void 0
-                }, Se = Q(
-                  g.layout,
-                  ie,
-                  De
+              const { nodeId: V, tabIndex: P } = i.payload, N = se(u.layout, V);
+              if (N && N.children) {
+                const F = N.children.filter(
+                  (xe, Ce) => Ce !== P
+                ), ee = N.selected ?? 0;
+                let ge = ee;
+                P <= ee && (ge = Math.max(0, ee - 1)), ge = Math.min(ge, F.length - 1);
+                const we = {
+                  ...N,
+                  children: F,
+                  selected: F.length > 0 ? ge : void 0
+                }, Te = Q(
+                  u.layout,
+                  V,
+                  we
                 );
-                if (Se) {
-                  const ye = xe(Se);
-                  if (ye)
+                if (Te) {
+                  const xe = ve(Te);
+                  if (xe)
                     return {
-                      ...g,
-                      layout: ye
+                      ...u,
+                      layout: xe
                     };
                 }
               }
-              return g;
+              return u;
             case "closeTabset":
-              const { nodeId: V } = l.payload, q = Q(
-                g.layout,
-                V,
+              const { nodeId: re } = i.payload, oe = Q(
+                u.layout,
+                re,
                 null
               );
-              if (q) {
-                const O = xe(q);
-                if (O)
+              if (oe) {
+                const F = ve(oe);
+                if (F)
                   return {
-                    ...g,
-                    layout: O
+                    ...u,
+                    layout: F
                   };
               }
-              return g;
+              return u;
             case "changeDirection":
-              const { direction: fe } = l.payload;
+              const { direction: he } = i.payload;
               return {
-                ...g,
+                ...u,
                 global: {
-                  ...g.global,
-                  direction: fe
+                  ...u.global,
+                  direction: he
                 }
               };
             default:
-              return g;
+              return u;
           }
-        })(z);
-        D(j);
+        })(I);
+        v(ne);
       }
     }, []);
-    Ae(
-      x,
+    Be(
+      S,
       () => ({
-        handleAction: _
+        handleAction: Y
       }),
-      [_]
+      [Y]
     );
-    const R = T(
-      (l, z) => {
-        _({
+    const Se = D(
+      (i, I) => {
+        Y({
           type: "selectTab",
-          payload: { nodeId: l, tabIndex: z }
+          payload: { nodeId: i, tabIndex: I }
         });
       },
-      [_]
-    ), J = T(
-      (l, z) => {
-        _({
+      [Y]
+    ), De = D(
+      (i, I) => {
+        Y({
           type: "removeNode",
-          payload: { nodeId: l, tabIndex: z }
+          payload: { nodeId: i, tabIndex: I }
         });
       },
-      [_]
+      [Y]
     );
-    let ae;
-    i?.enabled ? p !== null ? ae = p : ae = L?.global?.direction || "ltr" : ae = N.global?.direction || "ltr";
-    const ve = N.global?.splitterSize || 8, s = T(
-      (l) => {
-        switch (l.type) {
+    let fe;
+    l?.enabled ? $ !== null ? fe = $ : fe = R?.global?.direction || "ltr" : fe = _.global?.direction || "ltr";
+    const s = _.global?.splitterSize || 8, f = D(
+      (i) => {
+        switch (i.type) {
           case "tabset":
-            return /* @__PURE__ */ w(
-              Ie,
+            return /* @__PURE__ */ L(
+              ze,
               {
-                node: l,
+                node: i,
                 factory: t,
-                onTabSelect: R,
-                onTabClose: J,
-                onTabDragStart: te,
+                onTabSelect: Se,
+                onTabClose: De,
+                onTabDragStart: de,
                 onTabDragEnd: M,
-                onDragOver: he,
-                onDragLeave: U,
-                onDrop: me,
-                dragOverTabset: A,
-                dropPosition: A === l.id ? ne : void 0,
-                dropTargetIndex: A === l.id ? ee : void 0,
-                direction: ae,
-                closeIcon: f,
+                onDragOver: ye,
+                onDragLeave: be,
+                onDrop: ie,
+                dragOverTabset: q,
+                dropPosition: q === i.id ? U : void 0,
+                dropTargetIndex: q === i.id ? B : void 0,
+                direction: fe,
+                closeIcon: m,
                 closeButtonClassName: o,
-                scrollLeftIcon: d,
+                scrollLeftIcon: h,
                 scrollRightIcon: y
               },
-              l.id
+              i.id
             );
           case "row":
-            const z = ae === "rtl", Y = l.children || [], j = z ? [...Y].reverse() : Y;
-            return /* @__PURE__ */ w(
+            const I = fe === "rtl", z = i.children || [], ne = I ? [...z].reverse() : z;
+            return /* @__PURE__ */ L(
               "div",
               {
                 className: "react-flex-layout-row",
                 style: {
-                  width: l.width ? `${l.width}%` : void 0,
-                  height: l.height ? `${l.height}%` : void 0,
-                  flex: `${l.flex || 1} 1 0%`,
-                  minWidth: l.minWidth ? `${l.minWidth}px` : void 0,
-                  minHeight: l.minHeight ? `${l.minHeight}px` : void 0,
-                  maxWidth: l.maxWidth ? `${l.maxWidth}px` : void 0,
-                  maxHeight: l.maxHeight ? `${l.maxHeight}px` : void 0
+                  width: i.width ? `${i.width}%` : void 0,
+                  height: i.height ? `${i.height}%` : void 0,
+                  flex: `${i.flex || 1} 1 0%`,
+                  minWidth: i.minWidth ? `${i.minWidth}px` : void 0,
+                  minHeight: i.minHeight ? `${i.minHeight}px` : void 0,
+                  maxWidth: i.maxWidth ? `${i.maxWidth}px` : void 0,
+                  maxHeight: i.maxHeight ? `${i.maxHeight}px` : void 0
                 },
-                children: j.map((g, de) => {
-                  const re = de + 1;
-                  if (!(re < j.length))
-                    return /* @__PURE__ */ w(Te.Fragment, { children: s(g) }, g.id);
-                  const ie = z ? Y.length - 1 - de : de, G = z ? Y.length - 1 - re : re, H = Math.min(
-                    ie,
-                    G
+                children: ne.map((u, Z) => {
+                  const J = Z + 1;
+                  if (!(J < ne.length))
+                    return /* @__PURE__ */ L(Re.Fragment, { children: f(u) }, u.id);
+                  const V = I ? z.length - 1 - Z : Z, P = I ? z.length - 1 - J : J, N = Math.min(
+                    V,
+                    P
                   );
                   if (Math.max(
-                    ie,
-                    G
-                  ) !== H + 1)
-                    return /* @__PURE__ */ w(Te.Fragment, { children: s(g) }, g.id);
-                  const q = Y[H], fe = z && ie > G;
-                  return /* @__PURE__ */ be(Te.Fragment, { children: [
-                    s(g),
-                    /* @__PURE__ */ w(
-                      Le,
+                    V,
+                    P
+                  ) !== N + 1)
+                    return /* @__PURE__ */ L(Re.Fragment, { children: f(u) }, u.id);
+                  const oe = z[N], he = I && V > P, F = G(
+                    oe.id,
+                    "horizontal",
+                    he
+                  );
+                  return /* @__PURE__ */ me(Re.Fragment, { children: [
+                    f(u),
+                    /* @__PURE__ */ L(
+                      Ie,
                       {
                         direction: "horizontal",
-                        onResize: (O) => {
-                          const le = fe ? -O : O;
-                          $(
-                            q.id,
-                            le,
-                            "horizontal"
-                          );
-                        },
-                        onResizeStart: () => {
-                          E(q.id, "horizontal");
-                        },
-                        size: ve
+                        onResize: F.onResize,
+                        onResizeStart: F.onResizeStart,
+                        size: s
                       }
                     )
-                  ] }, g.id);
+                  ] }, u.id);
                 })
               },
-              l.id
+              i.id
             );
           case "column":
-            return /* @__PURE__ */ w(
+            return /* @__PURE__ */ L(
               "div",
               {
                 className: "react-flex-layout-column",
                 style: {
-                  width: l.width ? `${l.width}%` : void 0,
-                  height: l.height ? `${l.height}%` : void 0,
-                  flex: `${l.flex || 1} 1 0%`,
-                  minWidth: l.minWidth ? `${l.minWidth}px` : void 0,
-                  minHeight: l.minHeight ? `${l.minHeight}px` : void 0,
-                  maxWidth: l.maxWidth ? `${l.maxWidth}px` : void 0,
-                  maxHeight: l.maxHeight ? `${l.maxHeight}px` : void 0
+                  width: i.width ? `${i.width}%` : void 0,
+                  height: i.height ? `${i.height}%` : void 0,
+                  flex: `${i.flex || 1} 1 0%`,
+                  minWidth: i.minWidth ? `${i.minWidth}px` : void 0,
+                  minHeight: i.minHeight ? `${i.minHeight}px` : void 0,
+                  maxWidth: i.maxWidth ? `${i.maxWidth}px` : void 0,
+                  maxHeight: i.maxHeight ? `${i.maxHeight}px` : void 0
                 },
-                children: l.children?.map((g, de) => /* @__PURE__ */ be(Te.Fragment, { children: [
-                  s(g),
-                  de < (l.children?.length || 0) - 1 && /* @__PURE__ */ w(
-                    Le,
-                    {
-                      direction: "vertical",
-                      onResize: (re) => $(g.id, re, "vertical"),
-                      onResizeStart: () => {
-                        E(g.id, "vertical");
-                      },
-                      size: ve
-                    }
-                  )
-                ] }, g.id))
+                children: i.children?.map((u, Z) => {
+                  const J = Z < (i.children?.length || 0) - 1 ? G(u.id, "vertical") : null;
+                  return /* @__PURE__ */ me(Re.Fragment, { children: [
+                    f(u),
+                    J && /* @__PURE__ */ L(
+                      Ie,
+                      {
+                        direction: "vertical",
+                        onResize: J.onResize,
+                        onResizeStart: J.onResizeStart,
+                        size: s
+                      }
+                    )
+                  ] }, u.id);
+                })
               },
-              l.id
+              i.id
             );
           case "tab":
-            return t(l);
+            return t(i);
           default:
             return null;
         }
       },
       [
-        ae,
-        ve,
+        fe,
+        s,
         t,
-        R,
-        J,
-        $,
-        te,
+        Se,
+        De,
+        p,
+        de,
         M,
-        he,
+        ye,
+        be,
+        ie,
+        q,
         U,
-        me,
-        A,
-        ne,
-        f,
-        o
+        m,
+        o,
+        G
       ]
     );
-    W(() => {
-      !i?.enabled && p !== null && k(null);
-    }, [i?.enabled, p]), W(() => {
-      i?.enabled && p !== null && (L?.global?.direction || "ltr") === p && k(null);
-    }, [i?.enabled, p, L?.global?.direction]);
-    const v = ue(
-      () => s(N.layout),
-      [s, N.layout]
-    ), K = {
+    k(() => {
+      !l?.enabled && $ !== null && E(null);
+    }, [l?.enabled, $]), k(() => {
+      l?.enabled && $ !== null && (R?.global?.direction || "ltr") === $ && E(null);
+    }, [l?.enabled, $, R?.global?.direction]);
+    const K = ue(
+      () => f(_.layout),
+      [f, _.layout]
+    ), le = {
       ...c,
       height: "100%",
       width: "100%"
     };
-    return i?.enabled && !C ? /* @__PURE__ */ w(
+    return l?.enabled && !O ? /* @__PURE__ */ L(
       "div",
       {
         className: `react-flex-layout ${a}`,
         style: {
-          ...K,
+          ...le,
           display: "flex",
           alignItems: "center",
           justifyContent: "center"
         },
-        children: /* @__PURE__ */ w("div", { children: "Loading layout..." })
+        children: /* @__PURE__ */ L("div", { children: "Loading layout..." })
       }
-    ) : /* @__PURE__ */ w(
+    ) : /* @__PURE__ */ L(
       "div",
       {
         className: `react-flex-layout ${a}`,
-        style: K,
-        dir: ae,
-        children: v
+        style: le,
+        dir: fe,
+        children: K
       }
     );
   }
 );
-Qe.displayName = "Layout";
-const Ze = Ce(Re, (e, t) => !(e.className !== t.className || e.style !== t.style || e.closeIcon !== t.closeIcon || e.closeButtonClassName !== t.closeButtonClassName || e.index !== t.index || e.onSelect !== t.onSelect || e.onClose !== t.onClose || e.onDragStart !== t.onDragStart || e.onDragEnd !== t.onDragEnd || e.node.id !== t.node.id || e.node.name !== t.node.name));
-Ze.displayName = "MemoizedTab";
+et.displayName = "Layout";
+const tt = Le(Ne, (e, t) => !(e.className !== t.className || e.style !== t.style || e.closeIcon !== t.closeIcon || e.closeButtonClassName !== t.closeButtonClassName || e.index !== t.index || e.onSelect !== t.onSelect || e.onClose !== t.onClose || e.onDragStart !== t.onDragStart || e.onDragEnd !== t.onDragEnd || e.node.id !== t.node.id || e.node.name !== t.node.name));
+tt.displayName = "MemoizedTab";
 export {
-  Be as DefaultCloseIcon,
-  Qe as Layout,
-  We as LayoutStorage,
-  Ze as MemoizedTab,
-  Ie as MemoizedTabSet,
-  Le as Splitter,
-  Re as Tab,
-  Me as TabSet,
-  Je as addTabToTabset,
-  ze as calculateFlexValues,
-  qe as createColumn,
-  tt as createLayoutModel,
-  lt as createLayoutStorage,
-  je as createRow,
-  _e as createTab,
-  pe as createTabSet,
+  Me as DefaultCloseIcon,
+  et as Layout,
+  Ae as LayoutStorage,
+  tt as MemoizedTab,
+  ze as MemoizedTabSet,
+  Ie as Splitter,
+  Ne as Tab,
+  je as TabSet,
+  Ye as addTabToTabset,
+  Ee as calculateFlexValues,
+  Ue as createColumn,
+  lt as createLayoutModel,
+  st as createLayoutStorage,
+  Xe as createRow,
+  Je as createTab,
+  $e as createTabSet,
   se as findNodeById,
-  Ge as isLocalStorageAvailable,
-  xe as removeEmptyTabsets,
-  $e as removeNodeById,
-  nt as removeTab,
-  rt as restoreTab,
-  it as tabExists,
+  Ze as isLocalStorageAvailable,
+  ve as removeEmptyTabsets,
+  He as removeNodeById,
+  it as removeTab,
+  at as restoreTab,
+  ct as tabExists,
   Q as updateNodeById,
-  Ve as useLayoutStorage
+  Pe as useLayoutStorage
 };

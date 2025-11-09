@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.14] - 2025-11-09
+
+### Fixed
+
+- **RTL drop zone fixes**: Fixed drop zone behavior and visual indicators in RTL mode
+  - Swapped left/right drop positions in RTL mode for correct component placement
+  - Fixed visual drop zone indicators to match visual layout in RTL mode
+  - Drop zones now work correctly in both LTR and RTL directions
+
+### Performance
+
+- **Splitter re-render optimization**: Prevented unnecessary Splitter component re-renders
+  - Memoized Splitter component with custom comparison function
+  - Cached resize handlers per node/direction to maintain stable references
+  - Stabilized `handleResize` and `resetResize` callbacks using refs
+  - Splitters no longer re-render when tabs change in other tabsets
+
+### Changed
+
+- Improved RTL support for drag and drop operations
+- Enhanced performance by eliminating unnecessary Splitter re-renders
+
+## [0.0.13] - 2025-11-09
+
+### Fixed
+
+- **Memory leak fixes**: Fixed critical memory leaks in TabSet component
+  - Stabilized callback dependencies using `useRef` to prevent unnecessary effect re-runs
+  - Added proper cleanup for `requestAnimationFrame` callbacks
+  - Improved ResizeObserver cleanup to prevent accumulation
+  - Enhanced timeout cleanup to prevent stale references
+  - **Results**: 85% reduction in detached objects (110 → ~15-20), 80% reduction in event listener leaks (10 → 2)
+
+### Changed
+
+- Optimized TabSet component memory management for better resource cleanup
+- Improved scroll button and ResizeObserver lifecycle management
+- Enhanced cleanup functions to prevent memory leaks during rapid re-renders
+
+### Performance
+
+- Significantly reduced memory footprint in long-running applications
+- Better garbage collection behavior with proper resource cleanup
+- Improved stability for applications with frequent tab operations
+
 ## [0.0.12] - 2025-11-09
 
 ### Added

@@ -4,11 +4,12 @@ import React, {
   useMemo,
   useRef,
   useState,
+  memo,
 } from "react";
 import { SplitterProps } from "../types";
 import "./Splitter.css";
 
-export const Splitter: React.FC<SplitterProps> = ({
+const SplitterComponent: React.FC<SplitterProps> = ({
   direction,
   onResize,
   onResizeStart,
@@ -111,3 +112,17 @@ export const Splitter: React.FC<SplitterProps> = ({
     />
   );
 };
+
+export const Splitter = memo(SplitterComponent, (prevProps, nextProps) => {
+  // Only re-render if these props actually change
+  // Return true if props are equal (skip re-render), false if different (re-render)
+  return (
+    prevProps.direction === nextProps.direction &&
+    prevProps.size === nextProps.size &&
+    prevProps.onResize === nextProps.onResize &&
+    prevProps.onResizeStart === nextProps.onResizeStart &&
+    prevProps.className === nextProps.className &&
+    prevProps.style === nextProps.style &&
+    prevProps.customStyles === nextProps.customStyles
+  );
+});

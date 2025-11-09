@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { LayoutNode, LayoutModel } from "../types";
 import { updateNodeById } from "../utils/layoutUtils";
 
@@ -12,12 +12,24 @@ export const useLayoutResize = (
   const lastAppliedRef = useRef<{
     [key: string]: { current: number; sibling: number } | undefined;
   }>({});
+  const modelRef = useRef<LayoutModel>(model);
+  const onModelChangeRef = useRef(onModelChange);
+
+  // Keep refs up to date
+  useEffect(() => {
+    modelRef.current = model;
+  }, [model]);
+
+  useEffect(() => {
+    onModelChangeRef.current = onModelChange;
+  }, [onModelChange]);
 
   const handleResize = useCallback(
     (nodeId: string, delta: number, direction: "horizontal" | "vertical") => {
-      if (!onModelChange) return;
+      if (!onModelChangeRef.current) return;
 
-      const parent = findParentNode(model.layout, nodeId);
+      const currentModel = modelRef.current;
+      const parent = findParentNode(currentModel.layout, nodeId);
       if (!parent || !parent.children) return;
 
       const currentIndex = parent.children.findIndex(
@@ -85,7 +97,7 @@ export const useLayoutResize = (
         newChildren[currentIndex] = { ...currentChild, flex: newCurrentFlex };
         newChildren[siblingIndex] = { ...siblingChild, flex: newSiblingFlex };
 
-        const updatedLayout = updateNodeById(model.layout, parent.id, {
+        const updatedLayout = updateNodeById(currentModel.layout, parent.id, {
           children: newChildren,
         });
 
@@ -94,14 +106,14 @@ export const useLayoutResize = (
             current: newCurrentFlex,
             sibling: newSiblingFlex,
           };
-          onModelChange({
-            ...model,
+          onModelChangeRef.current({
+            ...currentModel,
             layout: updatedLayout,
           });
         }
       }
     },
-    [model, onModelChange]
+    [] // Empty deps - stable reference, uses refs internally
   );
 
   const resetResize = useCallback(
