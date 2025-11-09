@@ -895,7 +895,6 @@ const Le = ({
       }), r(null), c(null);
     },
     []
-    // No dependencies - uses refs
   );
   return {
     draggedTab: n,
@@ -1086,13 +1085,9 @@ const lt = (e) => new We(e), Ge = () => {
     }, [i]), W(() => {
       m.current = P;
     }, [P]);
-    const h = T(
-      (l) => {
-        b.current?.enabled ? (m.current(l), u.current && u.current(l)) : u.current ? u.current(l) : D(l);
-      },
-      []
-      // No dependencies - uses refs
-    ), { handleResize: $, resetResize: E } = Xe(
+    const h = T((l) => {
+      b.current?.enabled ? (m.current(l), u.current && u.current(l)) : u.current ? u.current(l) : D(l);
+    }, []), { handleResize: $, resetResize: E } = Xe(
       N,
       h
     ), {
@@ -1120,171 +1115,161 @@ const lt = (e) => new We(e), Ge = () => {
     W(() => {
       F.current = r;
     }, [r]);
-    const _ = T(
-      (l) => {
-        if (b.current?.enabled) {
-          const z = ge.current;
-          if (l.type === "changeDirection") {
-            const { direction: g } = l.payload;
-            k(g);
-          }
-          const j = ((g) => {
-            switch (l.type) {
-              case "selectTab":
-                const { nodeId: de, tabIndex: re } = l.payload, Z = Q(g.layout, de, {
-                  selected: re
-                });
-                return !Z || Z === g.layout ? g : {
-                  ...g,
-                  layout: Z
-                };
-              case "removeNode":
-                const { nodeId: ie, tabIndex: G } = l.payload, H = se(g.layout, ie);
-                if (H && H.children) {
-                  const O = H.children.filter(
-                    (ye, we) => we !== G
-                  ), le = H.selected ?? 0;
-                  let X = le;
-                  G <= le && (X = Math.max(0, le - 1)), X = Math.min(
-                    X,
-                    O.length - 1
-                  );
-                  const De = {
-                    ...H,
-                    children: O,
-                    selected: O.length > 0 ? X : void 0
-                  }, Se = Q(
-                    g.layout,
-                    ie,
-                    De
-                  );
-                  if (Se) {
-                    const ye = xe(Se);
-                    if (ye)
-                      return {
-                        ...g,
-                        layout: ye
-                      };
-                  }
-                }
-                return g;
-              case "closeTabset":
-                const { nodeId: V } = l.payload, q = Q(
+    const _ = T((l) => {
+      if (b.current?.enabled) {
+        const z = ge.current;
+        if (l.type === "changeDirection") {
+          const { direction: g } = l.payload;
+          k(g);
+        }
+        const j = ((g) => {
+          switch (l.type) {
+            case "selectTab":
+              const { nodeId: de, tabIndex: re } = l.payload, Z = Q(g.layout, de, {
+                selected: re
+              });
+              return !Z || Z === g.layout ? g : {
+                ...g,
+                layout: Z
+              };
+            case "removeNode":
+              const { nodeId: ie, tabIndex: G } = l.payload, H = se(g.layout, ie);
+              if (H && H.children) {
+                const O = H.children.filter(
+                  (ye, we) => we !== G
+                ), le = H.selected ?? 0;
+                let X = le;
+                G <= le && (X = Math.max(0, le - 1)), X = Math.min(X, O.length - 1);
+                const De = {
+                  ...H,
+                  children: O,
+                  selected: O.length > 0 ? X : void 0
+                }, Se = Q(
                   g.layout,
-                  V,
-                  null
+                  ie,
+                  De
                 );
-                if (q) {
-                  const O = xe(q);
-                  if (O)
+                if (Se) {
+                  const ye = xe(Se);
+                  if (ye)
                     return {
                       ...g,
-                      layout: O
+                      layout: ye
                     };
                 }
-                return g;
-              case "changeDirection":
-                const { direction: fe } = l.payload;
-                return {
-                  ...g,
-                  global: {
-                    ...g.global,
-                    direction: fe
-                  }
-                };
-              default:
-                return g;
-            }
-          })(z);
-          m.current(j), u.current && u.current(j), F.current?.(l);
-        } else {
-          if (l.type === "changeDirection" && u.current) {
-            const { direction: z } = l.payload, Y = B.current, j = {
-              ...Y,
-              global: {
-                ...Y.global,
-                direction: z
               }
-            };
-            u.current(j);
-          }
-          F.current?.(l);
-        }
-        if (!b.current?.enabled && !u.current) {
-          const z = oe.current, j = ((g) => {
-            switch (l.type) {
-              case "selectTab":
-                const { nodeId: de, tabIndex: re } = l.payload, Z = Q(g.layout, de, {
-                  selected: re
-                });
-                return !Z || Z === g.layout ? g : {
-                  ...g,
-                  layout: Z
-                };
-              case "removeNode":
-                const { nodeId: ie, tabIndex: G } = l.payload, H = se(g.layout, ie);
-                if (H && H.children) {
-                  const O = H.children.filter(
-                    (ye, we) => we !== G
-                  ), le = H.selected ?? 0;
-                  let X = le;
-                  G <= le && (X = Math.max(0, le - 1)), X = Math.min(
-                    X,
-                    O.length - 1
-                  );
-                  const De = {
-                    ...H,
-                    children: O,
-                    selected: O.length > 0 ? X : void 0
-                  }, Se = Q(
-                    g.layout,
-                    ie,
-                    De
-                  );
-                  if (Se) {
-                    const ye = xe(Se);
-                    if (ye)
-                      return {
-                        ...g,
-                        layout: ye
-                      };
-                  }
+              return g;
+            case "closeTabset":
+              const { nodeId: V } = l.payload, q = Q(
+                g.layout,
+                V,
+                null
+              );
+              if (q) {
+                const O = xe(q);
+                if (O)
+                  return {
+                    ...g,
+                    layout: O
+                  };
+              }
+              return g;
+            case "changeDirection":
+              const { direction: fe } = l.payload;
+              return {
+                ...g,
+                global: {
+                  ...g.global,
+                  direction: fe
                 }
-                return g;
-              case "closeTabset":
-                const { nodeId: V } = l.payload, q = Q(
+              };
+            default:
+              return g;
+          }
+        })(z);
+        m.current(j), u.current && u.current(j), F.current?.(l);
+      } else {
+        if (l.type === "changeDirection" && u.current) {
+          const { direction: z } = l.payload, Y = B.current, j = {
+            ...Y,
+            global: {
+              ...Y.global,
+              direction: z
+            }
+          };
+          u.current(j);
+        }
+        F.current?.(l);
+      }
+      if (!b.current?.enabled && !u.current) {
+        const z = oe.current, j = ((g) => {
+          switch (l.type) {
+            case "selectTab":
+              const { nodeId: de, tabIndex: re } = l.payload, Z = Q(g.layout, de, {
+                selected: re
+              });
+              return !Z || Z === g.layout ? g : {
+                ...g,
+                layout: Z
+              };
+            case "removeNode":
+              const { nodeId: ie, tabIndex: G } = l.payload, H = se(g.layout, ie);
+              if (H && H.children) {
+                const O = H.children.filter(
+                  (ye, we) => we !== G
+                ), le = H.selected ?? 0;
+                let X = le;
+                G <= le && (X = Math.max(0, le - 1)), X = Math.min(X, O.length - 1);
+                const De = {
+                  ...H,
+                  children: O,
+                  selected: O.length > 0 ? X : void 0
+                }, Se = Q(
                   g.layout,
-                  V,
-                  null
+                  ie,
+                  De
                 );
-                if (q) {
-                  const O = xe(q);
-                  if (O)
+                if (Se) {
+                  const ye = xe(Se);
+                  if (ye)
                     return {
                       ...g,
-                      layout: O
+                      layout: ye
                     };
                 }
-                return g;
-              case "changeDirection":
-                const { direction: fe } = l.payload;
-                return {
-                  ...g,
-                  global: {
-                    ...g.global,
-                    direction: fe
-                  }
-                };
-              default:
-                return g;
-            }
-          })(z);
-          D(j);
-        }
-      },
-      []
-      // No dependencies - uses refs
-    );
+              }
+              return g;
+            case "closeTabset":
+              const { nodeId: V } = l.payload, q = Q(
+                g.layout,
+                V,
+                null
+              );
+              if (q) {
+                const O = xe(q);
+                if (O)
+                  return {
+                    ...g,
+                    layout: O
+                  };
+              }
+              return g;
+            case "changeDirection":
+              const { direction: fe } = l.payload;
+              return {
+                ...g,
+                global: {
+                  ...g.global,
+                  direction: fe
+                }
+              };
+            default:
+              return g;
+          }
+        })(z);
+        D(j);
+      }
+    }, []);
     Ae(
       x,
       () => ({

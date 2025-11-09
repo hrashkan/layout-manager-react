@@ -21,7 +21,6 @@ export default defineConfig({
     minify: true,
     rollupOptions: {
       external: (id) => {
-        // Externalize React and all React-related modules
         return (
           id === "react" ||
           id === "react-dom" ||

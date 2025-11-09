@@ -14,11 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auto-scroll to selected tab**: Tabs automatically scroll into view when selected
 - **Smooth scrolling**: Scroll buttons use smooth scrolling behavior for better UX
 - **Responsive scroll buttons**: Scroll buttons automatically show/hide based on scroll position and content overflow
+- **Memory management tests**: Comprehensive test suite for memory leak detection and resource cleanup verification
+- **Live Demo**: Interactive demo available at [https://hrashkan.github.io/layout-manager-demo/](https://hrashkan.github.io/layout-manager-demo/)
 
 ### Changed
 
 - Improved tab header scrolling behavior with scroll buttons for better navigation when many tabs are present
 - Enhanced tab visibility: Selected tabs are automatically scrolled into view
+- Updated test infrastructure: Added ResizeObserver polyfill for jsdom test environment
+- Excluded E2E tests from Vitest to prevent conflicts with Playwright
+
+### Testing
+
+- Added memory management tests to existing test files (Layout, useLayoutStorage, useDragAndDrop)
+- Created general memory management test suite
+- All 107 unit tests passing
+- All 19 E2E tests passing
 
 ## [0.0.10] - 2025-11-08
 
