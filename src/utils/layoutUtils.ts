@@ -125,9 +125,10 @@ export const updateNodeById = (
     if (updates === null) {
       return null;
     }
-    const hasChanges = Object.keys(updates).some(
-      (key) => (node as any)[key] !== (updates as any)[key]
-    );
+    const hasChanges = Object.keys(updates).some((key) => {
+      const nodeKey = key as keyof LayoutNode;
+      return node[nodeKey] !== updates[nodeKey];
+    });
     if (!hasChanges) {
       return node;
     }

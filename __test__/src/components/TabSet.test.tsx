@@ -186,24 +186,63 @@ describe("TabSet component", () => {
     });
   });
 
-  it("accepts custom scroll icons", () => {
+  it("accepts custom scroll icons", async () => {
     const CustomLeftIcon = () => <span data-testid="custom-left">←</span>;
     const CustomRightIcon = () => <span data-testid="custom-right">→</span>;
-    const node = mkTabset([mkTab("a", "A"), mkTab("b", "B")], 0);
-    const { queryByTestId } = render(
+    const node = mkTabset(
+      [
+        mkTab("a", "A"),
+        mkTab("b", "B"),
+        mkTab("c", "C"),
+        mkTab("d", "D"),
+        mkTab("e", "E"),
+      ],
+      0
+    );
+    const { container } = render(
       <TabSet
         node={node}
         factory={factory}
+        style={{ width: "200px" }}
         scrollLeftIcon={<CustomLeftIcon />}
         scrollRightIcon={<CustomRightIcon />}
       />
     );
-    // Icons may not be visible if tabs don't overflow, but they should be accepted
-    expect(queryByTestId("custom-left")).toBeTruthy();
-    expect(queryByTestId("custom-right")).toBeTruthy();
+    const tabsContainer = container.querySelector(
+      ".react-flex-layout-tabset-tabs-container"
+    ) as HTMLElement;
+    
+    // Mock scroll properties to show buttons
+    Object.defineProperty(tabsContainer, "scrollWidth", {
+      writable: true,
+      configurable: true,
+      value: 500,
+    });
+    Object.defineProperty(tabsContainer, "clientWidth", {
+      writable: true,
+      configurable: true,
+      value: 200,
+    });
+    Object.defineProperty(tabsContainer, "scrollLeft", {
+      writable: true,
+      configurable: true,
+      value: 100,
+    });
+
+    await act(async () => {
+      fireEvent.scroll(tabsContainer);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    });
+
+    // Wait for custom icons to appear
+    await waitFor(() => {
+      const leftIcon = container.querySelector('[data-testid="custom-left"]');
+      const rightIcon = container.querySelector('[data-testid="custom-right"]');
+      expect(leftIcon || rightIcon).toBeTruthy();
+    });
   });
 
-  it("scrolls tabs container when scroll buttons are clicked", () => {
+  it("scrolls tabs container when scroll buttons are clicked", async () => {
     const node = mkTabset(
       [
         mkTab("a", "A"),
@@ -226,23 +265,31 @@ describe("TabSet component", () => {
     tabsContainer.scrollBy = scrollBySpy;
     Object.defineProperty(tabsContainer, "scrollWidth", {
       writable: true,
+      configurable: true,
       value: 500,
     });
     Object.defineProperty(tabsContainer, "clientWidth", {
       writable: true,
+      configurable: true,
       value: 200,
     });
     Object.defineProperty(tabsContainer, "scrollLeft", {
       writable: true,
+      configurable: true,
       value: 100,
     });
 
-    fireEvent.scroll(tabsContainer);
+    await act(async () => {
+      fireEvent.scroll(tabsContainer);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    });
     
-    setTimeout(() => {
+    await waitFor(() => {
       const rightButton = container.querySelector(
         ".react-flex-layout-tabset-scroll-right"
       ) as HTMLButtonElement;
+      expect(rightButton).toBeTruthy();
+      
       if (rightButton) {
         fireEvent.click(rightButton);
         expect(scrollBySpy).toHaveBeenCalledWith({
@@ -250,6 +297,6 @@ describe("TabSet component", () => {
           behavior: "smooth",
         });
       }
-    }, 20);
+    });
   });
 });

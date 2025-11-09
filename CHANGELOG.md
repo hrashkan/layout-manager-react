@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.11] - 2025-11-09
+
+### Added
+
+- **Scroll buttons for tab headers**: Added left/right scroll buttons that appear when tabs overflow the tabset header
+- **Custom scroll icons**: Support for custom `scrollLeftIcon` and `scrollRightIcon` props to customize scroll button icons
+- **Auto-scroll to selected tab**: Tabs automatically scroll into view when selected
+- **Smooth scrolling**: Scroll buttons use smooth scrolling behavior for better UX
+- **Responsive scroll buttons**: Scroll buttons automatically show/hide based on scroll position and content overflow
+
+### Changed
+
+- Improved tab header scrolling behavior with scroll buttons for better navigation when many tabs are present
+- Enhanced tab visibility: Selected tabs are automatically scrolled into view
+
 ## [0.0.10] - 2025-11-08
 
 ### Performance

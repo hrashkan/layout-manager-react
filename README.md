@@ -20,6 +20,8 @@ A modern React layout manager using flexbox with percentage-based sizing, simila
 npm install layout-manager-react
 ```
 
+**Bundle Size**: Check the package size on [Bundlephobia](https://bundlephobia.com/package/layout-manager-react@0.0.11)
+
 ## Quick Start
 
 ```tsx

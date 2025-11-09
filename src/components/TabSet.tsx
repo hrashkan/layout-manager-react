@@ -324,6 +324,7 @@ export const TabSet: React.FC<TabSetProps> = ({
         isDragOver ? "drag-over" : ""
       } ${className}`}
       style={tabSetStyle}
+      data-tabset-id={node.id}
       data-drop-position={isDragOver ? dropPosition : undefined}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
