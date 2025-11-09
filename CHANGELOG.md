@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.14] - 2025-11-09
+## [0.0.13] - 2025-11-09
 
 ### Fixed
 
@@ -26,10 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved RTL support for drag and drop operations
 - Enhanced performance by eliminating unnecessary Splitter re-renders
-
-## [0.0.13] - 2025-11-09
-
-### Fixed
 
 - **Memory leak fixes**: Fixed critical memory leaks in TabSet component
   - Stabilized callback dependencies using `useRef` to prevent unnecessary effect re-runs
