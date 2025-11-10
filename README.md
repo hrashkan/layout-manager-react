@@ -32,7 +32,7 @@ npm install layout-manager-react@latest
 npm update layout-manager-react
 ```
 
-**Bundle Size**: Check the package size on [Bundlephobia](https://bundlephobia.com/package/layout-manager-react@0.0.13)
+**Bundle Size**: Check the package size on [Bundlephobia](https://bundlephobia.com/package/layout-manager-react@0.0.14)
 
 ## Quick Start
 

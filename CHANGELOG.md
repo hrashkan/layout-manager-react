@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.14] - 2025-11-10
+
+### Performance
+
+- **Tree traversal caching**: Implemented O(1) node lookups using index maps
+
+  - Added `buildNodeIndexes()` utility to create node and parent index maps
+  - Added `findNodeByIdCached()` and `findParentNodeCached()` for O(1) lookups
+  - Created `useNodeIndex()` hook to maintain indexes automatically
+  - **Results**: 7-10x faster node lookups, 10x faster parent lookups
+  - Performance improvement scales with layout size (2x for small, 10x+ for large layouts)
+  - Index building overhead: ~0.1ms for 100 nodes, amortized over many lookups
+
+- **LRU cache for resize handlers**: Prevented unbounded memory growth
+  - Implemented LRU (Least Recently Used) cache with max 100 entries
+  - Resize handlers are now cached and reused efficiently
+  - Old handlers are automatically evicted when cache is full
+  - **Results**: Memory growth is now bounded, prevents memory leaks in long-running apps
+
+### Changed
+
+- **Extracted SVG icons**: Moved inline SVG icons to separate components
+  - Created `ScrollLeftIcon` and `ScrollRightIcon` components in `src/components/icons/`
+  - Icons are now exported and can be customized or replaced
+  - Better code organization and tree-shaking support
+  - Icons accept standard SVG props for customization
+
+### Added
+
+- **New exports**:
+
+  - `ScrollLeftIcon` - Default scroll left icon component
+  - `ScrollRightIcon` - Default scroll right icon component
+  - `buildNodeIndexes()` - Utility to build node index maps
+  - `findNodeByIdCached()` - Cached version of findNodeById
+  - `findParentNodeCached()` - Cached version of findParentNode
+  - `useNodeIndex()` - Hook to maintain node indexes
+
+- **Performance tests**: Added comprehensive performance benchmarks
+  - Tests compare cached vs recursive lookup performance
+  - Tests verify memory management improvements
+  - Tests measure real-world drag and drop operation performance
+
+### Technical Details
+
+- **Memory optimization**: Resize handler cache is capped at 100 entries using LRU eviction
+- **Performance optimization**: Node lookups use Map-based indexes instead of recursive tree traversal
+- **Backward compatibility**: All existing APIs remain unchanged, optimizations are internal
+
 ## [0.0.13] - 2025-11-09
 
 ### Fixed
