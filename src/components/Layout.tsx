@@ -22,9 +22,11 @@ import { Splitter } from "./Splitter";
 import { useLayoutResize } from "../hooks/useLayoutResize";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useLayoutStorage } from "../hooks/useLayoutStorage";
+import { useNodeIndex } from "../hooks/useNodeIndex";
 import {
   updateNodeById,
   findNodeById,
+  findNodeByIdCached,
   removeEmptyTabsets,
 } from "../utils/layoutUtils";
 import "./Layout.css";
@@ -74,6 +76,17 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       ? model
       : internalModel;
 
+    // Build and maintain node index maps for O(1) lookups
+    const { nodeIndex, parentIndex } = useNodeIndex(currentModel.layout);
+    const nodeIndexRef = useRef(nodeIndex);
+    const parentIndexRef = useRef(parentIndex);
+
+    // Keep index refs in sync
+    useEffect(() => {
+      nodeIndexRef.current = nodeIndex;
+      parentIndexRef.current = parentIndex;
+    }, [nodeIndex, parentIndex]);
+
     const onModelChangeRef = useRef(onModelChange);
     const storageRef = useRef(storage);
     const updateStoredModelRef = useRef(updateStoredModel);
@@ -107,10 +120,13 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
 
     const { handleResize, resetResize } = useLayoutResize(
       currentModel,
-      handleModelChange
+      handleModelChange,
+      parentIndex
     );
 
     // Memoize resize handlers per node to prevent Splitter re-renders
+    // Use LRU cache with max 100 entries to prevent unbounded memory growth
+    const MAX_RESIZE_HANDLERS = 100;
     const resizeHandlersRef = useRef<
       Map<
         string,
@@ -128,18 +144,38 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         isRTLReversed?: boolean
       ) => {
         const key = `${nodeId}-${direction}-${isRTLReversed ? "rtl" : "ltr"}`;
-        if (!resizeHandlersRef.current.has(key)) {
-          resizeHandlersRef.current.set(key, {
-            onResize: (delta: number) => {
-              const adjustedDelta = isRTLReversed ? -delta : delta;
-              handleResize(nodeId, adjustedDelta, direction);
-            },
-            onResizeStart: () => {
-              resetResize(nodeId, direction);
-            },
-          });
+        const handlersMap = resizeHandlersRef.current;
+
+        // If handler exists, move it to end (most recently used) for LRU
+        if (handlersMap.has(key)) {
+          const handler = handlersMap.get(key)!;
+          // Delete and re-add to move to end (most recently used)
+          handlersMap.delete(key);
+          handlersMap.set(key, handler);
+          return handler;
         }
-        return resizeHandlersRef.current.get(key)!;
+
+        // Create new handler
+        const handler = {
+          onResize: (delta: number) => {
+            const adjustedDelta = isRTLReversed ? -delta : delta;
+            handleResize(nodeId, adjustedDelta, direction);
+          },
+          onResizeStart: () => {
+            resetResize(nodeId, direction);
+          },
+        };
+
+        // If map is full, remove least recently used (first entry)
+        if (handlersMap.size >= MAX_RESIZE_HANDLERS) {
+          const firstKey = handlersMap.keys().next().value;
+          if (firstKey) {
+            handlersMap.delete(firstKey);
+          }
+        }
+
+        handlersMap.set(key, handler);
+        return handler;
       },
       [handleResize, resetResize]
     );
@@ -152,7 +188,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       handleDragOver,
       handleDragLeave,
       handleDrop,
-    } = useDragAndDrop(currentModel, handleModelChange);
+    } = useDragAndDrop(currentModel, handleModelChange, nodeIndex, parentIndex);
 
     const storedModelRef = useRef<LayoutModel>(storedModel);
     useEffect(() => {
@@ -202,7 +238,10 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             case "removeNode":
               const { nodeId: tabsetId, tabIndex: removeTabIndex } =
                 action.payload as { nodeId: string; tabIndex: number };
-              const tabsetNode = findNodeById(prevModel.layout, tabsetId);
+              // Use cached lookup first, fallback to recursive search if not found
+              const tabsetNode =
+                findNodeByIdCached(nodeIndexRef.current, tabsetId) ??
+                findNodeById(prevModel.layout, tabsetId);
               if (tabsetNode && tabsetNode.children) {
                 const updatedChildren = tabsetNode.children.filter(
                   (_, index) => index !== removeTabIndex
@@ -314,7 +353,10 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             case "removeNode":
               const { nodeId: tabsetId, tabIndex: removeTabIndex } =
                 action.payload as { nodeId: string; tabIndex: number };
-              const tabsetNode = findNodeById(prevModel.layout, tabsetId);
+              // Use cached lookup first, fallback to recursive search if not found
+              const tabsetNode =
+                findNodeByIdCached(nodeIndexRef.current, tabsetId) ??
+                findNodeById(prevModel.layout, tabsetId);
               if (tabsetNode && tabsetNode.children) {
                 const updatedChildren = tabsetNode.children.filter(
                   (_, index) => index !== removeTabIndex

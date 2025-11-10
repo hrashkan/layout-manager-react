@@ -1,5 +1,51 @@
 import { LayoutNode, LayoutModel } from "../types";
 
+export const buildNodeIndexes = (
+  root: LayoutNode
+): {
+  nodeIndex: Map<string, LayoutNode>;
+  parentIndex: Map<string, LayoutNode>;
+} => {
+  const nodeIndex = new Map<string, LayoutNode>();
+  const parentIndex = new Map<string, LayoutNode>();
+
+  const traverse = (node: LayoutNode, parent: LayoutNode | null = null) => {
+    nodeIndex.set(node.id, node);
+    if (parent) {
+      parentIndex.set(node.id, parent);
+    }
+
+    if (node.children) {
+      for (const child of node.children) {
+        traverse(child, node);
+      }
+    }
+  };
+
+  traverse(root);
+  return { nodeIndex, parentIndex };
+};
+
+/**
+ * Cached version of findNodeById using index map
+ */
+export const findNodeByIdCached = (
+  nodeIndex: Map<string, LayoutNode>,
+  id: string
+): LayoutNode | null => {
+  return nodeIndex.get(id) ?? null;
+};
+
+/**
+ * Cached version of findParentNode using index map
+ */
+export const findParentNodeCached = (
+  parentIndex: Map<string, LayoutNode>,
+  childId: string
+): LayoutNode | null => {
+  return parentIndex.get(childId) ?? null;
+};
+
 export const createLayoutModel = (
   layout: LayoutNode,
   global?: Partial<LayoutModel["global"]>

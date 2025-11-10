@@ -1,7 +1,9 @@
 import { useCallback, useState, useRef, useEffect } from "react";
-import { LayoutModel, DropPosition } from "../types";
+import { LayoutModel, DropPosition, LayoutNode } from "../types";
 import {
   findNodeById,
+  findNodeByIdCached,
+  findParentNodeCached,
   updateNodeById,
   createTabSet,
   createRow,
@@ -12,7 +14,9 @@ import {
 
 export const useDragAndDrop = (
   model: LayoutModel,
-  onModelChange?: (model: LayoutModel) => void
+  onModelChange?: (model: LayoutModel) => void,
+  nodeIndex?: Map<string, LayoutNode>,
+  parentIndex?: Map<string, LayoutNode>
 ) => {
   const [draggedTab, setDraggedTab] = useState<{
     tabsetId: string;
@@ -32,6 +36,8 @@ export const useDragAndDrop = (
   const onModelChangeRef = useRef(onModelChange);
   const dropPositionRef = useRef(dropPosition);
   const dropTargetIndexRef = useRef(dropTargetIndex);
+  const nodeIndexRef = useRef(nodeIndex);
+  const parentIndexRef = useRef(parentIndex);
 
   useEffect(() => {
     modelRef.current = model;
@@ -48,6 +54,14 @@ export const useDragAndDrop = (
   useEffect(() => {
     dropTargetIndexRef.current = dropTargetIndex;
   }, [dropTargetIndex]);
+
+  useEffect(() => {
+    nodeIndexRef.current = nodeIndex;
+  }, [nodeIndex]);
+
+  useEffect(() => {
+    parentIndexRef.current = parentIndex;
+  }, [parentIndex]);
 
   const handleDragStart = useCallback((tabsetId: string, tabIndex: number) => {
     const dragData = { tabsetId, tabIndex };
@@ -111,7 +125,11 @@ export const useDragAndDrop = (
         currentDropPosition === "tab" &&
         currentDropTargetIndex !== null
       ) {
-        const sourceTabset = findNodeById(currentModel.layout, sourceTabsetId);
+        // Use cached lookup first, fallback to recursive search
+        const sourceTabset =
+          (nodeIndexRef.current &&
+            findNodeByIdCached(nodeIndexRef.current, sourceTabsetId)) ??
+          findNodeById(currentModel.layout, sourceTabsetId);
         if (!sourceTabset || !sourceTabset.children) {
           return;
         }
@@ -164,8 +182,15 @@ export const useDragAndDrop = (
         return;
       }
 
-      const sourceTabset = findNodeById(currentModel.layout, sourceTabsetId);
-      const targetTabset = findNodeById(currentModel.layout, targetTabsetId);
+      // Use cached lookup first, fallback to recursive search
+      const sourceTabset =
+        (nodeIndexRef.current &&
+          findNodeByIdCached(nodeIndexRef.current, sourceTabsetId)) ??
+        findNodeById(currentModel.layout, sourceTabsetId);
+      const targetTabset =
+        (nodeIndexRef.current &&
+          findNodeByIdCached(nodeIndexRef.current, targetTabsetId)) ??
+        findNodeById(currentModel.layout, targetTabsetId);
 
       if (
         !sourceTabset ||
@@ -218,7 +243,12 @@ export const useDragAndDrop = (
           [tabToMove]
         );
 
-        const parent = findParentNode(updatedLayout, targetTabsetId);
+        // Use cached lookup first, fallback to recursive search
+        // Note: updatedLayout might not be in cache yet, so we try cache first then fallback
+        const parent =
+          (parentIndexRef.current &&
+            findParentNodeCached(parentIndexRef.current, targetTabsetId)) ??
+          findParentNode(updatedLayout, targetTabsetId);
         if (parent) {
           const targetIndex =
             parent.children?.findIndex(

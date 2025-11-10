@@ -7,37 +7,8 @@ import React, {
 } from "react";
 import { TabSetProps, DropPosition } from "../types";
 import { Tab } from "./Tab";
+import { ScrollLeftIcon, ScrollRightIcon } from "./icons";
 import "./TabSet.css";
-
-const DefaultScrollLeftIcon: React.FC = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
-
-const DefaultScrollRightIcon: React.FC = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 export const TabSet: React.FC<TabSetProps> = ({
   node,
@@ -377,7 +348,7 @@ export const TabSet: React.FC<TabSetProps> = ({
             type="button"
             aria-label="Scroll left"
           >
-            {scrollLeftIcon || <DefaultScrollLeftIcon />}
+            {scrollLeftIcon || <ScrollLeftIcon />}
           </button>
         )}
         <div
@@ -432,7 +403,7 @@ export const TabSet: React.FC<TabSetProps> = ({
             type="button"
             aria-label="Scroll right"
           >
-            {scrollRightIcon || <DefaultScrollRightIcon />}
+            {scrollRightIcon || <ScrollRightIcon />}
           </button>
         )}
       </div>

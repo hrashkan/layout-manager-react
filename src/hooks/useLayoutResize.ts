@@ -1,10 +1,11 @@
 import { useCallback, useRef, useEffect } from "react";
 import { LayoutNode, LayoutModel } from "../types";
-import { updateNodeById } from "../utils/layoutUtils";
+import { updateNodeById, findParentNodeCached } from "../utils/layoutUtils";
 
 export const useLayoutResize = (
   model: LayoutModel,
-  onModelChange?: (model: LayoutModel) => void
+  onModelChange?: (model: LayoutModel) => void,
+  parentIndex?: Map<string, LayoutNode>
 ) => {
   const initialFlexRef = useRef<{
     [key: string]: { current: number; sibling: number };
@@ -24,12 +25,21 @@ export const useLayoutResize = (
     onModelChangeRef.current = onModelChange;
   }, [onModelChange]);
 
+  const parentIndexRef = useRef(parentIndex);
+  useEffect(() => {
+    parentIndexRef.current = parentIndex;
+  }, [parentIndex]);
+
   const handleResize = useCallback(
     (nodeId: string, delta: number, direction: "horizontal" | "vertical") => {
       if (!onModelChangeRef.current) return;
 
       const currentModel = modelRef.current;
-      const parent = findParentNode(currentModel.layout, nodeId);
+      // Use cached lookup if available, fallback to recursive search
+      const parent =
+        (parentIndexRef.current &&
+          findParentNodeCached(parentIndexRef.current, nodeId)) ??
+        findParentNode(currentModel.layout, nodeId);
       if (!parent || !parent.children) return;
 
       const currentIndex = parent.children.findIndex(
@@ -128,6 +138,7 @@ export const useLayoutResize = (
   return { handleResize, resetResize };
 };
 
+// Fallback recursive search when cache is not available
 const findParentNode = (
   node: LayoutNode,
   childId: string

@@ -3,6 +3,7 @@ export { TabSet } from "./components/TabSet";
 export { Tab } from "./components/Tab";
 export { Splitter } from "./components/Splitter";
 export { DefaultCloseIcon } from "./components/DefaultCloseIcon";
+export { ScrollLeftIcon, ScrollRightIcon } from "./components/icons";
 
 export { MemoizedTab } from "./components/MemoizedTab";
 export { MemoizedTabSet } from "./components/MemoizedTabSet";
