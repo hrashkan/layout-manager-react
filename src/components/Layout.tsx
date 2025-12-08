@@ -76,12 +76,10 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       ? model
       : internalModel;
 
-    // Build and maintain node index maps for O(1) lookups
     const { nodeIndex, parentIndex } = useNodeIndex(currentModel.layout);
     const nodeIndexRef = useRef(nodeIndex);
     const parentIndexRef = useRef(parentIndex);
 
-    // Keep index refs in sync
     useEffect(() => {
       nodeIndexRef.current = nodeIndex;
       parentIndexRef.current = parentIndex;
@@ -124,8 +122,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       parentIndex
     );
 
-    // Memoize resize handlers per node to prevent Splitter re-renders
-    // Use LRU cache with max 100 entries to prevent unbounded memory growth
     const MAX_RESIZE_HANDLERS = 100;
     const resizeHandlersRef = useRef<
       Map<
@@ -138,35 +134,26 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     >(new Map());
 
     const getResizeHandler = useCallback(
-      (
-        nodeId: string,
-        direction: "horizontal" | "vertical",
-        isRTLReversed?: boolean
-      ) => {
-        const key = `${nodeId}-${direction}-${isRTLReversed ? "rtl" : "ltr"}`;
+      (nodeId: string, direction: "horizontal" | "vertical") => {
+        const key = `${nodeId}-${direction}`;
         const handlersMap = resizeHandlersRef.current;
 
-        // If handler exists, move it to end (most recently used) for LRU
         if (handlersMap.has(key)) {
           const handler = handlersMap.get(key)!;
-          // Delete and re-add to move to end (most recently used)
           handlersMap.delete(key);
           handlersMap.set(key, handler);
           return handler;
         }
 
-        // Create new handler
         const handler = {
           onResize: (delta: number) => {
-            const adjustedDelta = isRTLReversed ? -delta : delta;
-            handleResize(nodeId, adjustedDelta, direction);
+            handleResize(nodeId, delta, direction);
           },
           onResizeStart: () => {
             resetResize(nodeId, direction);
           },
         };
 
-        // If map is full, remove least recently used (first entry)
         if (handlersMap.size >= MAX_RESIZE_HANDLERS) {
           const firstKey = handlersMap.keys().next().value;
           if (firstKey) {
@@ -238,7 +225,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             case "removeNode":
               const { nodeId: tabsetId, tabIndex: removeTabIndex } =
                 action.payload as { nodeId: string; tabIndex: number };
-              // Use cached lookup first, fallback to recursive search if not found
               const tabsetNode =
                 findNodeByIdCached(nodeIndexRef.current, tabsetId) ??
                 findNodeById(prevModel.layout, tabsetId);
@@ -353,7 +339,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             case "removeNode":
               const { nodeId: tabsetId, tabIndex: removeTabIndex } =
                 action.payload as { nodeId: string; tabIndex: number };
-              // Use cached lookup first, fallback to recursive search if not found
               const tabsetNode =
                 findNodeByIdCached(nodeIndexRef.current, tabsetId) ??
                 findNodeById(prevModel.layout, tabsetId);
@@ -503,11 +488,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             );
 
           case "row":
-            const isRTL = direction === "rtl";
             const rowChildren = node.children || [];
-            const childrenToRender = isRTL
-              ? [...rowChildren].reverse()
-              : rowChildren;
 
             return (
               <div
@@ -523,10 +504,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                   maxHeight: node.maxHeight ? `${node.maxHeight}px` : undefined,
                 }}
               >
-                {childrenToRender.map((child, renderIndex) => {
-                  const nextRenderIndex = renderIndex + 1;
-                  const hasNextSibling =
-                    nextRenderIndex < childrenToRender.length;
+                {rowChildren.map((child, index) => {
+                  const hasNextSibling = index < rowChildren.length - 1;
 
                   if (!hasNextSibling) {
                     return (
@@ -536,38 +515,9 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                     );
                   }
 
-                  const currentOriginalIndex = isRTL
-                    ? rowChildren.length - 1 - renderIndex
-                    : renderIndex;
-                  const nextOriginalIndex = isRTL
-                    ? rowChildren.length - 1 - nextRenderIndex
-                    : nextRenderIndex;
-
-                  const firstOriginalIndex = Math.min(
-                    currentOriginalIndex,
-                    nextOriginalIndex
-                  );
-                  const secondOriginalIndex = Math.max(
-                    currentOriginalIndex,
-                    nextOriginalIndex
-                  );
-
-                  if (secondOriginalIndex !== firstOriginalIndex + 1) {
-                    return (
-                      <React.Fragment key={child.id}>
-                        {renderNode(child)}
-                      </React.Fragment>
-                    );
-                  }
-
-                  const firstChild = rowChildren[firstOriginalIndex];
-                  const isRTLReversed =
-                    isRTL && currentOriginalIndex > nextOriginalIndex;
-
                   const horizontalHandlers = getResizeHandler(
-                    firstChild.id,
-                    "horizontal",
-                    isRTLReversed
+                    child.id,
+                    "horizontal"
                   );
                   return (
                     <React.Fragment key={child.id}>

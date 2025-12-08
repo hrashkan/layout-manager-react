@@ -16,7 +16,6 @@ export const useLayoutResize = (
   const modelRef = useRef<LayoutModel>(model);
   const onModelChangeRef = useRef(onModelChange);
 
-  // Keep refs up to date
   useEffect(() => {
     modelRef.current = model;
   }, [model]);
@@ -35,7 +34,6 @@ export const useLayoutResize = (
       if (!onModelChangeRef.current) return;
 
       const currentModel = modelRef.current;
-      // Use cached lookup if available, fallback to recursive search
       const parent =
         (parentIndexRef.current &&
           findParentNodeCached(parentIndexRef.current, nodeId)) ??
@@ -123,7 +121,7 @@ export const useLayoutResize = (
         }
       }
     },
-    [] // Empty deps - stable reference, uses refs internally
+    []
   );
 
   const resetResize = useCallback(
@@ -138,7 +136,6 @@ export const useLayoutResize = (
   return { handleResize, resetResize };
 };
 
-// Fallback recursive search when cache is not available
 const findParentNode = (
   node: LayoutNode,
   childId: string

@@ -93,7 +93,6 @@ export const TabSet: React.FC<TabSetProps> = ({
   const [showRightArrow, setShowRightArrow] = useState(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Use ref for stable callback to prevent effect re-runs
   const checkScrollButtonsRef = useRef<() => void>();
   checkScrollButtonsRef.current = () => {
     const container = tabsContainerRef.current;
@@ -115,7 +114,7 @@ export const TabSet: React.FC<TabSetProps> = ({
     scrollTimeoutRef.current = setTimeout(() => {
       checkScrollButtonsRef.current?.();
     }, 10);
-  }, []); // Empty deps - stable reference
+  }, []);
 
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
@@ -295,7 +294,7 @@ export const TabSet: React.FC<TabSetProps> = ({
         scrollTimeoutRef.current = null;
       }
     };
-  }, [handleScroll, tabsToRender.length]); // Removed checkScrollButtons from deps
+  }, [handleScroll, tabsToRender.length]);
 
   const tabSetStyle: React.CSSProperties = {
     ...style,
@@ -312,7 +311,6 @@ export const TabSet: React.FC<TabSetProps> = ({
     return null;
   }
 
-  // Swap left/right for visual indicator in RTL mode
   const visualDropPosition =
     isDragOver && dropPosition
       ? direction === "rtl" &&

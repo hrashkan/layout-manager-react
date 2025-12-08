@@ -114,8 +114,6 @@ const SplitterComponent: React.FC<SplitterProps> = ({
 };
 
 export const Splitter = memo(SplitterComponent, (prevProps, nextProps) => {
-  // Only re-render if these props actually change
-  // Return true if props are equal (skip re-render), false if different (re-render)
   return (
     prevProps.direction === nextProps.direction &&
     prevProps.size === nextProps.size &&
