@@ -46,8 +46,8 @@ export const TabSet: React.FC<TabSetProps> = ({
   }, [tabs]);
 
   const tabsToRender = useMemo(() => {
-    return direction === "rtl" ? [...tabs].reverse() : tabs;
-  }, [tabs, direction]);
+    return tabs;
+  }, [tabs]);
 
   const rawSelectedIndex = node.selected ?? 0;
   const selectedTabIndex = Math.min(
