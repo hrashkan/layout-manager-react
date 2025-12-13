@@ -46,12 +46,6 @@ export interface LayoutProps {
   onAction?: (action: LayoutAction) => void;
   className?: string;
   style?: React.CSSProperties;
-  storage?: {
-    enabled?: boolean;
-    key?: string;
-    autoSave?: boolean;
-    debounceMs?: number;
-  };
   splitterStyles?: {
     default?: React.CSSProperties;
     hover?: React.CSSProperties;

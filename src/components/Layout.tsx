@@ -21,7 +21,6 @@ import { MemoizedTabSet } from "./MemoizedTabSet";
 import { Splitter } from "./Splitter";
 import { useLayoutResize } from "../hooks/useLayoutResize";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
-import { useLayoutStorage } from "../hooks/useLayoutStorage";
 import { useNodeIndex } from "../hooks/useNodeIndex";
 import {
   updateNodeById,
@@ -40,7 +39,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       onAction,
       className = "",
       style = {},
-      storage,
       closeIcon,
       closeButtonClassName,
       scrollLeftIcon,
@@ -49,32 +47,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     ref
   ) => {
     const [internalModel, setInternalModel] = useState(model);
-    const [pendingDirection, setPendingDirection] = useState<Direction | null>(
-      null
-    );
 
-    const {
-      model: storedModel,
-      updateModel: updateStoredModel,
-      isLoaded,
-    } = useLayoutStorage(model, {
-      key: storage?.key,
-      autoSave: storage?.autoSave,
-      debounceMs: storage?.debounceMs,
-      onLoad: (loadedModel) => {
-        if (onModelChange) {
-          onModelChange(loadedModel);
-        } else {
-          setInternalModel(loadedModel);
-        }
-      },
-    });
-
-    const currentModel = storage?.enabled
-      ? storedModel
-      : onModelChange
-      ? model
-      : internalModel;
+    const currentModel = onModelChange ? model : internalModel;
 
     const { nodeIndex, parentIndex } = useNodeIndex(currentModel.layout);
     const nodeIndexRef = useRef(nodeIndex);
@@ -86,33 +60,16 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     }, [nodeIndex, parentIndex]);
 
     const onModelChangeRef = useRef(onModelChange);
-    const storageRef = useRef(storage);
-    const updateStoredModelRef = useRef(updateStoredModel);
 
     useEffect(() => {
       onModelChangeRef.current = onModelChange;
     }, [onModelChange]);
 
-    useEffect(() => {
-      storageRef.current = storage;
-    }, [storage]);
-
-    useEffect(() => {
-      updateStoredModelRef.current = updateStoredModel;
-    }, [updateStoredModel]);
-
     const handleModelChange = useCallback((newModel: LayoutModel) => {
-      if (storageRef.current?.enabled) {
-        updateStoredModelRef.current(newModel);
-        if (onModelChangeRef.current) {
-          onModelChangeRef.current(newModel);
-        }
+      if (onModelChangeRef.current) {
+        onModelChangeRef.current(newModel);
       } else {
-        if (onModelChangeRef.current) {
-          onModelChangeRef.current(newModel);
-        } else {
-          setInternalModel(newModel);
-        }
+        setInternalModel(newModel);
       }
     }, []);
 
@@ -177,11 +134,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       handleDrop,
     } = useDragAndDrop(currentModel, handleModelChange, nodeIndex, parentIndex);
 
-    const storedModelRef = useRef<LayoutModel>(storedModel);
-    useEffect(() => {
-      storedModelRef.current = storedModel;
-    }, [storedModel]);
-
     const internalModelRef = useRef<LayoutModel>(internalModel);
     useEffect(() => {
       internalModelRef.current = internalModel;
@@ -198,77 +150,47 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     }, [onAction]);
 
     const handleAction = useCallback((action: LayoutAction) => {
-      if (storageRef.current?.enabled) {
-        const currentStoredModel = storedModelRef.current;
-
-        if (action.type === "changeDirection") {
-          const { direction: newDirection } = action.payload as {
-            direction: Direction;
-          };
-          setPendingDirection(newDirection);
-        }
-
-        const updateModel = (prevModel: LayoutModel): LayoutModel => {
-          switch (action.type) {
-            case "selectTab":
-              const { nodeId, tabIndex } = action.payload as SelectTabPayload;
-              const selectResult = updateNodeById(prevModel.layout, nodeId, {
-                selected: tabIndex,
-              });
-              if (!selectResult || selectResult === prevModel.layout) {
-                return prevModel;
-              }
-              return {
-                ...prevModel,
-                layout: selectResult,
-              };
-            case "removeNode":
-              const { nodeId: tabsetId, tabIndex: removeTabIndex } =
-                action.payload as { nodeId: string; tabIndex: number };
-              const tabsetNode =
-                findNodeByIdCached(nodeIndexRef.current, tabsetId) ??
-                findNodeById(prevModel.layout, tabsetId);
-              if (tabsetNode && tabsetNode.children) {
-                const updatedChildren = tabsetNode.children.filter(
-                  (_, index) => index !== removeTabIndex
-                );
-
-                const currentSelected = tabsetNode.selected ?? 0;
-                let newSelected = currentSelected;
-                if (removeTabIndex <= currentSelected) {
-                  newSelected = Math.max(0, currentSelected - 1);
-                }
-                newSelected = Math.min(newSelected, updatedChildren.length - 1);
-
-                const updatedTabset = {
-                  ...tabsetNode,
-                  children: updatedChildren,
-                  selected:
-                    updatedChildren.length > 0 ? newSelected : undefined,
-                };
-                const updatedLayout = updateNodeById(
-                  prevModel.layout,
-                  tabsetId,
-                  updatedTabset
-                );
-                if (updatedLayout) {
-                  const cleanedLayout = removeEmptyTabsets(updatedLayout);
-                  if (cleanedLayout) {
-                    return {
-                      ...prevModel,
-                      layout: cleanedLayout,
-                    };
-                  }
-                }
-              }
+      const updateModel = (prevModel: LayoutModel): LayoutModel => {
+        switch (action.type) {
+          case "selectTab":
+            const { nodeId, tabIndex } = action.payload as SelectTabPayload;
+            const selectResult = updateNodeById(prevModel.layout, nodeId, {
+              selected: tabIndex,
+            });
+            if (!selectResult || selectResult === prevModel.layout) {
               return prevModel;
-            case "closeTabset":
-              const { nodeId: closeTabsetId } =
-                action.payload as CloseTabsetPayload;
+            }
+            return {
+              ...prevModel,
+              layout: selectResult,
+            };
+          case "removeNode":
+            const { nodeId: tabsetId, tabIndex: removeTabIndex } =
+              action.payload as { nodeId: string; tabIndex: number };
+            const tabsetNode =
+              findNodeByIdCached(nodeIndexRef.current, tabsetId) ??
+              findNodeById(prevModel.layout, tabsetId);
+            if (tabsetNode && tabsetNode.children) {
+              const updatedChildren = tabsetNode.children.filter(
+                (_, index) => index !== removeTabIndex
+              );
+
+              const currentSelected = tabsetNode.selected ?? 0;
+              let newSelected = currentSelected;
+              if (removeTabIndex <= currentSelected) {
+                newSelected = Math.max(0, currentSelected - 1);
+              }
+              newSelected = Math.min(newSelected, updatedChildren.length - 1);
+
+              const updatedTabset = {
+                ...tabsetNode,
+                children: updatedChildren,
+                selected: updatedChildren.length > 0 ? newSelected : undefined,
+              };
               const updatedLayout = updateNodeById(
                 prevModel.layout,
-                closeTabsetId,
-                null
+                tabsetId,
+                updatedTabset
               );
               if (updatedLayout) {
                 const cleanedLayout = removeEmptyTabsets(updatedLayout);
@@ -279,140 +201,53 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                   };
                 }
               }
-              return prevModel;
-            case "changeDirection":
-              const { direction: newDirection } = action.payload as {
-                direction: Direction;
-              };
-              return {
-                ...prevModel,
-                global: {
-                  ...prevModel.global,
-                  direction: newDirection,
-                },
-              };
-            default:
-              return prevModel;
-          }
-        };
-
-        const updatedModel = updateModel(currentStoredModel);
-        updateStoredModelRef.current(updatedModel);
-        if (onModelChangeRef.current) {
-          onModelChangeRef.current(updatedModel);
+            }
+            return prevModel;
+          case "closeTabset":
+            const { nodeId: closeTabsetId } =
+              action.payload as CloseTabsetPayload;
+            const updatedLayout = updateNodeById(
+              prevModel.layout,
+              closeTabsetId,
+              null
+            );
+            if (updatedLayout) {
+              const cleanedLayout = removeEmptyTabsets(updatedLayout);
+              if (cleanedLayout) {
+                return {
+                  ...prevModel,
+                  layout: cleanedLayout,
+                };
+              }
+            }
+            return prevModel;
+          case "changeDirection":
+            const { direction: newDirection } = action.payload as {
+              direction: Direction;
+            };
+            return {
+              ...prevModel,
+              global: {
+                ...prevModel.global,
+                direction: newDirection,
+              },
+            };
+          default:
+            return prevModel;
         }
-        onActionRef.current?.(action);
+      };
+
+      if (onModelChangeRef.current) {
+        const currentModel = modelRef.current;
+        const updatedModel = updateModel(currentModel);
+        onModelChangeRef.current(updatedModel);
       } else {
-        if (action.type === "changeDirection" && onModelChangeRef.current) {
-          const { direction: newDirection } = action.payload as {
-            direction: Direction;
-          };
-          const currentModel = modelRef.current;
-          const updatedModel: LayoutModel = {
-            ...currentModel,
-            global: {
-              ...currentModel.global,
-              direction: newDirection,
-            },
-          };
-          onModelChangeRef.current(updatedModel);
-        }
-        onActionRef.current?.(action);
-      }
-
-      if (!storageRef.current?.enabled && !onModelChangeRef.current) {
         const currentInternalModel = internalModelRef.current;
-        const updateModel = (prevModel: LayoutModel): LayoutModel => {
-          switch (action.type) {
-            case "selectTab":
-              const { nodeId, tabIndex } = action.payload as SelectTabPayload;
-              const selectResult = updateNodeById(prevModel.layout, nodeId, {
-                selected: tabIndex,
-              });
-              if (!selectResult || selectResult === prevModel.layout) {
-                return prevModel;
-              }
-              return {
-                ...prevModel,
-                layout: selectResult,
-              };
-            case "removeNode":
-              const { nodeId: tabsetId, tabIndex: removeTabIndex } =
-                action.payload as { nodeId: string; tabIndex: number };
-              const tabsetNode =
-                findNodeByIdCached(nodeIndexRef.current, tabsetId) ??
-                findNodeById(prevModel.layout, tabsetId);
-              if (tabsetNode && tabsetNode.children) {
-                const updatedChildren = tabsetNode.children.filter(
-                  (_, index) => index !== removeTabIndex
-                );
-
-                const currentSelected = tabsetNode.selected ?? 0;
-                let newSelected = currentSelected;
-                if (removeTabIndex <= currentSelected) {
-                  newSelected = Math.max(0, currentSelected - 1);
-                }
-                newSelected = Math.min(newSelected, updatedChildren.length - 1);
-
-                const updatedTabset = {
-                  ...tabsetNode,
-                  children: updatedChildren,
-                  selected:
-                    updatedChildren.length > 0 ? newSelected : undefined,
-                };
-                const updatedLayout = updateNodeById(
-                  prevModel.layout,
-                  tabsetId,
-                  updatedTabset
-                );
-                if (updatedLayout) {
-                  const cleanedLayout = removeEmptyTabsets(updatedLayout);
-                  if (cleanedLayout) {
-                    return {
-                      ...prevModel,
-                      layout: cleanedLayout,
-                    };
-                  }
-                }
-              }
-              return prevModel;
-            case "closeTabset":
-              const { nodeId: closeTabsetId } =
-                action.payload as CloseTabsetPayload;
-              const updatedLayout = updateNodeById(
-                prevModel.layout,
-                closeTabsetId,
-                null
-              );
-              if (updatedLayout) {
-                const cleanedLayout = removeEmptyTabsets(updatedLayout);
-                if (cleanedLayout) {
-                  return {
-                    ...prevModel,
-                    layout: cleanedLayout,
-                  };
-                }
-              }
-              return prevModel;
-            case "changeDirection":
-              const { direction: newDirection } = action.payload as {
-                direction: Direction;
-              };
-              return {
-                ...prevModel,
-                global: {
-                  ...prevModel.global,
-                  direction: newDirection,
-                },
-              };
-            default:
-              return prevModel;
-          }
-        };
-
         const updatedModel = updateModel(currentInternalModel);
         setInternalModel(updatedModel);
       }
+
+      onActionRef.current?.(action);
     }, []);
 
     useImperativeHandle(
@@ -443,16 +278,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       [handleAction]
     );
 
-    let direction: Direction;
-    if (storage?.enabled) {
-      if (pendingDirection !== null) {
-        direction = pendingDirection;
-      } else {
-        direction = storedModel?.global?.direction || "ltr";
-      }
-    } else {
-      direction = currentModel.global?.direction || "ltr";
-    }
+    const direction: Direction = currentModel.global?.direction || "ltr";
 
     const splitterSize = currentModel.global?.splitterSize || 8;
 
@@ -598,21 +424,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       ]
     );
 
-    useEffect(() => {
-      if (!storage?.enabled && pendingDirection !== null) {
-        setPendingDirection(null);
-      }
-    }, [storage?.enabled, pendingDirection]);
-
-    useEffect(() => {
-      if (storage?.enabled && pendingDirection !== null) {
-        const storedDir = storedModel?.global?.direction || "ltr";
-        if (storedDir === pendingDirection) {
-          setPendingDirection(null);
-        }
-      }
-    }, [storage?.enabled, pendingDirection, storedModel?.global?.direction]);
-
     const renderedLayout = useMemo(
       () => renderNode(currentModel.layout),
       [renderNode, currentModel.layout]
@@ -623,22 +434,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       height: "100%",
       width: "100%",
     };
-
-    if (storage?.enabled && !isLoaded) {
-      return (
-        <div
-          className={`react-flex-layout ${className}`}
-          style={{
-            ...layoutStyle,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div>Loading layout...</div>
-        </div>
-      );
-    }
 
     return (
       <div

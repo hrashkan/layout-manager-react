@@ -41,15 +41,6 @@ export {
 } from "./utils/layoutUtils";
 export type { ComponentRestoreData } from "./utils/layoutUtils";
 
-export {
-  createLayoutStorage,
-  isLocalStorageAvailable,
-  LayoutStorage,
-} from "./utils/storageUtils";
-export type { StorageOptions } from "./utils/storageUtils";
-
-export { useLayoutStorage } from "./hooks/useLayoutStorage";
-export type { UseLayoutStorageOptions } from "./hooks/useLayoutStorage";
 
 import "./components/Layout.css";
 import "./components/TabSet.css";

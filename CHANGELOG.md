@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2025-12-13
+
+### Breaking Changes
+
+- **Removed built-in localStorage support**: The package no longer includes built-in localStorage functionality
+  - Removed `storage` prop from `Layout` component
+  - Removed `useLayoutStorage` hook
+  - Removed `LayoutStorage` class and `storageUtils`
+  - Removed `createLayoutStorage`, `isLocalStorageAvailable` exports
+  - Users must now manage state persistence themselves via `onModelChange`
+
+### Migration Guide
+
+**Before (v0.0.15):**
+
+```tsx
+<Layout
+  model={model}
+  factory={factory}
+  storage={{ enabled: true, key: "my-layout" }}
+/>
+```
+
+**After (v0.1.0):**
+
+```tsx
+// User manages storage manually
+const [model, setModel] = useState(() => {
+  const saved = localStorage.getItem("my-layout");
+  return saved ? JSON.parse(saved) : initialModel;
+});
+
+useEffect(() => {
+  localStorage.setItem("my-layout", JSON.stringify(model));
+}, [model]);
+
+<Layout model={model} factory={factory} onModelChange={setModel} />;
+```
+
+### Changed
+
+- Simplified Layout component by removing storage-related logic
+- Reduced bundle size: ES Module 44.75 kB → 37.15 kB (~17% smaller)
+- Reduced bundle size: UMD 28.17 kB → 23.41 kB (~17% smaller)
+- Package is now storage-agnostic - users can use any storage solution (localStorage, IndexedDB, backend API, Zustand, Redux, etc.)
+
+### Fixed
+
+- Fixed RTL children order: Removed incorrect child reversal in RTL mode
+  - Row children no longer reversed
+  - Tab children no longer reversed
+  - Children maintain original order regardless of direction
+
 ## [0.0.15] - 2025-01-XX
 
 ### Fixed

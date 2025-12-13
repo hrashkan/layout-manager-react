@@ -20,8 +20,6 @@ import {
   updateNodeById,
   findNodeById,
   removeEmptyTabsets,
-  createLayoutStorage,
-  isLocalStorageAvailable,
   removeTab,
   restoreTab,
   tabExists,
@@ -76,23 +74,8 @@ const App: React.FC = () => {
   });
   const [storageKey, setStorageKey] = useState("demo-layout");
 
-  // Try to load direction from storage first, fallback to "ltr"
-  const getInitialDirection = (): "ltr" | "rtl" => {
-    if (storageEnabled && isLocalStorageAvailable()) {
-      const storage = createLayoutStorage({ key: storageKey });
-      const savedModel = storage.load();
-      if (savedModel?.global?.direction) {
-        return savedModel.global.direction;
-      }
-    }
-    return "ltr";
-  };
-
-  const [direction, setDirection] = useState<"ltr" | "rtl">(
-    getInitialDirection
-  );
-
-  const initialModel = createLayoutModel(
+  // Create base initial model (without direction dependency)
+  const baseInitialModel = createLayoutModel(
     createRow("root", [
       createColumn("left", [
         createTabSet("left-tabset", [
@@ -116,11 +99,49 @@ const App: React.FC = () => {
     ]),
     {
       splitterSize: 8,
-      direction: direction,
+      direction: "ltr",
     }
   );
 
-  const [model, setModel] = useState<LayoutModel>(initialModel);
+  // Try to load from localStorage on mount
+  const getInitialModel = (): LayoutModel => {
+    if (storageEnabled && typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(
+          `layout-manager-react-${storageKey}`
+        );
+        if (saved) {
+          const parsed = JSON.parse(saved) as LayoutModel;
+          return parsed;
+        }
+      } catch (e) {
+        console.error("Failed to load from localStorage:", e);
+      }
+    }
+    return baseInitialModel;
+  };
+
+  const [model, setModel] = useState<LayoutModel>(getInitialModel);
+
+  const [direction, setDirection] = useState<"ltr" | "rtl">(
+    model.global?.direction || "ltr"
+  );
+
+  // Save to localStorage when model changes (with debouncing)
+  useEffect(() => {
+    if (!storageEnabled || typeof window === "undefined") return;
+
+    const timeoutId = setTimeout(() => {
+      try {
+        const key = `layout-manager-react-${storageKey}`;
+        localStorage.setItem(key, JSON.stringify(model));
+      } catch (e) {
+        console.error("Failed to save to localStorage:", e);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [model, storageEnabled, storageKey]);
 
   // Sync direction from model when it's loaded from storage
   useEffect(() => {
@@ -202,7 +223,7 @@ const App: React.FC = () => {
           const restored = restoreTab(
             model.layout,
             restoreData,
-            initialModel.layout
+            baseInitialModel.layout
           );
           if (restored) {
             restoreDataRef.current.delete(config.tabId);
@@ -225,7 +246,7 @@ const App: React.FC = () => {
         }
       }
     },
-    [model, initialModel.layout, direction]
+    [model, baseInitialModel.layout, direction]
   );
 
   const factory = useCallback((node: any) => {
@@ -383,16 +404,20 @@ const App: React.FC = () => {
   }, [direction, model]);
 
   const clearStorage = useCallback(() => {
-    if (isLocalStorageAvailable()) {
-      const storage = createLayoutStorage({ key: storageKey });
-      storage.clear();
-      setModel(initialModel);
+    if (typeof window !== "undefined") {
+      try {
+        const key = `layout-manager-react-${storageKey}`;
+        localStorage.removeItem(key);
+        setModel(baseInitialModel);
+      } catch (e) {
+        console.error("Failed to clear localStorage:", e);
+      }
     }
-  }, [storageKey, initialModel]);
+  }, [storageKey, baseInitialModel]);
 
   const resetLayout = useCallback(() => {
-    setModel(initialModel);
-  }, [initialModel]);
+    setModel(baseInitialModel);
+  }, [baseInitialModel]);
 
   // Memoize closeIcon to prevent unnecessary re-renders
   const memoizedCloseIcon = useMemo(() => <CustomCloseIcon />, []);
@@ -606,12 +631,6 @@ const App: React.FC = () => {
           if (action.type !== "changeDirection") {
             handleAction(action);
           }
-        }}
-        storage={{
-          enabled: storageEnabled,
-          key: storageKey,
-          autoSave: true,
-          debounceMs: 500,
         }}
         closeIcon={memoizedCloseIcon}
         closeButtonClassName="demo-custom-close-button"
