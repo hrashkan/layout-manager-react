@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.1] - 2026-08-24
+
+### Fixed
+
+- **Splitter drag is measured against the panes being resized, not the
+  viewport.** Nested splitters used `window.innerWidth` / `innerHeight`, so a
+  pointer move of N pixels changed flex as if the parent were the whole window
+  and the pane lagged behind the cursor. Resize now uses the two adjacent
+  nodes' laid-out sizes (`data-layout-id`), falling back to the parent pane
+  when those measurements are missing. `minWidth` / `minHeight` / `maxWidth` /
+  `maxHeight` on the pair are honoured; the previous 100px floor remains the
+  default when they are omitted.
+
 ## [0.2.0] - 2026-08-24
 
 Runtime behaviour, plus the packaging work that was sitting unreleased as 0.1.1.

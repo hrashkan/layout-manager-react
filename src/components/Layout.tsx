@@ -331,6 +331,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             return (
               <div
                 key={node.id}
+                data-layout-id={node.id}
                 className="react-flex-layout-row"
                 style={{
                   width: node.width ? `${node.width}%` : undefined,
@@ -391,6 +392,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             return (
               <div
                 key={node.id}
+                data-layout-id={node.id}
                 className="react-flex-layout-column"
                 style={{
                   width: node.width ? `${node.width}%` : undefined,

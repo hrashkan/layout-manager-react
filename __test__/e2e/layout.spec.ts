@@ -412,4 +412,133 @@ test.describe("Layout Manager E2E Tests", () => {
       page.locator('.react-flex-layout-tab:has-text("Analytics")')
     ).toHaveCount(1);
   });
+
+  test("16. Nested splitter drag should follow the pointer, not the viewport", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const model = {
+        global: {
+          enableClose: true,
+          enableDrag: true,
+          enableResize: true,
+          enableTabKeepAlive: true,
+          splitterSize: 8,
+          direction: "ltr",
+        },
+        layout: {
+          id: "root",
+          type: "row",
+          flex: 1,
+          children: [
+            {
+              id: "outer-left",
+              type: "column",
+              flex: 0.5,
+              children: [
+                {
+                  id: "left-tabset",
+                  type: "tabset",
+                  flex: 1,
+                  selected: 0,
+                  children: [
+                    {
+                      id: "tab1",
+                      type: "tab",
+                      component: "component1",
+                      name: "Dashboard",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "outer-right",
+              type: "column",
+              flex: 0.5,
+              children: [
+                {
+                  id: "nested-row",
+                  type: "row",
+                  flex: 1,
+                  children: [
+                    {
+                      id: "ts-a",
+                      type: "tabset",
+                      flex: 0.5,
+                      selected: 0,
+                      children: [
+                        {
+                          id: "tab3",
+                          type: "tab",
+                          component: "component3",
+                          name: "Settings",
+                        },
+                      ],
+                    },
+                    {
+                      id: "ts-b",
+                      type: "tabset",
+                      flex: 0.5,
+                      selected: 0,
+                      children: [
+                        {
+                          id: "tab4",
+                          type: "tab",
+                          component: "component4",
+                          name: "Logs",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      };
+      localStorage.setItem(
+        "layout-manager-react-demo-layout",
+        JSON.stringify(model)
+      );
+    });
+    await page.reload();
+    await page.waitForSelector('[data-layout-id="nested-row"]');
+
+    const settings = page.locator('[data-layout-id="ts-a"]');
+    const nestedRow = page.locator('[data-layout-id="nested-row"]');
+    const splitter = page.locator(
+      '[data-layout-id="nested-row"] > .react-flex-layout-splitter'
+    );
+
+    const beforeSettings = await settings.boundingBox();
+    const rowBox = await nestedRow.boundingBox();
+    const splitterBox = await splitter.boundingBox();
+    expect(beforeSettings).toBeTruthy();
+    expect(rowBox).toBeTruthy();
+    expect(splitterBox).toBeTruthy();
+
+    const viewportWidth = page.viewportSize()?.width ?? 0;
+    expect(rowBox!.width).toBeLessThan(viewportWidth * 0.7);
+
+    const drag = 80;
+    await page.mouse.move(
+      splitterBox!.x + splitterBox!.width / 2,
+      splitterBox!.y + splitterBox!.height / 2
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      splitterBox!.x + splitterBox!.width / 2 + drag,
+      splitterBox!.y + splitterBox!.height / 2,
+      { steps: 8 }
+    );
+    await page.mouse.up();
+    await page.waitForTimeout(200);
+
+    const afterSettings = await settings.boundingBox();
+    expect(afterSettings).toBeTruthy();
+    const grownBy = afterSettings!.width - beforeSettings!.width;
+    expect(grownBy).toBeGreaterThan(drag * 0.75);
+    expect(grownBy).toBeLessThan(drag * 1.25);
+  });
 });

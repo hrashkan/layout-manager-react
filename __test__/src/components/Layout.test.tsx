@@ -145,6 +145,9 @@ describe("Layout component", () => {
 
     const splitters = container.querySelectorAll(".react-flex-layout-splitter");
     expect(splitters.length).toBe(1);
+    expect(container.querySelector('[data-layout-id="root"]')).toBeTruthy();
+    expect(container.querySelector('[data-layout-id="ts1"]')).toBeTruthy();
+    expect(container.querySelector('[data-layout-id="ts2"]')).toBeTruthy();
   });
 
   it("hides splitters when global enableResize is false", () => {

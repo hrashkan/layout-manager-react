@@ -416,6 +416,7 @@ export const TabSet: React.FC<TabSetProps> = ({
       className={`react-flex-layout-tabset ${isDragOver ? "drag-over" : ""
         } ${className}`}
       style={tabSetStyle}
+      data-layout-id={node.id}
       data-tabset-id={node.id}
       data-drop-position={visualDropPosition}
       onDragOver={handleDragOver}
