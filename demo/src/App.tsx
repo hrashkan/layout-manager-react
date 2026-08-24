@@ -26,6 +26,18 @@ import {
   ComponentRestoreData,
 } from "../../src/index";
 
+// Component configuration mapping
+const COMPONENT_CONFIG: Record<
+  string,
+  { tabId: string; component: string; name: string }
+> = {
+  component1: { tabId: "tab1", component: "component1", name: "Dashboard" },
+  component2: { tabId: "tab2", component: "component2", name: "Analytics" },
+  component3: { tabId: "tab3", component: "component3", name: "Settings" },
+  component4: { tabId: "tab4", component: "component4", name: "Logs" },
+  component5: { tabId: "tab5", component: "component5", name: "Console" },
+};
+
 // Sample components for the demo
 const SampleComponent: React.FC<{ title: string; color: string }> = ({
   title,
@@ -123,9 +135,7 @@ const App: React.FC = () => {
 
   const [model, setModel] = useState<LayoutModel>(getInitialModel);
 
-  const [direction, setDirection] = useState<"ltr" | "rtl">(
-    model.global?.direction || "ltr"
-  );
+  const direction: "ltr" | "rtl" = model.global?.direction || "ltr";
 
   // Save to localStorage when model changes (with debouncing)
   useEffect(() => {
@@ -143,27 +153,8 @@ const App: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [model, storageEnabled, storageKey]);
 
-  // Sync direction from model when it's loaded from storage
-  useEffect(() => {
-    if (model.global?.direction && model.global.direction !== direction) {
-      setDirection(model.global.direction);
-    }
-  }, [model.global?.direction]);
-
   // Store minimal restoration data in ref (no re-renders, memory efficient)
   const restoreDataRef = useRef<Map<string, ComponentRestoreData>>(new Map());
-
-  // Component configuration mapping
-  const COMPONENT_CONFIG: Record<
-    string,
-    { tabId: string; component: string; name: string }
-  > = {
-    component1: { tabId: "tab1", component: "component1", name: "Dashboard" },
-    component2: { tabId: "tab2", component: "component2", name: "Analytics" },
-    component3: { tabId: "tab3", component: "component3", name: "Settings" },
-    component4: { tabId: "tab4", component: "component4", name: "Logs" },
-    component5: { tabId: "tab5", component: "component5", name: "Console" },
-  };
 
   // Load restoration data from model metadata on mount and when model changes
   useEffect(() => {
@@ -384,7 +375,6 @@ const App: React.FC = () => {
 
   const toggleDirection = useCallback(() => {
     const newDirection = direction === "ltr" ? "rtl" : "ltr";
-    setDirection(newDirection);
 
     if (layoutRef.current) {
       layoutRef.current.handleAction({
@@ -580,19 +570,10 @@ const App: React.FC = () => {
           const layoutChanged =
             JSON.stringify(model.layout) !== JSON.stringify(newModel.layout);
 
-          // Always sync direction first, regardless of layout change
-          if (
-            newModel.global?.direction &&
-            newModel.global.direction !== direction
-          ) {
-            setDirection(newModel.global.direction);
-          }
-
           if (layoutChanged) {
             // Preserve restoration data when layout changes from drag/drop
             // Check if all tabs still exist (not removed, just moved)
             const preservedRestoreData = model.metadata?.restoreData;
-            // Use direction state which is now synced above
             const currentDirection = direction;
 
             setModel({
