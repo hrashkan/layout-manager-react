@@ -15,6 +15,10 @@ import {
   restoreTab,
   tabExists,
   isCapabilityEnabled,
+  countTabsets,
+  nodeContainsId,
+  resolveMaximizedTabsetId,
+  withSyncedMaximize,
 } from "../../../src/utils/layoutUtils";
 import type { LayoutModel, LayoutNode } from "../../../src/types";
 
@@ -46,11 +50,13 @@ describe("layoutUtils", () => {
   it("create helpers produce expected shapes", () => {
     const model = mkBase();
     expect(model.global.splitterSize).toBe(8);
+    expect(model.global.enableMaximize).toBe(true);
     expect(model.layout.type).toBe("row");
     const left = findNodeById(model.layout, "left")!;
     expect(left.type).toBe("column");
     const tabset = findNodeById(model.layout, "tabs-right")!;
     expect(tabset.type).toBe("tabset");
+    expect(tabset.enableMaximize).toBeUndefined();
   });
 
   it("findNodeById returns null for missing id", () => {
@@ -284,7 +290,50 @@ describe("layoutUtils", () => {
   it("removeEmptyTabsets returns structure with same content when nothing changes", () => {
     const model = mkBase();
     const cleaned = removeEmptyTabsets(model.layout)!;
-    // No empty tabsets, content unchanged
     expect(cleaned).toStrictEqual(model.layout);
+  });
+
+  it("countTabsets and nodeContainsId walk the tree", () => {
+    const model = mkBase();
+    expect(countTabsets(model.layout)).toBe(2);
+    expect(nodeContainsId(model.layout, "tabs-right")).toBe(true);
+    expect(nodeContainsId(model.layout, "missing")).toBe(false);
+  });
+
+  it("resolveMaximizedTabsetId clears missing or sole tabsets", () => {
+    const model = mkBase();
+    expect(
+      resolveMaximizedTabsetId({
+        ...model,
+        global: { ...model.global, maximizedTabsetId: "tabs-right" },
+      })
+    ).toBe("tabs-right");
+    expect(
+      resolveMaximizedTabsetId({
+        ...model,
+        global: { ...model.global, maximizedTabsetId: "gone" },
+      })
+    ).toBeNull();
+
+    const single = createLayoutModel(
+      createTabSet("only", [createTab("t", "c", "T")])
+    );
+    expect(
+      resolveMaximizedTabsetId({
+        ...single,
+        global: { ...single.global, maximizedTabsetId: "only" },
+      })
+    ).toBeNull();
+  });
+
+  it("withSyncedMaximize writes null when the maximized tabset is gone", () => {
+    const model = mkBase();
+    const stale = {
+      ...model,
+      global: { ...model.global, maximizedTabsetId: "gone" },
+    };
+    const synced = withSyncedMaximize(stale);
+    expect(synced.global.maximizedTabsetId).toBeNull();
+    expect(withSyncedMaximize(model)).toBe(model);
   });
 });

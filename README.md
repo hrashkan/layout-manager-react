@@ -21,6 +21,7 @@ Try it out: **[https://hrashkan.github.io/layout-manager-demo/](https://hrashkan
 - 🪶 **Small**: ~9 kB gzipped JavaScript plus ~1 kB of CSS, with React as the only peer dependency
 - 🔗 **Broad compatibility**: Works on React 16.8+ and ships both ESM and UMD builds
 - 🧠 **Tab keep-alive**: Panels mount once and stay mounted while you switch tabs
+- ⛶ **Maximize tabset**: Temporarily fill the layout with one tabset, then restore
 - 🔒 **Type Safe**: Full TypeScript support
 
 > **Persistence:** built-in `localStorage` support was removed in v0.1.0 to keep the
@@ -369,10 +370,10 @@ Full drag and drop support with 4 drop zones:
 - **Right**: Create new tabset to the right (50% width)
 - **Top/Bottom**: Create new tabset above/below (50% height)
 
-> **Capability flags:** `enableClose`, `enableDrag` and `enableResize` are
-> respected at the node, parent and global levels. The first defined value wins
-> (tab → tabset → `model.global` → default `true`). Set a flag to `false` to lock
-> that behaviour; leave it unset to inherit.
+> **Capability flags:** `enableClose`, `enableDrag`, `enableResize` and
+> `enableMaximize` are respected at the node, parent and global levels. The first
+> defined value wins (tab → tabset → `model.global` → default `true`). Set a flag
+> to `false` to lock that behaviour; leave it unset to inherit.
 
 ## Tab content keep-alive
 
@@ -404,6 +405,26 @@ function LivePanel() {
 | Old remount-everywhere behaviour | `createLayoutModel(layout, { enableTabKeepAlive: false })` |
 
 See [`docs/tab-content-lifecycle.md`](docs/tab-content-lifecycle.md) for the full design.
+
+## Maximize / restore tabset
+
+When the layout has more than one tabset, each strip shows a maximize control
+(or double-click empty header space). The chosen tabset fills `.react-flex-layout`
+until restore. Other tabsets stay mounted and hidden; splitters are not shown.
+This is stored on the model as `global.maximizedTabsetId`, so it persists with
+`onModelChange`. If you filter `onModelChange` (for example only applying layout
+tree edits), still apply `global` updates or maximize will not stick.
+
+```tsx
+layoutRef.current.handleAction({
+  type: "maximizeTabset",
+  payload: { nodeId: "settings-tabset" },
+});
+layoutRef.current.handleAction({ type: "restoreTabset", payload: {} });
+```
+
+Disable the control with `enableMaximize: false` on the tabset, a parent row or
+column, or `model.global`. A layout with a single tabset does not show the icon.
 
 ## Resizing
 

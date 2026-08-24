@@ -565,14 +565,12 @@ const App: React.FC = () => {
         model={model}
         factory={factory}
         onModelChange={(newModel) => {
-          // Only update if the layout actually changed (not just metadata)
-          // This prevents infinite loops when we update metadata
           const layoutChanged =
             JSON.stringify(model.layout) !== JSON.stringify(newModel.layout);
+          const globalChanged =
+            JSON.stringify(model.global) !== JSON.stringify(newModel.global);
 
-          if (layoutChanged) {
-            // Preserve restoration data when layout changes from drag/drop
-            // Check if all tabs still exist (not removed, just moved)
+          if (layoutChanged || globalChanged) {
             const preservedRestoreData = model.metadata?.restoreData;
             const currentDirection = direction;
 
@@ -580,18 +578,15 @@ const App: React.FC = () => {
               ...newModel,
               global: {
                 ...newModel.global,
-                direction: newModel.global?.direction || currentDirection, // Preserve direction
+                direction: newModel.global?.direction || currentDirection,
               },
               metadata: {
                 ...newModel.metadata,
-                // Preserve existing restoration data - drag/drop doesn't remove components
                 restoreData:
                   preservedRestoreData || newModel.metadata?.restoreData,
               },
             });
           } else {
-            // Layout didn't change, just update metadata if needed
-            // Also preserve direction
             const currentDirection = direction;
             if (newModel.metadata?.restoreData || newModel.global?.direction) {
               setModel((prev) => ({
@@ -601,7 +596,7 @@ const App: React.FC = () => {
                   direction:
                     newModel.global?.direction ||
                     prev.global?.direction ||
-                    currentDirection, // Preserve direction
+                    currentDirection,
                 },
                 metadata: newModel.metadata || prev.metadata,
               }));

@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Layout } from "../../../src/components/Layout";
 import {
@@ -9,7 +9,7 @@ import {
   createTabSet,
   createTab,
 } from "../../../src/utils/layoutUtils";
-import type { LayoutModel, LayoutNode } from "../../../src/types";
+import type { LayoutModel, LayoutNode, LayoutRef } from "../../../src/types";
 
 function mkModel(): LayoutModel {
   return createLayoutModel(
@@ -304,6 +304,228 @@ describe("Layout component", () => {
     const [nextModel] = onModelChange.mock.calls[0];
     expect(nextModel.layout.children[0].selected).toBe(1);
     expect(getByTestId("content-ca")).toBeTruthy();
+  });
+
+  it("reports maximizedTabsetId through onModelChange without a layout rewrite", async () => {
+    const user = userEvent.setup();
+    const model = mkModel();
+    const onModelChange = vi.fn();
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout
+          model={model}
+          factory={factory}
+          onModelChange={onModelChange}
+        />
+      </div>
+    );
+
+    const ts2 = container.querySelector(
+      '[data-layout-id="ts2"]'
+    ) as HTMLElement;
+    await user.click(
+      ts2.querySelector(".react-flex-layout-tabset-maximize") as HTMLButtonElement
+    );
+
+    expect(onModelChange).toHaveBeenCalled();
+    const [nextModel] = onModelChange.mock.calls[0];
+    expect(nextModel.global.maximizedTabsetId).toBe("ts2");
+    expect(nextModel.layout).toBe(model.layout);
+  });
+
+  it("maximizes a tabset and hides siblings while keeping them mounted", async () => {
+    const user = userEvent.setup();
+    const model = mkModel();
+    const { container, getByTestId } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+
+    const ts2 = container.querySelector(
+      '[data-layout-id="ts2"]'
+    ) as HTMLElement;
+    const maximize = ts2.querySelector(
+      ".react-flex-layout-tabset-maximize"
+    ) as HTMLButtonElement;
+    await user.click(maximize);
+
+    const ts1 = container.querySelector(
+      '[data-layout-id="ts1"]'
+    ) as HTMLElement;
+    expect(ts1.hasAttribute("hidden")).toBe(true);
+    expect(ts1.getAttribute("aria-hidden")).toBe("true");
+    expect(ts2.hasAttribute("hidden")).toBe(false);
+    expect(ts2.classList.contains("react-flex-layout-tabset--maximized")).toBe(
+      true
+    );
+    expect(container.querySelectorAll(".react-flex-layout-splitter").length).toBe(
+      0
+    );
+    expect(getByTestId("content-ca")).toBeTruthy();
+    expect(getByTestId("content-cc")).toBeTruthy();
+  });
+
+  it("restores flex and splitters after maximize", async () => {
+    const user = userEvent.setup();
+    const model = mkModel();
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+
+    const ts2 = container.querySelector(
+      '[data-layout-id="ts2"]'
+    ) as HTMLElement;
+    await user.click(
+      ts2.querySelector(".react-flex-layout-tabset-maximize") as HTMLButtonElement
+    );
+    await user.click(
+      ts2.querySelector(".react-flex-layout-tabset-maximize") as HTMLButtonElement
+    );
+
+    expect(
+      (container.querySelector('[data-layout-id="ts1"]') as HTMLElement).hasAttribute(
+        "hidden"
+      )
+    ).toBe(false);
+    expect(container.querySelectorAll(".react-flex-layout-splitter").length).toBe(
+      1
+    );
+    expect(
+      container.querySelector(".react-flex-layout")?.getAttribute("data-maximized")
+    ).toBeNull();
+  });
+
+  it("keeps sibling tab panel state while another tabset is maximized", async () => {
+    const user = userEvent.setup();
+    const model = mkModel();
+    const statefulFactory = (node: LayoutNode) => (
+      <div data-testid={`content-${node.component}`}>
+        <input aria-label={`field-${node.component}`} defaultValue="" />
+      </div>
+    );
+    const { container, getByLabelText } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={statefulFactory} />
+      </div>
+    );
+
+    await user.type(getByLabelText("field-ca"), "kept");
+    const ts2 = container.querySelector(
+      '[data-layout-id="ts2"]'
+    ) as HTMLElement;
+    await user.click(
+      ts2.querySelector(".react-flex-layout-tabset-maximize") as HTMLButtonElement
+    );
+    expect((getByLabelText("field-ca") as HTMLInputElement).value).toBe("kept");
+    await user.click(
+      ts2.querySelector(".react-flex-layout-tabset-maximize") as HTMLButtonElement
+    );
+    expect((getByLabelText("field-ca") as HTMLInputElement).value).toBe("kept");
+  });
+
+  it("clears maximizedTabsetId when the maximized tabset is pruned", async () => {
+    const user = userEvent.setup();
+    const model = mkModel();
+    const { container, queryByTestId } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+
+    const ts2 = container.querySelector(
+      '[data-layout-id="ts2"]'
+    ) as HTMLElement;
+    await user.click(
+      ts2.querySelector(".react-flex-layout-tabset-maximize") as HTMLButtonElement
+    );
+
+    const closeC = ts2.querySelector(
+      ".react-flex-layout-tab-close"
+    ) as HTMLButtonElement;
+    await user.click(closeC);
+
+    expect(queryByTestId("content-cc")).toBeNull();
+    expect(container.querySelector('[data-layout-id="ts2"]')).toBeNull();
+    expect(
+      (container.querySelector('[data-layout-id="ts1"]') as HTMLElement).hasAttribute(
+        "hidden"
+      )
+    ).toBe(false);
+    expect(
+      container.querySelector(".react-flex-layout")?.getAttribute("data-maximized")
+    ).toBeNull();
+  });
+
+  it("hides the maximize button when enableMaximize is false", () => {
+    const model = createLayoutModel(
+      createRow("root", [
+        createTabSet("ts1", [createTab("a", "ca", "A")]),
+        createTabSet("ts2", [createTab("c", "cc", "C")]),
+      ]),
+      { enableMaximize: false }
+    );
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+    expect(container.querySelector(".react-flex-layout-tabset-maximize")).toBeNull();
+  });
+
+  it("does not show maximize on a single tabset and handleAction is a no-op", () => {
+    const model = createLayoutModel(
+      createTabSet("ts1", [createTab("a", "ca", "A")])
+    );
+    const ref = React.createRef<LayoutRef>();
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout ref={ref} model={model} factory={factory} />
+      </div>
+    );
+    expect(container.querySelector(".react-flex-layout-tabset-maximize")).toBeNull();
+
+    act(() => {
+      ref.current!.handleAction({
+        type: "maximizeTabset",
+        payload: { nodeId: "ts1" },
+      });
+    });
+    expect(
+      container.querySelector(".react-flex-layout")?.getAttribute("data-maximized")
+    ).toBeNull();
+  });
+
+  it("handleAction maximizeTabset and restoreTabset update the model", () => {
+    const model = mkModel();
+    const ref = React.createRef<LayoutRef>();
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout ref={ref} model={model} factory={factory} />
+      </div>
+    );
+
+    act(() => {
+      ref.current!.handleAction({
+        type: "maximizeTabset",
+        payload: { nodeId: "ts2" },
+      });
+    });
+    expect(
+      container.querySelector(".react-flex-layout")?.getAttribute("data-maximized")
+    ).toBe("ts2");
+
+    act(() => {
+      ref.current!.handleAction({
+        type: "restoreTabset",
+        payload: {},
+      });
+    });
+    expect(
+      container.querySelector(".react-flex-layout")?.getAttribute("data-maximized")
+    ).toBeNull();
   });
 
   describe("Memory Management", () => {

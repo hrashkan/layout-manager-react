@@ -14,6 +14,7 @@ import {
   LayoutAction,
   SelectTabPayload,
   CloseTabsetPayload,
+  MaximizeTabsetPayload,
   LayoutModel,
   Direction,
 } from "../types";
@@ -26,8 +27,13 @@ import {
   updateNodeById,
   findNodeById,
   findNodeByIdCached,
+  findParentNodeCached,
   removeEmptyTabsets,
   isCapabilityEnabled,
+  countTabsets,
+  nodeContainsId,
+  resolveMaximizedTabsetId,
+  withSyncedMaximize,
 } from "../utils/layoutUtils";
 import "./Layout.css";
 
@@ -152,7 +158,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
 
     const handleAction = useCallback((action: LayoutAction) => {
       const updateModel = (prevModel: LayoutModel): LayoutModel => {
-        switch (action.type) {
+        const nextModel = (() => {
+          switch (action.type) {
           case "selectTab": {
             const { nodeId, tabIndex } = action.payload as SelectTabPayload;
             const selectResult = updateNodeById(prevModel.layout, nodeId, {
@@ -225,6 +232,40 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             }
             return prevModel;
           }
+          case "maximizeTabset": {
+            const { nodeId } = action.payload as MaximizeTabsetPayload;
+            const target =
+              findNodeByIdCached(nodeIndexRef.current, nodeId) ??
+              findNodeById(prevModel.layout, nodeId);
+            if (!target || target.type !== "tabset") {
+              return prevModel;
+            }
+            if (countTabsets(prevModel.layout) <= 1) {
+              return prevModel;
+            }
+            if (prevModel.global?.maximizedTabsetId === nodeId) {
+              return prevModel;
+            }
+            return {
+              ...prevModel,
+              global: {
+                ...prevModel.global,
+                maximizedTabsetId: nodeId,
+              },
+            };
+          }
+          case "restoreTabset": {
+            if (!prevModel.global?.maximizedTabsetId) {
+              return prevModel;
+            }
+            return {
+              ...prevModel,
+              global: {
+                ...prevModel.global,
+                maximizedTabsetId: null,
+              },
+            };
+          }
           case "changeDirection": {
             const { direction: newDirection } = action.payload as {
               direction: Direction;
@@ -239,7 +280,10 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
           }
           default:
             return prevModel;
-        }
+          }
+        })();
+
+        return withSyncedMaximize(nextModel);
       };
 
       if (onModelChangeRef.current) {
@@ -283,18 +327,51 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
       [handleAction]
     );
 
+    const handleMaximizeToggle = useCallback(
+      (nodeId: string) => {
+        const maximizedId = onModelChangeRef.current
+          ? modelRef.current.global?.maximizedTabsetId
+          : internalModelRef.current.global?.maximizedTabsetId;
+        if (maximizedId === nodeId) {
+          handleAction({
+            type: "restoreTabset",
+            payload: {},
+          });
+          return;
+        }
+        handleAction({
+          type: "maximizeTabset",
+          payload: { nodeId },
+        });
+      },
+      [handleAction]
+    );
+
     const direction: Direction = currentModel.global?.direction || "ltr";
 
     const splitterSize = currentModel.global?.splitterSize || 8;
     const globalEnableClose = currentModel.global?.enableClose;
     const globalEnableDrag = currentModel.global?.enableDrag;
     const globalEnableResize = currentModel.global?.enableResize;
+    const globalEnableMaximize = currentModel.global?.enableMaximize;
     const globalEnableTabKeepAlive = currentModel.global?.enableTabKeepAlive;
+    const maximizedTabsetId = resolveMaximizedTabsetId(currentModel);
+    const tabsetCount = countTabsets(currentModel.layout);
 
     const renderNode = useCallback(
       (node: LayoutNode): React.ReactNode => {
+        const offMaximizePath = !!(
+          maximizedTabsetId && !nodeContainsId(node, maximizedTabsetId)
+        );
+
         switch (node.type) {
-          case "tabset":
+          case "tabset": {
+            const parent = findParentNodeCached(parentIndex, node.id);
+            const maximizeEnabled = isCapabilityEnabled(
+              node.enableMaximize,
+              parent?.enableMaximize,
+              globalEnableMaximize
+            );
             return (
               <MemoizedTabSet
                 key={node.id}
@@ -322,8 +399,14 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 globalEnableClose={globalEnableClose}
                 globalEnableDrag={globalEnableDrag}
                 globalEnableTabKeepAlive={globalEnableTabKeepAlive}
+                isMaximized={maximizedTabsetId === node.id}
+                canMaximize={maximizeEnabled && tabsetCount > 1}
+                allowDrop={!maximizedTabsetId || maximizedTabsetId === node.id}
+                hidden={offMaximizePath}
+                onMaximizeToggle={handleMaximizeToggle}
               />
             );
+          }
 
           case "row": {
             const rowChildren = node.children || [];
@@ -333,6 +416,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 key={node.id}
                 data-layout-id={node.id}
                 className="react-flex-layout-row"
+                hidden={offMaximizePath || undefined}
+                aria-hidden={offMaximizePath || undefined}
                 style={{
                   width: node.width ? `${node.width}%` : undefined,
                   height: node.height ? `${node.height}%` : undefined,
@@ -346,6 +431,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 {rowChildren.map((child, index) => {
                   const nextChild = rowChildren[index + 1];
                   const showSplitter =
+                    !maximizedTabsetId &&
                     !!nextChild &&
                     isCapabilityEnabled(
                       child.enableResize,
@@ -394,6 +480,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 key={node.id}
                 data-layout-id={node.id}
                 className="react-flex-layout-column"
+                hidden={offMaximizePath || undefined}
+                aria-hidden={offMaximizePath || undefined}
                 style={{
                   width: node.width ? `${node.width}%` : undefined,
                   height: node.height ? `${node.height}%` : undefined,
@@ -407,6 +495,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 {columnChildren.map((child, index) => {
                   const nextChild = columnChildren[index + 1];
                   const showSplitter =
+                    !maximizedTabsetId &&
                     !!nextChild &&
                     isCapabilityEnabled(
                       child.enableResize,
@@ -460,6 +549,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         factory,
         handleTabSelect,
         handleTabClose,
+        handleMaximizeToggle,
         handleDragStart,
         handleDragEnd,
         handleDragOver,
@@ -476,6 +566,10 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         globalEnableDrag,
         globalEnableTabKeepAlive,
         globalEnableResize,
+        globalEnableMaximize,
+        maximizedTabsetId,
+        tabsetCount,
+        parentIndex,
         getResizeHandler,
       ]
     );
@@ -496,6 +590,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         className={`react-flex-layout ${className}`}
         style={layoutStyle}
         dir={direction}
+        data-maximized={maximizedTabsetId || undefined}
       >
         {renderedLayout}
       </div>

@@ -16,6 +16,7 @@ export interface LayoutNode {
   enableClose?: boolean;
   enableDrag?: boolean;
   enableResize?: boolean;
+  enableMaximize?: boolean;
   enableRenderOnDemand?: boolean;
 }
 
@@ -26,7 +27,9 @@ export interface LayoutModel {
     enableClose?: boolean;
     enableDrag?: boolean;
     enableResize?: boolean;
+    enableMaximize?: boolean;
     enableTabKeepAlive?: boolean;
+    maximizedTabsetId?: string | null;
     splitterSize?: number;
     tabOverlapLength?: number;
     direction?: Direction;
@@ -68,6 +71,10 @@ export interface CloseTabsetPayload {
   nodeId: string;
 }
 
+export interface MaximizeTabsetPayload {
+  nodeId: string;
+}
+
 export interface ChangeDirectionPayload {
   direction: Direction;
 }
@@ -80,8 +87,10 @@ export interface LayoutAction {
     | "resizeNode"
     | "selectTab"
     | "closeTabset"
+    | "maximizeTabset"
+    | "restoreTabset"
     | "changeDirection";
-  payload: SelectTabPayload | unknown;
+  payload: SelectTabPayload | MaximizeTabsetPayload | unknown;
 }
 
 export interface ResizeData {
@@ -148,6 +157,11 @@ export interface TabSetProps {
   globalEnableClose?: boolean;
   globalEnableDrag?: boolean;
   globalEnableTabKeepAlive?: boolean;
+  isMaximized?: boolean;
+  canMaximize?: boolean;
+  allowDrop?: boolean;
+  hidden?: boolean;
+  onMaximizeToggle?: (nodeId: string) => void;
 }
 
 export interface SplitterProps {

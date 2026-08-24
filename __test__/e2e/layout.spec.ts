@@ -541,4 +541,96 @@ test.describe("Layout Manager E2E Tests", () => {
     expect(grownBy).toBeGreaterThan(drag * 0.75);
     expect(grownBy).toBeLessThan(drag * 1.25);
   });
+
+  test("17. Should maximize a tabset to fill the layout and restore the tree", async ({
+    page,
+  }) => {
+    const layout = page.locator(".react-flex-layout");
+    const settings = page.locator('[data-tabset-id="top-tabset"]');
+    const dashboard = page.locator('[data-tabset-id="left-tabset"]');
+    const logs = page.locator('[data-tabset-id="bottom-tabset"]');
+
+    await settings
+      .locator(".react-flex-layout-tabset-maximize")
+      .click();
+
+    await expect(layout).toHaveAttribute("data-maximized", "top-tabset");
+    await expect(dashboard).toBeHidden();
+    await expect(logs).toBeHidden();
+    await expect(settings).toBeVisible();
+    await expect(page.locator(".react-flex-layout-splitter")).toHaveCount(0);
+
+    const layoutBox = await layout.boundingBox();
+    const settingsBox = await settings.boundingBox();
+    expect(layoutBox).toBeTruthy();
+    expect(settingsBox).toBeTruthy();
+    expect(Math.abs(settingsBox!.width - layoutBox!.width)).toBeLessThan(8);
+    expect(Math.abs(settingsBox!.height - layoutBox!.height)).toBeLessThan(8);
+
+    await settings
+      .locator(".react-flex-layout-tabset-maximize")
+      .click();
+
+    await expect(layout).not.toHaveAttribute("data-maximized");
+    await expect(dashboard).toBeVisible();
+    await expect(logs).toBeVisible();
+    await expect(page.locator(".react-flex-layout-splitter")).not.toHaveCount(0);
+  });
+
+  test("18. Should persist maximized tabset across reload when storage is on", async ({
+    page,
+  }) => {
+    await page
+      .locator('[data-tabset-id="top-tabset"] .react-flex-layout-tabset-maximize')
+      .click();
+    await expect(page.locator(".react-flex-layout")).toHaveAttribute(
+      "data-maximized",
+      "top-tabset"
+    );
+
+    await page.waitForTimeout(700);
+    await page.reload();
+    await page.waitForSelector(".react-flex-layout-tabset--maximized", {
+      timeout: 10000,
+    });
+
+    await expect(page.locator(".react-flex-layout")).toHaveAttribute(
+      "data-maximized",
+      "top-tabset"
+    );
+    await expect(page.locator('[data-tabset-id="left-tabset"]')).toBeHidden();
+    await expect(page.locator('[data-tabset-id="top-tabset"]')).toBeVisible();
+  });
+
+  test("19. Should switch tabs while maximized and restore after closing the last tab", async ({
+    page,
+  }) => {
+    const logs = page.locator('[data-tabset-id="bottom-tabset"]');
+    await logs.locator(".react-flex-layout-tabset-maximize").click();
+    await expect(page.locator(".react-flex-layout")).toHaveAttribute(
+      "data-maximized",
+      "bottom-tabset"
+    );
+
+    await logs.locator('.react-flex-layout-tab:has-text("Console")').click();
+    await expect(page.locator('text="Console"').last()).toBeVisible();
+
+    await logs.locator('.react-flex-layout-tab:has-text("Logs")').click();
+    const logsTab = logs.locator('.react-flex-layout-tab:has-text("Logs")');
+    await logsTab.locator(".react-flex-layout-tab-close").click();
+    await page.waitForTimeout(300);
+
+    const consoleTab = page.locator(
+      '[data-tabset-id="bottom-tabset"] .react-flex-layout-tab:has-text("Console")'
+    );
+    await consoleTab.locator(".react-flex-layout-tab-close").click();
+    await page.waitForTimeout(500);
+
+    await expect(page.locator(".react-flex-layout")).not.toHaveAttribute(
+      "data-maximized"
+    );
+    await expect(page.locator('[data-tabset-id="left-tabset"]')).toBeVisible();
+    await expect(page.locator('[data-tabset-id="top-tabset"]')).toBeVisible();
+    await expect(page.locator('[data-tabset-id="bottom-tabset"]')).toHaveCount(0);
+  });
 });

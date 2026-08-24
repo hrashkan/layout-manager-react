@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Maximize / restore a tabset** so one pane can fill the layout root
+  (not the browser viewport) and then return to the same flex tree.
+  `global.maximizedTabsetId` is serializable with the rest of the model.
+  `enableMaximize` follows the usual capability order (tabset → parent →
+  `model.global` → default `true`). Hidden tabsets stay mounted for keep-alive.
+  `handleAction` types: `maximizeTabset` and `restoreTabset`.
 - Project community files: `CONTRIBUTING.md`, Contributor Covenant
   `CODE_OF_CONDUCT.md`, `SECURITY.md`, and GitHub issue / pull-request
   templates.

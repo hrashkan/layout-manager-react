@@ -26,10 +26,13 @@ export const MemoizedTabSet = memo<TabSetProps>(
     if (prevProps.globalEnableClose !== nextProps.globalEnableClose)
       return false;
     if (prevProps.globalEnableDrag !== nextProps.globalEnableDrag) return false;
-    if (
-      prevProps.globalEnableTabKeepAlive !== nextProps.globalEnableTabKeepAlive
-    )
+    if (prevProps.globalEnableTabKeepAlive !== nextProps.globalEnableTabKeepAlive)
       return false;
+    if (prevProps.isMaximized !== nextProps.isMaximized) return false;
+    if (prevProps.canMaximize !== nextProps.canMaximize) return false;
+    if (prevProps.allowDrop !== nextProps.allowDrop) return false;
+    if (prevProps.hidden !== nextProps.hidden) return false;
+    if (prevProps.onMaximizeToggle !== nextProps.onMaximizeToggle) return false;
     if (prevProps.style !== nextProps.style) return false;
     if (prevProps.children !== nextProps.children) return false;
 
@@ -47,6 +50,8 @@ export const MemoizedTabSet = memo<TabSetProps>(
       if (prevProps.node.enableClose !== nextProps.node.enableClose)
         return false;
       if (prevProps.node.enableDrag !== nextProps.node.enableDrag) return false;
+      if (prevProps.node.enableMaximize !== nextProps.node.enableMaximize)
+        return false;
       if (
         prevProps.node.enableRenderOnDemand !==
         nextProps.node.enableRenderOnDemand

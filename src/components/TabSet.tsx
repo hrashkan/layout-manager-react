@@ -7,7 +7,12 @@ import React, {
 } from "react";
 import { TabSetProps, DropPosition } from "../types";
 import { Tab } from "./Tab";
-import { ScrollLeftIcon, ScrollRightIcon } from "./icons";
+import {
+  ScrollLeftIcon,
+  ScrollRightIcon,
+  MaximizeIcon,
+  RestoreIcon,
+} from "./icons";
 import { isCapabilityEnabled } from "../utils/layoutUtils";
 import { TabActiveProvider } from "../hooks/useTabActive";
 import "./TabSet.css";
@@ -47,6 +52,11 @@ export const TabSet: React.FC<TabSetProps> = ({
   globalEnableClose,
   globalEnableDrag,
   globalEnableTabKeepAlive,
+  isMaximized = false,
+  canMaximize = false,
+  allowDrop = true,
+  hidden = false,
+  onMaximizeToggle,
 }) => {
   const tabs = useMemo(() => {
     return node.children?.filter((child) => child.type === "tab") || [];
@@ -209,6 +219,9 @@ export const TabSet: React.FC<TabSetProps> = ({
 
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
+      if (!allowDrop) {
+        return;
+      }
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
 
@@ -300,7 +313,7 @@ export const TabSet: React.FC<TabSetProps> = ({
 
       onDragOver?.(e, node.id, position);
     },
-    [node.id, direction, tabs.length, tabsToRender, idToIndex, onDragOver]
+    [node.id, direction, tabs.length, tabsToRender, idToIndex, onDragOver, allowDrop]
   );
 
   const handleDragLeave = useCallback(
@@ -312,9 +325,33 @@ export const TabSet: React.FC<TabSetProps> = ({
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
+      if (!allowDrop) {
+        return;
+      }
       onDrop?.(e, node.id);
     },
-    [node.id, onDrop]
+    [node.id, onDrop, allowDrop]
+  );
+
+  const handleMaximizeToggle = useCallback(() => {
+    if (!isMaximized && !canMaximize) {
+      return;
+    }
+    onMaximizeToggle?.(node.id);
+  }, [isMaximized, canMaximize, onMaximizeToggle, node.id]);
+
+  const handleHeaderDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest(".react-flex-layout-tab")) {
+        return;
+      }
+      if (target.closest("button")) {
+        return;
+      }
+      handleMaximizeToggle();
+    },
+    [handleMaximizeToggle]
   );
 
   const isDragOver = dragOverTabset === node.id;
@@ -414,16 +451,32 @@ export const TabSet: React.FC<TabSetProps> = ({
   return (
     <div
       className={`react-flex-layout-tabset ${isDragOver ? "drag-over" : ""
-        } ${className}`}
+        } ${isMaximized ? "react-flex-layout-tabset--maximized" : ""} ${className}`}
       style={tabSetStyle}
       data-layout-id={node.id}
       data-tabset-id={node.id}
       data-drop-position={visualDropPosition}
+      hidden={hidden || undefined}
+      aria-hidden={hidden || undefined}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="react-flex-layout-tabset-header" ref={headerRef}>
+      <div
+        className="react-flex-layout-tabset-header"
+        ref={headerRef}
+        onDoubleClick={handleHeaderDoubleClick}
+      >
+        {(isMaximized || canMaximize) && (
+          <button
+            className="react-flex-layout-tabset-maximize"
+            onClick={handleMaximizeToggle}
+            type="button"
+            aria-label={isMaximized ? "Restore" : "Maximize"}
+          >
+            {isMaximized ? <RestoreIcon /> : <MaximizeIcon />}
+          </button>
+        )}
         {showLeftArrow && (
           <button
             className="react-flex-layout-tabset-scroll-button react-flex-layout-tabset-scroll-left"

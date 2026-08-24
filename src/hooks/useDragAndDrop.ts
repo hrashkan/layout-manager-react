@@ -84,6 +84,10 @@ export const useDragAndDrop = (
       targetIndex?: number
     ) => {
       e.preventDefault();
+      const maximizedId = modelRef.current.global?.maximizedTabsetId;
+      if (maximizedId && tabsetId !== maximizedId) {
+        return;
+      }
       e.dataTransfer.dropEffect = "move";
       setDragOverTabset(tabsetId);
       setDropPosition(position);
@@ -115,6 +119,11 @@ export const useDragAndDrop = (
       const currentDropTargetIndex = dropTargetIndexRef.current;
 
       if (!currentDraggedTab || !currentOnModelChange) {
+        return;
+      }
+
+      const maximizedId = currentModel.global?.maximizedTabsetId;
+      if (maximizedId && targetTabsetId !== maximizedId) {
         return;
       }
 

@@ -3,7 +3,7 @@ export { TabSet } from "./components/TabSet";
 export { Tab } from "./components/Tab";
 export { Splitter } from "./components/Splitter";
 export { DefaultCloseIcon } from "./components/DefaultCloseIcon";
-export { ScrollLeftIcon, ScrollRightIcon } from "./components/icons";
+export { ScrollLeftIcon, ScrollRightIcon, MaximizeIcon, RestoreIcon } from "./components/icons";
 
 export { MemoizedTab } from "./components/MemoizedTab";
 export { MemoizedTabSet } from "./components/MemoizedTabSet";
@@ -17,6 +17,7 @@ export type {
   LayoutAction,
   SelectTabPayload,
   CloseTabsetPayload,
+  MaximizeTabsetPayload,
   TabProps,
   TabSetProps,
   SplitterProps,
@@ -40,6 +41,10 @@ export {
   tabExists,
   addTabToTabset,
   isCapabilityEnabled,
+  countTabsets,
+  nodeContainsId,
+  resolveMaximizedTabsetId,
+  withSyncedMaximize,
 } from "./utils/layoutUtils";
 export type { ComponentRestoreData } from "./utils/layoutUtils";
 

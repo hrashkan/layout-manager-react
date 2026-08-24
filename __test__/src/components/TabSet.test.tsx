@@ -128,6 +128,60 @@ describe("TabSet component", () => {
     expect(onTabClose).toHaveBeenCalledWith("ts", 0);
   });
 
+  it("shows a maximize button when canMaximize is set", () => {
+    const onMaximizeToggle = vi.fn();
+    const node = mkTabset([mkTab("a", "A")], 0);
+    const { container } = render(
+      <TabSet
+        node={node}
+        factory={factory}
+        canMaximize
+        onMaximizeToggle={onMaximizeToggle}
+      />
+    );
+    const button = container.querySelector(
+      ".react-flex-layout-tabset-maximize"
+    ) as HTMLButtonElement;
+    expect(button).toBeTruthy();
+    expect(button.getAttribute("aria-label")).toBe("Maximize");
+    fireEvent.click(button);
+    expect(onMaximizeToggle).toHaveBeenCalledWith("ts");
+  });
+
+  it("toggles maximize on double-click of empty header space", () => {
+    const onMaximizeToggle = vi.fn();
+    const node = mkTabset([mkTab("a", "A")], 0);
+    const { container } = render(
+      <TabSet
+        node={node}
+        factory={factory}
+        canMaximize
+        onMaximizeToggle={onMaximizeToggle}
+      />
+    );
+    const header = container.querySelector(
+      ".react-flex-layout-tabset-header"
+    ) as HTMLElement;
+    fireEvent.doubleClick(header);
+    expect(onMaximizeToggle).toHaveBeenCalledWith("ts");
+  });
+
+  it("does not maximize when double-clicking a tab", () => {
+    const onMaximizeToggle = vi.fn();
+    const node = mkTabset([mkTab("a", "A")], 0);
+    const { container } = render(
+      <TabSet
+        node={node}
+        factory={factory}
+        canMaximize
+        onMaximizeToggle={onMaximizeToggle}
+      />
+    );
+    const tab = container.querySelector(".react-flex-layout-tab") as HTMLElement;
+    fireEvent.doubleClick(tab);
+    expect(onMaximizeToggle).not.toHaveBeenCalled();
+  });
+
   it("respects enableClose=false on a tab", () => {
     const onTabClose = vi.fn();
     const locked = { ...mkTab("a", "A"), enableClose: false };

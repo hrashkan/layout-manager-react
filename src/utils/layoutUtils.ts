@@ -60,6 +60,7 @@ export const createLayoutModel = (
     enableClose: true,
     enableDrag: true,
     enableResize: true,
+    enableMaximize: true,
     enableTabKeepAlive: true,
     splitterSize: 8,
     tabOverlapLength: 0,
@@ -386,6 +387,7 @@ const cloneContainerShell = (node: LayoutNode): LayoutNode => ({
   enableClose: node.enableClose,
   enableDrag: node.enableDrag,
   enableResize: node.enableResize,
+  enableMaximize: node.enableMaximize,
   enableRenderOnDemand: node.enableRenderOnDemand,
 });
 
@@ -661,4 +663,65 @@ export const restoreTab = (
 
 export const tabExists = (layout: LayoutNode, tabId: string): boolean => {
   return findNodeById(layout, tabId) !== null;
+};
+
+export const countTabsets = (node: LayoutNode): number => {
+  if (node.type === "tabset") {
+    return 1;
+  }
+  if (!node.children) {
+    return 0;
+  }
+  let count = 0;
+  for (let i = 0; i < node.children.length; i++) {
+    count += countTabsets(node.children[i]);
+  }
+  return count;
+};
+
+export const nodeContainsId = (node: LayoutNode, id: string): boolean => {
+  if (node.id === id) {
+    return true;
+  }
+  if (!node.children) {
+    return false;
+  }
+  for (let i = 0; i < node.children.length; i++) {
+    if (nodeContainsId(node.children[i], id)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+export const resolveMaximizedTabsetId = (
+  model: LayoutModel
+): string | null => {
+  const id = model.global?.maximizedTabsetId;
+  if (!id) {
+    return null;
+  }
+  const node = findNodeById(model.layout, id);
+  if (!node || node.type !== "tabset") {
+    return null;
+  }
+  if (countTabsets(model.layout) <= 1) {
+    return null;
+  }
+  return id;
+};
+
+export const withSyncedMaximize = (model: LayoutModel): LayoutModel => {
+  const resolved = resolveMaximizedTabsetId(model);
+  const current = model.global?.maximizedTabsetId ?? null;
+  if (resolved === current) {
+    return model;
+  }
+  return {
+    ...model,
+    global: {
+      ...model.global,
+      maximizedTabsetId: resolved,
+    },
+  };
 };

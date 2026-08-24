@@ -61,3 +61,19 @@
 .react-flex-layout[dir="ltr"] {
   text-align: left;
 }
+
+.react-flex-layout .react-flex-layout-tabset[hidden],
+.react-flex-layout .react-flex-layout-row[hidden],
+.react-flex-layout .react-flex-layout-column[hidden] {
+  display: none !important;
+}
+
+.react-flex-layout[data-maximized] .react-flex-layout-row:not([hidden]),
+.react-flex-layout[data-maximized] .react-flex-layout-column:not([hidden]),
+.react-flex-layout[data-maximized] .react-flex-layout-tabset--maximized {
+  flex: 1 1 0% !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+}
