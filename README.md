@@ -16,6 +16,7 @@ Try it out: **[https://hrashkan.github.io/layout-manager-demo/](https://hrashkan
 - 🎨 **Customizable**: Easy to style and customize
 - 🪶 **Small**: ~9 kB gzipped JavaScript plus ~1 kB of CSS, with React as the only peer dependency
 - 🔗 **Broad compatibility**: Works on React 16.8+ and ships both ESM and UMD builds
+- 🧠 **Tab keep-alive**: Panels mount once and stay mounted while you switch tabs
 - 🔒 **Type Safe**: Full TypeScript support
 
 > **Persistence:** built-in `localStorage` support was removed in v0.1.0 to keep the
@@ -364,9 +365,41 @@ Full drag and drop support with 4 drop zones:
 - **Right**: Create new tabset to the right (50% width)
 - **Top/Bottom**: Create new tabset above/below (50% height)
 
-> **Known limitation:** every tab is currently draggable and closeable. The
-> `enableDrag`, `enableClose` and `enableResize` attributes are accepted by the model
-> but are not yet enforced.
+> **Capability flags:** `enableClose`, `enableDrag` and `enableResize` are
+> respected at the node, parent and global levels. The first defined value wins
+> (tab → tabset → `model.global` → default `true`). Set a flag to `false` to lock
+> that behaviour; leave it unset to inherit.
+
+## Tab content keep-alive
+
+By default, a tab’s panel is mounted the first time you open it and then **kept
+mounted** (hidden) when you switch away, so form state, scroll position and React
+state survive. Closing the tab still unmounts it.
+
+```tsx
+import { useTabActive } from "layout-manager-react";
+
+function LivePanel() {
+  const active = useTabActive();
+
+  useEffect(() => {
+    if (!active) return;
+    const socket = connect();
+    return () => socket.close();
+  }, [active]);
+
+  return <div>...</div>;
+}
+```
+
+| Need | How |
+|---|---|
+| Default IDE-like panels | do nothing |
+| Pause work while hidden (sockets, polling) | `useTabActive()` |
+| Remount this tab every visit | `tab.enableRenderOnDemand = true` |
+| Old remount-everywhere behaviour | `createLayoutModel(layout, { enableTabKeepAlive: false })` |
+
+See [`docs/tab-content-lifecycle.md`](docs/tab-content-lifecycle.md) for the full design.
 
 ## Resizing
 

@@ -1,3 +1,40 @@
+# Release Notes: v0.2.0
+
+Published **2026-08-24**. Latest npm release before this was **v0.1.0**.
+(v0.1.1 packaging-only work is included here; it was never published separately.)
+
+## Highlights
+
+- **Tab keep-alive (default on).** Switching tabs no longer unmounts the previous panel. Use `useTabActive()` for sockets/polling. Opt out with `enableRenderOnDemand` or `enableTabKeepAlive: false`.
+- **Capability flags work.** `enableClose`, `enableDrag`, and `enableResize` now control the UI (node → parent → global → default `true`).
+- **Tab restore.** Removing the last tab in a pane and bringing it back recreates the original containers (Settings no longer lands on Logs).
+- **Packaging.** ESM as `.mjs`, correct `exports`/`types`, CSS import strip on `.d.ts`, CI, ESLint, npm-only lockfile.
+
+## Migration notes
+
+If you opened WebSockets in `useEffect(() => { ...; return () => ws.close() }, [])` expecting unmount on tab switch, that cleanup no longer runs on switch. Use:
+
+```tsx
+import { useTabActive } from "layout-manager-react";
+
+const active = useTabActive();
+useEffect(() => {
+  if (!active) return;
+  const ws = connect();
+  return () => ws.close();
+}, [active]);
+```
+
+Or set `global.enableTabKeepAlive: false` for the previous remount behaviour.
+
+## Install
+
+```bash
+npm install layout-manager-react@0.2.0
+```
+
+---
+
 # Release Notes: v0.1.0
 
 ## 🎉 Minor Version Release

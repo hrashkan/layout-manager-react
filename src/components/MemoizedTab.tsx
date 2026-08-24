@@ -14,9 +14,13 @@ export const MemoizedTab = memo<TabProps>(Tab, (prevProps, nextProps) => {
   if (prevProps.onClose !== nextProps.onClose) return false;
   if (prevProps.onDragStart !== nextProps.onDragStart) return false;
   if (prevProps.onDragEnd !== nextProps.onDragEnd) return false;
+  if (prevProps.enableClose !== nextProps.enableClose) return false;
+  if (prevProps.enableDrag !== nextProps.enableDrag) return false;
 
   if (prevProps.node.id !== nextProps.node.id) return false;
   if (prevProps.node.name !== nextProps.node.name) return false;
+  if (prevProps.node.enableClose !== nextProps.node.enableClose) return false;
+  if (prevProps.node.enableDrag !== nextProps.node.enableDrag) return false;
 
   return true;
 });

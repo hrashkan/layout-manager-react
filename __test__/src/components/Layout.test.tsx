@@ -9,7 +9,7 @@ import {
   createTabSet,
   createTab,
 } from "../../../src/utils/layoutUtils";
-import type { LayoutModel } from "../../../src/types";
+import type { LayoutModel, LayoutNode } from "../../../src/types";
 
 function mkModel(): LayoutModel {
   return createLayoutModel(
@@ -41,19 +41,73 @@ describe("Layout component", () => {
   it("selects tab on header click and updates content", async () => {
     const user = userEvent.setup();
     const model = mkModel();
-    const { getAllByText, queryByTestId } = render(
+    const { getAllByText, getByTestId } = render(
       <div style={{ width: 800, height: 600 }}>
         <Layout model={model} factory={factory} />
       </div>
     );
 
-    // Click tab header "B"
     const tabB = getAllByText("B")[0];
     await user.click(tabB);
 
-    // Content should switch from 'ca' to 'cb'
-    expect(queryByTestId("content-ca")).toBeNull();
-    expect(queryByTestId("content-cb")).toBeTruthy();
+    const panelA = getByTestId("content-ca").closest(
+      ".react-flex-layout-tab-panel"
+    ) as HTMLElement;
+    const panelB = getByTestId("content-cb").closest(
+      ".react-flex-layout-tab-panel"
+    ) as HTMLElement;
+    expect(panelA.hasAttribute("hidden")).toBe(true);
+    expect(panelB.hasAttribute("hidden")).toBe(false);
+  });
+
+  it("preserves panel state when switching tabs (keep-alive)", async () => {
+    const user = userEvent.setup();
+    const model = createLayoutModel(
+      createTabSet("ts1", [
+        createTab("a", "ca", "A"),
+        createTab("b", "cb", "B"),
+      ])
+    );
+    const statefulFactory = (node: LayoutNode) => (
+      <div data-testid={`content-${node.component}`}>
+        <input aria-label={`field-${node.component}`} defaultValue="" />
+      </div>
+    );
+    const { getAllByText, getByLabelText } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={statefulFactory} />
+      </div>
+    );
+
+    await user.type(getByLabelText("field-ca"), "kept");
+    await user.click(getAllByText("B")[0]);
+    await user.click(getAllByText("A")[0]);
+    expect((getByLabelText("field-ca") as HTMLInputElement).value).toBe("kept");
+  });
+
+  it("remounts when enableRenderOnDemand is true", async () => {
+    const user = userEvent.setup();
+    const remount = createTab("a", "ca", "A");
+    remount.enableRenderOnDemand = true;
+    const model = createLayoutModel(
+      createTabSet("ts1", [remount, createTab("b", "cb", "B")])
+    );
+    const statefulFactory = (node: LayoutNode) => (
+      <div data-testid={`content-${node.component}`}>
+        <input aria-label={`field-${node.component}`} defaultValue="" />
+      </div>
+    );
+    const { getAllByText, getByLabelText, queryByLabelText } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={statefulFactory} />
+      </div>
+    );
+
+    await user.type(getByLabelText("field-ca"), "gone");
+    await user.click(getAllByText("B")[0]);
+    expect(queryByLabelText("field-ca")).toBeNull();
+    await user.click(getAllByText("A")[0]);
+    expect((getByLabelText("field-ca") as HTMLInputElement).value).toBe("");
   });
 
   it("closes a tab via close button and removes from header", async () => {
@@ -93,6 +147,77 @@ describe("Layout component", () => {
     expect(splitters.length).toBe(1);
   });
 
+  it("hides splitters when global enableResize is false", () => {
+    const model = createLayoutModel(
+      createRow("root", [
+        createTabSet("ts1", [createTab("a", "ca", "A")]),
+        createTabSet("ts2", [createTab("c", "cc", "C")]),
+      ]),
+      { enableResize: false }
+    );
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+    expect(
+      container.querySelectorAll(".react-flex-layout-splitter").length
+    ).toBe(0);
+  });
+
+  it("hides the splitter when an adjacent child has enableResize false", () => {
+    const left = createTabSet("ts1", [createTab("a", "ca", "A")]);
+    left.enableResize = false;
+    const model = createLayoutModel(
+      createRow("root", [left, createTabSet("ts2", [createTab("c", "cc", "C")])])
+    );
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+    expect(
+      container.querySelectorAll(".react-flex-layout-splitter").length
+    ).toBe(0);
+  });
+
+  it("hides splitters when the parent row has enableResize false", () => {
+    const row = createRow("root", [
+      createTabSet("ts1", [createTab("a", "ca", "A")]),
+      createTabSet("ts2", [createTab("c", "cc", "C")]),
+    ]);
+    row.enableResize = false;
+    const model = createLayoutModel(row);
+    const { container } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+    expect(
+      container.querySelectorAll(".react-flex-layout-splitter").length
+    ).toBe(0);
+  });
+
+  it("omits the close button when a tab has enableClose false", () => {
+    const locked = createTab("a", "ca", "A");
+    locked.enableClose = false;
+    const model = createLayoutModel(
+      createTabSet("ts1", [locked, createTab("b", "cb", "B")])
+    );
+    const { getAllByText } = render(
+      <div style={{ width: 800, height: 600 }}>
+        <Layout model={model} factory={factory} />
+      </div>
+    );
+    const lockedTab = getAllByText("A")[0].closest(
+      ".react-flex-layout-tab"
+    ) as HTMLElement;
+    const openTab = getAllByText("B")[0].closest(
+      ".react-flex-layout-tab"
+    ) as HTMLElement;
+    expect(lockedTab.querySelector(".react-flex-layout-tab-close")).toBeNull();
+    expect(openTab.querySelector(".react-flex-layout-tab-close")).toBeTruthy();
+  });
 
   it("exposes direction via the dir attribute without reordering the DOM", () => {
     const mkDirectionalModel = (direction: "ltr" | "rtl"): LayoutModel =>

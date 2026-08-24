@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, fireEvent, within, waitFor, act } from "@testing-library/react";
 import { TabSet } from "../../../src/components/TabSet";
+import { useTabActive } from "../../../src/hooks/useTabActive";
 import type { LayoutNode } from "../../../src/types";
 
 function mkTab(id: string, name: string): LayoutNode {
@@ -19,7 +20,7 @@ const factory = (node: any) => (
 describe("TabSet component", () => {
   it("renders tab headers and selected tab content", () => {
     const node = mkTabset([mkTab("a", "A"), mkTab("b", "B")], 0);
-    const { container, getByTestId } = render(
+    const { container, getByTestId, queryByTestId } = render(
       <TabSet node={node} factory={factory} />
     );
     const tabsContainer = container.querySelector(
@@ -28,6 +29,64 @@ describe("TabSet component", () => {
     expect(within(tabsContainer).getByText("A")).toBeTruthy();
     expect(within(tabsContainer).getByText("B")).toBeTruthy();
     expect(getByTestId("content-a")).toBeTruthy();
+    expect(queryByTestId("content-b")).toBeNull();
+  });
+
+  it("keeps visited tab panels mounted and toggles hidden", () => {
+    const node = mkTabset([mkTab("a", "A"), mkTab("b", "B")], 0);
+    const { rerender, getByTestId, queryByTestId } = render(
+      <TabSet node={node} factory={factory} />
+    );
+    expect(queryByTestId("content-b")).toBeNull();
+
+    rerender(
+      <TabSet
+        node={{ ...node, selected: 1 }}
+        factory={factory}
+      />
+    );
+    expect(
+      getByTestId("content-a")
+        .closest(".react-flex-layout-tab-panel")
+        ?.hasAttribute("hidden")
+    ).toBe(true);
+    expect(
+      getByTestId("content-b")
+        .closest(".react-flex-layout-tab-panel")
+        ?.hasAttribute("hidden")
+    ).toBe(false);
+
+    rerender(
+      <TabSet
+        node={{ ...node, selected: 0 }}
+        factory={factory}
+      />
+    );
+    expect(getByTestId("content-a")).toBeTruthy();
+    expect(getByTestId("content-b")).toBeTruthy();
+  });
+
+  it("exposes useTabActive to panel content", () => {
+    const ActiveProbe: React.FC = () => {
+      const active = useTabActive();
+      return <div data-testid="active-flag">{active ? "yes" : "no"}</div>;
+    };
+    const probeFactory = () => <ActiveProbe />;
+    const node = mkTabset([mkTab("a", "A"), mkTab("b", "B")], 0);
+    const { rerender, getByTestId } = render(
+      <TabSet node={node} factory={probeFactory} />
+    );
+    expect(getByTestId("active-flag").textContent).toBe("yes");
+
+    rerender(
+      <TabSet node={{ ...node, selected: 1 }} factory={probeFactory} />
+    );
+    const flags = document.querySelectorAll('[data-testid="active-flag"]');
+    expect(flags).toHaveLength(2);
+    expect(Array.from(flags).map((el) => el.textContent)).toEqual([
+      "no",
+      "yes",
+    ]);
   });
 
   it("clamps selected index when out of bounds", () => {
@@ -67,6 +126,43 @@ describe("TabSet component", () => {
     ) as HTMLButtonElement;
     fireEvent.click(closeBtn);
     expect(onTabClose).toHaveBeenCalledWith("ts", 0);
+  });
+
+  it("respects enableClose=false on a tab", () => {
+    const onTabClose = vi.fn();
+    const locked = { ...mkTab("a", "A"), enableClose: false };
+    const node = mkTabset([locked], 0);
+    const { container } = render(
+      <TabSet node={node} factory={factory} onTabClose={onTabClose} />
+    );
+    const tabEl = container
+      .querySelector(".react-flex-layout-tab") as HTMLElement;
+    expect(tabEl.querySelector(".react-flex-layout-tab-close")).toBeNull();
+  });
+
+  it("respects globalEnableClose=false when tab does not override", () => {
+    const node = mkTabset([mkTab("a", "A")], 0);
+    const { container } = render(
+      <TabSet
+        node={node}
+        factory={factory}
+        globalEnableClose={false}
+      />
+    );
+    expect(container.querySelector(".react-flex-layout-tab-close")).toBeNull();
+  });
+
+  it("lets a tab override globalEnableClose=false with enableClose=true", () => {
+    const open = { ...mkTab("a", "A"), enableClose: true };
+    const node = mkTabset([open], 0);
+    const { container } = render(
+      <TabSet
+        node={node}
+        factory={factory}
+        globalEnableClose={false}
+      />
+    );
+    expect(container.querySelector(".react-flex-layout-tab-close")).toBeTruthy();
   });
 
   it("calls onTabDragStart when a tab drag starts (with index)", () => {

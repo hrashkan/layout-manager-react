@@ -92,4 +92,32 @@ describe("Tab component", () => {
     expect(tabEl.classList.contains("dragging")).toBe(false);
     expect(document.body.classList.contains("dragging")).toBe(false);
   });
+
+  it("hides the close button when enableClose is false", () => {
+    const onClose = vi.fn();
+    const node = { ...mkTabNode("x", "Locked"), enableClose: false };
+    const { getByText, queryByLabelText } = render(
+      <Tab node={node} onClose={onClose} />
+    );
+    expect(queryByLabelText("Close tab")).toBeNull();
+    expect(
+      getByText("Locked").closest(".react-flex-layout-tab")
+    ).toBeTruthy();
+  });
+
+  it("is not draggable when enableDrag is false", () => {
+    const onDragStart = vi.fn();
+    const node = { ...mkTabNode("d", "Fixed"), enableDrag: false };
+    const { getByText } = render(
+      <Tab node={node} onDragStart={onDragStart} />
+    );
+    const tabEl = getByText("Fixed").closest(
+      ".react-flex-layout-tab"
+    ) as HTMLElement;
+    expect(tabEl.getAttribute("draggable")).toBe("false");
+    fireEvent.dragStart(tabEl, {
+      dataTransfer: { setData: vi.fn(), effectAllowed: "" },
+    });
+    expect(onDragStart).not.toHaveBeenCalled();
+  });
 });

@@ -125,6 +125,43 @@ test.describe("Layout Manager E2E Tests", () => {
     ).toHaveCount(1);
   });
 
+  test("5b. Should restore a sole tab (Settings) to its original pane", async ({
+    page,
+  }) => {
+    const settingsLabel = page.locator("label").filter({ hasText: "Settings" });
+    const settingsCheckbox = settingsLabel.locator('input[type="checkbox"]');
+
+    await expect(settingsCheckbox).toBeChecked();
+    await settingsCheckbox.click();
+    await page.waitForTimeout(500);
+
+    await expect(
+      page.locator('.react-flex-layout-tab:has-text("Settings")')
+    ).toHaveCount(0);
+
+    await settingsCheckbox.click();
+    await page.waitForTimeout(500);
+
+    const settingsTab = page.locator(
+      '.react-flex-layout-tab:has-text("Settings")'
+    );
+    await expect(settingsTab).toHaveCount(1);
+
+    // Settings must live alone in its tabset again — not merged into Logs/Console.
+    const settingsTabset = settingsTab.locator(
+      "xpath=ancestor::*[contains(@class,'react-flex-layout-tabset')][1]"
+    );
+    await expect(
+      settingsTabset.locator(".react-flex-layout-tab")
+    ).toHaveCount(1);
+    await expect(
+      settingsTabset.locator('.react-flex-layout-tab:has-text("Logs")')
+    ).toHaveCount(0);
+    await expect(
+      settingsTabset.locator('.react-flex-layout-tab:has-text("Console")')
+    ).toHaveCount(0);
+  });
+
   test("6. Should drag and drop tab to different tabset", async ({ page }) => {
     const leftTabset = page.locator(".react-flex-layout-tabset").first();
     const initialLeftTabs = await leftTabset

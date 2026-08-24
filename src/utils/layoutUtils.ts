@@ -1,5 +1,17 @@
 import { LayoutNode, LayoutModel } from "../types";
 
+export const isCapabilityEnabled = (
+  ...flags: Array<boolean | undefined>
+): boolean => {
+  for (let i = 0; i < flags.length; i++) {
+    const flag = flags[i];
+    if (flag !== undefined) {
+      return flag;
+    }
+  }
+  return true;
+};
+
 export const buildNodeIndexes = (
   root: LayoutNode
 ): {
@@ -48,6 +60,7 @@ export const createLayoutModel = (
     enableClose: true,
     enableDrag: true,
     enableResize: true,
+    enableTabKeepAlive: true,
     splitterSize: 8,
     tabOverlapLength: 0,
     direction: "ltr",
@@ -67,8 +80,6 @@ export const createTab = (
   component,
   name,
   config,
-  enableClose: true,
-  enableDrag: true,
 });
 
 export const createTabSet = (
@@ -80,8 +91,6 @@ export const createTabSet = (
   type: "tabset",
   children,
   selected,
-  enableClose: true,
-  enableDrag: true,
 });
 
 export const createRow = (
@@ -95,7 +104,6 @@ export const createRow = (
   children: calculateFlexValues(children),
   width,
   height,
-  enableResize: true,
 });
 
 export const createColumn = (
@@ -109,7 +117,6 @@ export const createColumn = (
   children: calculateFlexValues(children),
   width,
   height,
-  enableResize: true,
 });
 
 export const findNodeById = (
@@ -346,23 +353,86 @@ export interface ComponentRestoreData {
   config?: Record<string, any>;
 }
 
-const findParentContainer = (
+const getAncestorChain = (
   root: LayoutNode,
-  childId: string,
-  parent: LayoutNode | null = null
-): LayoutNode | null => {
+  nodeId: string
+): LayoutNode[] | null => {
+  if (root.id === nodeId) {
+    return [root];
+  }
   if (!root.children) return null;
 
   for (const child of root.children) {
-    if (child.id === childId) {
-      return parent || root;
-    }
-    if (child.children) {
-      const found = findParentContainer(child, childId, root);
-      if (found) return found;
+    const sub = getAncestorChain(child, nodeId);
+    if (sub) {
+      return [root, ...sub];
     }
   }
   return null;
+};
+
+const cloneContainerShell = (node: LayoutNode): LayoutNode => ({
+  id: node.id,
+  type: node.type,
+  children: [],
+  width: node.width,
+  height: node.height,
+  flex: node.flex,
+  minWidth: node.minWidth,
+  minHeight: node.minHeight,
+  maxWidth: node.maxWidth,
+  maxHeight: node.maxHeight,
+  selected: node.type === "tabset" ? 0 : node.selected,
+  enableClose: node.enableClose,
+  enableDrag: node.enableDrag,
+  enableResize: node.enableResize,
+  enableRenderOnDemand: node.enableRenderOnDemand,
+});
+
+
+const resolveSiblingInsertIndex = (
+  initialSiblings: LayoutNode[],
+  currentSiblings: LayoutNode[],
+  targetId: string
+): number => {
+  const targetIndex = initialSiblings.findIndex((c) => c.id === targetId);
+  if (targetIndex <= 0) return 0;
+
+  let insertAt = 0;
+  for (let i = 0; i < targetIndex; i++) {
+    if (currentSiblings.some((c) => c.id === initialSiblings[i].id)) {
+      insertAt += 1;
+    }
+  }
+  return insertAt;
+};
+
+const insertChildIntoParent = (
+  layout: LayoutNode,
+  parentId: string,
+  child: LayoutNode,
+  insertIndex: number
+): LayoutNode | null => {
+  const parent = findNodeById(layout, parentId);
+  if (!parent) return null;
+
+  const children = [...(parent.children || [])];
+  if (children.some((c) => c.id === child.id)) {
+    return layout;
+  }
+
+  const index = Math.max(0, Math.min(insertIndex, children.length));
+  children.splice(index, 0, child);
+
+  const withFlex =
+    parent.type === "row" || parent.type === "column"
+      ? calculateFlexValues(children)
+      : children;
+
+  return updateNodeById(layout, parentId, {
+    ...parent,
+    children: withFlex,
+  });
 };
 
 const findParentTabset = (
@@ -389,20 +459,29 @@ const findParentTabset = (
 export const addTabToTabset = (
   layout: LayoutNode,
   tabsetId: string,
-  tab: LayoutNode
+  tab: LayoutNode,
+  tabIndex?: number
 ): LayoutNode | null => {
   const tabset = findNodeById(layout, tabsetId);
   if (!tabset || tabset.type !== "tabset") {
     return null;
   }
 
-  const existingChildren = tabset.children || [];
-  const updatedChildren = [...existingChildren, tab];
+  const existingChildren = [...(tabset.children || [])];
+  if (existingChildren.some((c) => c.id === tab.id)) {
+    return layout;
+  }
+
+  const index =
+    tabIndex === undefined
+      ? existingChildren.length
+      : Math.max(0, Math.min(tabIndex, existingChildren.length));
+  existingChildren.splice(index, 0, tab);
 
   const updatedTabset = {
     ...tabset,
-    children: updatedChildren,
-    selected: updatedChildren.length - 1,
+    children: existingChildren,
+    selected: index,
   };
 
   return updateNodeById(layout, tabsetId, updatedTabset);
@@ -431,16 +510,17 @@ export const removeTab = (
     (child) => child.id !== tabId
   );
 
+  const restoreData: ComponentRestoreData = {
+    tabId: tab.id,
+    component: tab.component || "",
+    name: tab.name || "",
+    tabsetId: parentTabset.id,
+    tabIndex: tabIndex !== undefined && tabIndex !== -1 ? tabIndex : 0,
+    config: tab.config,
+  };
+
   if (!updatedChildren || updatedChildren.length === 0) {
     const newLayout = removeNodeById(layout, parentTabset.id);
-    const restoreData = {
-      tabId: tab.id,
-      component: tab.component || "",
-      name: tab.name || "",
-      tabsetId: parentTabset.id,
-      tabIndex: tabIndex !== undefined ? tabIndex : 0,
-      config: tab.config,
-    };
     return {
       layout: newLayout,
       restoreData,
@@ -463,18 +543,72 @@ export const removeTab = (
   };
 
   const newLayout = updateNodeById(layout, parentTabset.id, updatedTabset);
-  const restoreData = {
-    tabId: tab.id,
-    component: tab.component || "",
-    name: tab.name || "",
-    tabsetId: parentTabset.id,
-    tabIndex: tabIndex !== undefined ? tabIndex : 0,
-    config: tab.config,
-  };
   return {
     layout: newLayout,
     restoreData,
   };
+};
+
+
+const ensureTabsetPath = (
+  layout: LayoutNode,
+  tabsetId: string,
+  initialLayout: LayoutNode
+): LayoutNode | null => {
+  if (findNodeById(layout, tabsetId)?.type === "tabset") {
+    return layout;
+  }
+
+  const chain = getAncestorChain(initialLayout, tabsetId);
+  if (!chain || chain.length < 2) {
+    return null;
+  }
+
+  let deepestExisting = -1;
+  for (let i = chain.length - 1; i >= 0; i--) {
+    if (findNodeById(layout, chain[i].id)) {
+      deepestExisting = i;
+      break;
+    }
+  }
+
+  if (deepestExisting < 0) {
+    return null;
+  }
+
+  let current = layout;
+  for (let i = deepestExisting + 1; i < chain.length; i++) {
+    const nodeTemplate = chain[i];
+    const parentTemplate = chain[i - 1];
+    const parentLive = findNodeById(current, parentTemplate.id);
+    if (!parentLive) {
+      return null;
+    }
+
+    if (findNodeById(current, nodeTemplate.id)) {
+      continue;
+    }
+
+    const insertIndex = resolveSiblingInsertIndex(
+      parentTemplate.children || [],
+      parentLive.children || [],
+      nodeTemplate.id
+    );
+
+    const shell = cloneContainerShell(nodeTemplate);
+    const next = insertChildIntoParent(
+      current,
+      parentTemplate.id,
+      shell,
+      insertIndex
+    );
+    if (!next) {
+      return null;
+    }
+    current = next;
+  }
+
+  return findNodeById(current, tabsetId)?.type === "tabset" ? current : null;
 };
 
 export const restoreTab = (
@@ -487,56 +621,26 @@ export const restoreTab = (
     return layout;
   }
 
-  let tabsetNode = findNodeById(layout, restoreData.tabsetId);
+  let workingLayout = layout;
+  let tabsetNode = findNodeById(workingLayout, restoreData.tabsetId);
 
   if (!tabsetNode || tabsetNode.type !== "tabset") {
     if (!initialLayout) {
       return null;
     }
 
-    const parentInInitial = findParentContainer(
-      initialLayout,
-      restoreData.tabsetId
+    const ensured = ensureTabsetPath(
+      workingLayout,
+      restoreData.tabsetId,
+      initialLayout
     );
-
-    if (!parentInInitial) {
+    if (!ensured) {
       return null;
     }
-
-    const parentInCurrent = findNodeById(layout, parentInInitial.id);
-
-    if (!parentInCurrent || !parentInCurrent.children) {
+    workingLayout = ensured;
+    tabsetNode = findNodeById(workingLayout, restoreData.tabsetId);
+    if (!tabsetNode || tabsetNode.type !== "tabset") {
       return null;
-    }
-
-    const existingTabset = parentInCurrent.children.find(
-      (child) => child.id === restoreData.tabsetId
-    );
-    if (!existingTabset) {
-      const newTabset = createTabSet(restoreData.tabsetId, []);
-
-      const updatedParentChildren = [...parentInCurrent.children, newTabset];
-      const updatedParent = {
-        ...parentInCurrent,
-        children: updatedParentChildren,
-      };
-
-      const updatedLayout = updateNodeById(
-        layout,
-        parentInCurrent.id,
-        updatedParent
-      );
-
-      if (!updatedLayout) {
-        return null;
-      }
-
-      layout = updatedLayout;
-      tabsetNode = findNodeById(layout, restoreData.tabsetId);
-
-      if (!tabsetNode || tabsetNode.type !== "tabset") {
-        return null;
-      }
     }
   }
 
@@ -547,9 +651,12 @@ export const restoreTab = (
     restoreData.config
   );
 
-  const result = addTabToTabset(layout, restoreData.tabsetId, tab);
-
-  return result;
+  return addTabToTabset(
+    workingLayout,
+    restoreData.tabsetId,
+    tab,
+    restoreData.tabIndex
+  );
 };
 
 export const tabExists = (layout: LayoutNode, tabId: string): boolean => {

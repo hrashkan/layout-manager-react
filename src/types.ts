@@ -16,6 +16,7 @@ export interface LayoutNode {
   enableClose?: boolean;
   enableDrag?: boolean;
   enableResize?: boolean;
+  enableRenderOnDemand?: boolean;
 }
 
 export type Direction = "ltr" | "rtl";
@@ -25,6 +26,7 @@ export interface LayoutModel {
     enableClose?: boolean;
     enableDrag?: boolean;
     enableResize?: boolean;
+    enableTabKeepAlive?: boolean;
     splitterSize?: number;
     tabOverlapLength?: number;
     direction?: Direction;
@@ -113,6 +115,8 @@ export interface TabProps {
   style?: React.CSSProperties;
   closeIcon?: React.ReactElement;
   closeButtonClassName?: string;
+  enableClose?: boolean;
+  enableDrag?: boolean;
 }
 
 export interface TabSetProps {
@@ -141,6 +145,9 @@ export interface TabSetProps {
   closeButtonClassName?: string;
   scrollLeftIcon?: React.ReactElement;
   scrollRightIcon?: React.ReactElement;
+  globalEnableClose?: boolean;
+  globalEnableDrag?: boolean;
+  globalEnableTabKeepAlive?: boolean;
 }
 
 export interface SplitterProps {

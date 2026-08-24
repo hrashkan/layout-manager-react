@@ -228,6 +228,16 @@
   position: relative;
 }
 
+.react-flex-layout-tab-panel {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
+
+.react-flex-layout-tab-panel[hidden] {
+  display: none !important;
+}
+
 .react-flex-layout-tabset-close {
   background: none;
   border: none;

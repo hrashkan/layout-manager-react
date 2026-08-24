@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { TabProps } from "../types";
+import { isCapabilityEnabled } from "../utils/layoutUtils";
 import { DefaultCloseIcon } from "./DefaultCloseIcon";
 import "./Tab.css";
 
@@ -14,8 +15,13 @@ export const Tab: React.FC<TabProps> = ({
   style = {},
   closeIcon,
   closeButtonClassName = "",
+  enableClose: enableCloseProp,
+  enableDrag: enableDragProp,
 }) => {
   const isDraggingRef = useRef(false);
+
+  const canClose = isCapabilityEnabled(enableCloseProp, node.enableClose);
+  const canDrag = isCapabilityEnabled(enableDragProp, node.enableDrag);
 
   const handleClick = useCallback(() => {
     onSelect?.(node.id);
@@ -24,13 +30,19 @@ export const Tab: React.FC<TabProps> = ({
   const handleClose = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (!canClose) return;
       onClose?.(node.id);
     },
-    [node.id, onClose]
+    [canClose, node.id, onClose]
   );
 
   const handleDragStart = useCallback(
     (e: React.DragEvent) => {
+      if (!canDrag) {
+        e.preventDefault();
+        return;
+      }
+
       e.dataTransfer.setData("text/plain", node.id);
       e.dataTransfer.effectAllowed = "move";
 
@@ -41,7 +53,7 @@ export const Tab: React.FC<TabProps> = ({
 
       onDragStart?.(node.id, index);
     },
-    [node.id, index, onDragStart]
+    [canDrag, node.id, index, onDragStart]
   );
 
   const handleDragEnd = useCallback(
@@ -65,28 +77,33 @@ export const Tab: React.FC<TabProps> = ({
     };
   }, []);
 
-  const mergedStyle = useMemo(() => ({ ...style, cursor: "grab" }), [style]);
+  const mergedStyle = useMemo(
+    () => ({ ...style, cursor: canDrag ? "grab" : style.cursor }),
+    [style, canDrag]
+  );
 
   return (
     <div
       className={`react-flex-layout-tab ${className}`}
       style={mergedStyle}
       onClick={handleClick}
-      draggable={true}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      draggable={canDrag}
+      onDragStart={canDrag ? handleDragStart : undefined}
+      onDragEnd={canDrag ? handleDragEnd : undefined}
     >
       <span className="react-flex-layout-tab-title">
         {node.name || "Untitled"}
       </span>
-      <button
-        className={`react-flex-layout-tab-close ${closeButtonClassName}`.trim()}
-        onClick={handleClose}
-        type="button"
-        aria-label="Close tab"
-      >
-        {closeIcon || <DefaultCloseIcon />}
-      </button>
+      {canClose && (
+        <button
+          className={`react-flex-layout-tab-close ${closeButtonClassName}`.trim()}
+          onClick={handleClose}
+          type="button"
+          aria-label="Close tab"
+        >
+          {closeIcon || <DefaultCloseIcon />}
+        </button>
+      )}
     </div>
   );
 };

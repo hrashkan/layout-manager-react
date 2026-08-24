@@ -23,6 +23,13 @@ export const MemoizedTabSet = memo<TabSetProps>(
       return false;
     if (prevProps.scrollLeftIcon !== nextProps.scrollLeftIcon) return false;
     if (prevProps.scrollRightIcon !== nextProps.scrollRightIcon) return false;
+    if (prevProps.globalEnableClose !== nextProps.globalEnableClose)
+      return false;
+    if (prevProps.globalEnableDrag !== nextProps.globalEnableDrag) return false;
+    if (
+      prevProps.globalEnableTabKeepAlive !== nextProps.globalEnableTabKeepAlive
+    )
+      return false;
     if (prevProps.style !== nextProps.style) return false;
     if (prevProps.children !== nextProps.children) return false;
 
@@ -36,6 +43,15 @@ export const MemoizedTabSet = memo<TabSetProps>(
       if (prevProps.node.selected !== nextProps.node.selected) {
         return false;
       }
+
+      if (prevProps.node.enableClose !== nextProps.node.enableClose)
+        return false;
+      if (prevProps.node.enableDrag !== nextProps.node.enableDrag) return false;
+      if (
+        prevProps.node.enableRenderOnDemand !==
+        nextProps.node.enableRenderOnDemand
+      )
+        return false;
 
       if (prevProps.node.width !== nextProps.node.width) return false;
       if (prevProps.node.height !== nextProps.node.height) return false;
@@ -61,7 +77,9 @@ export const MemoizedTabSet = memo<TabSetProps>(
               prevChild.name !== nextChild.name ||
               prevChild.component !== nextChild.component ||
               prevChild.enableClose !== nextChild.enableClose ||
-              prevChild.enableDrag !== nextChild.enableDrag
+              prevChild.enableDrag !== nextChild.enableDrag ||
+              prevChild.enableRenderOnDemand !==
+                nextChild.enableRenderOnDemand
             ) {
               return false;
             }

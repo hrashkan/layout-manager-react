@@ -8,7 +8,20 @@ import React, {
 import { TabSetProps, DropPosition } from "../types";
 import { Tab } from "./Tab";
 import { ScrollLeftIcon, ScrollRightIcon } from "./icons";
+import { isCapabilityEnabled } from "../utils/layoutUtils";
+import { TabActiveProvider } from "../hooks/useTabActive";
 import "./TabSet.css";
+
+const shouldRenderOnDemand = (
+  tabEnableRenderOnDemand: boolean | undefined,
+  tabsetEnableRenderOnDemand: boolean | undefined,
+  enableTabKeepAlive: boolean | undefined
+): boolean => {
+  if (tabEnableRenderOnDemand !== undefined) return tabEnableRenderOnDemand;
+  if (tabsetEnableRenderOnDemand !== undefined)
+    return tabsetEnableRenderOnDemand;
+  return enableTabKeepAlive === false;
+};
 
 export const TabSet: React.FC<TabSetProps> = ({
   node,
@@ -31,6 +44,9 @@ export const TabSet: React.FC<TabSetProps> = ({
   closeButtonClassName,
   scrollLeftIcon,
   scrollRightIcon,
+  globalEnableClose,
+  globalEnableDrag,
+  globalEnableTabKeepAlive,
 }) => {
   const tabs = useMemo(() => {
     return node.children?.filter((child) => child.type === "tab") || [];
@@ -55,6 +71,46 @@ export const TabSet: React.FC<TabSetProps> = ({
     Math.max(0, tabs.length - 1)
   );
   const selectedTab = tabs[selectedTabIndex];
+  const selectedTabId = selectedTab?.id;
+
+  const [mountedTabIds, setMountedTabIds] = useState<Set<string>>(() => {
+    return selectedTabId ? new Set([selectedTabId]) : new Set();
+  });
+
+  const liveTabIds = useMemo(
+    () => new Set(tabs.map((tab) => tab.id)),
+    [tabs]
+  );
+
+  let nextMountedTabIds = mountedTabIds;
+  let mountedTabIdsNeedUpdate = false;
+
+  for (const id of mountedTabIds) {
+    if (!liveTabIds.has(id)) {
+      mountedTabIdsNeedUpdate = true;
+      break;
+    }
+  }
+  if (
+    selectedTabId &&
+    liveTabIds.has(selectedTabId) &&
+    !mountedTabIds.has(selectedTabId)
+  ) {
+    mountedTabIdsNeedUpdate = true;
+  }
+
+  if (mountedTabIdsNeedUpdate) {
+    nextMountedTabIds = new Set<string>();
+    for (const id of mountedTabIds) {
+      if (liveTabIds.has(id)) {
+        nextMountedTabIds.add(id);
+      }
+    }
+    if (selectedTabId && liveTabIds.has(selectedTabId)) {
+      nextMountedTabIds.add(selectedTabId);
+    }
+    setMountedTabIds(nextMountedTabIds);
+  }
 
   const handleTabSelect = useCallback(
     (tabId: string) => {
@@ -69,22 +125,58 @@ export const TabSet: React.FC<TabSetProps> = ({
   const handleTabClose = useCallback(
     (tabId: string) => {
       const tabIndex = idToIndex.get(tabId);
-      if (tabIndex !== undefined && tabIndex !== -1) {
-        onTabClose?.(node.id, tabIndex);
+      if (tabIndex === undefined || tabIndex === -1) return;
+
+      const tab = tabs[tabIndex];
+      if (
+        !isCapabilityEnabled(
+          tab?.enableClose,
+          node.enableClose,
+          globalEnableClose
+        )
+      ) {
+        return;
       }
+
+      onTabClose?.(node.id, tabIndex);
     },
-    [node.id, idToIndex, onTabClose]
+    [
+      node.id,
+      node.enableClose,
+      idToIndex,
+      tabs,
+      onTabClose,
+      globalEnableClose,
+    ]
   );
 
   const handleTabDragStart = useCallback(
     (tabId: string, tabIndex?: number) => {
       const derivedIndex =
         tabIndex !== undefined ? tabIndex : idToIndex.get(tabId) ?? -1;
-      if (derivedIndex !== -1) {
-        onTabDragStart?.(node.id, derivedIndex);
+      if (derivedIndex === -1) return;
+
+      const tab = tabs[derivedIndex];
+      if (
+        !isCapabilityEnabled(
+          tab?.enableDrag,
+          node.enableDrag,
+          globalEnableDrag
+        )
+      ) {
+        return;
       }
+
+      onTabDragStart?.(node.id, derivedIndex);
     },
-    [node.id, idToIndex, onTabDragStart]
+    [
+      node.id,
+      node.enableDrag,
+      idToIndex,
+      tabs,
+      onTabDragStart,
+      globalEnableDrag,
+    ]
   );
 
   const headerRef = useRef<HTMLDivElement | null>(null);
@@ -321,9 +413,8 @@ export const TabSet: React.FC<TabSetProps> = ({
 
   return (
     <div
-      className={`react-flex-layout-tabset ${
-        isDragOver ? "drag-over" : ""
-      } ${className}`}
+      className={`react-flex-layout-tabset ${isDragOver ? "drag-over" : ""
+        } ${className}`}
       style={tabSetStyle}
       data-tabset-id={node.id}
       data-drop-position={visualDropPosition}
@@ -376,6 +467,16 @@ export const TabSet: React.FC<TabSetProps> = ({
                   className={isActive ? "active" : ""}
                   closeIcon={closeIcon}
                   closeButtonClassName={closeButtonClassName}
+                  enableClose={isCapabilityEnabled(
+                    tab.enableClose,
+                    node.enableClose,
+                    globalEnableClose
+                  )}
+                  enableDrag={isCapabilityEnabled(
+                    tab.enableDrag,
+                    node.enableDrag,
+                    globalEnableDrag
+                  )}
                 />
               </React.Fragment>
             );
@@ -404,7 +505,36 @@ export const TabSet: React.FC<TabSetProps> = ({
         )}
       </div>
       <div className="react-flex-layout-tabset-content">
-        {selectedTab && (factory ? factory(selectedTab) : children)}
+        {factory
+          ? tabs.map((tab) => {
+            const active = tab.id === selectedTabId;
+            const renderOnDemand = shouldRenderOnDemand(
+              tab.enableRenderOnDemand,
+              node.enableRenderOnDemand,
+              globalEnableTabKeepAlive
+            );
+            const shouldMount = renderOnDemand
+              ? active
+              : nextMountedTabIds.has(tab.id);
+
+            if (!shouldMount) return null;
+
+            return (
+              <div
+                key={tab.id}
+                className="react-flex-layout-tab-panel"
+                hidden={!active}
+                aria-hidden={!active}
+              >
+                <TabActiveProvider value={active}>
+                  {factory(tab)}
+                </TabActiveProvider>
+              </div>
+            );
+          })
+          : selectedTab
+            ? children
+            : null}
       </div>
     </div>
   );

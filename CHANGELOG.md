@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-08-24
+
+Runtime behaviour, plus the packaging work that was sitting unreleased as 0.1.1.
+
+### Added
+
+- Lazy tab keep-alive (default on): panels mount on first visit and stay mounted
+  while hidden. `useTabActive()` for pause/resume. Per-tab
+  `enableRenderOnDemand` and `global.enableTabKeepAlive: false` restore the old
+  remount-on-switch behaviour.
+
+### Fixed
+
+- **Inactive tab panels keep their React state.** Tab content is mounted on first
+  visit and then hidden (`hidden` + `aria-hidden`) instead of unmounting on every
+  switch. Closing a tab still unmounts it. Override with
+  `tab.enableRenderOnDemand = true` or `global.enableTabKeepAlive: false`.
+  Use `useTabActive()` to pause sockets/subscriptions while a panel stays mounted
+  but is not visible.
+- **Restoring a removed tab recreates pruned containers in the right place.**
+  Removing the last tab in a tabset used to drop intermediate rows/columns;
+  `restoreTab` then either failed or appended the tabset under the wrong parent
+  (e.g. Settings landing next to Logs). Restore now rebuilds the ancestor path
+  from `initialLayout` and inserts at the original sibling / tab index.
+- **`enableClose`, `enableDrag` and `enableResize` now control the UI.** Resolution
+  order is node → parent → `model.global` → default `true`. Close buttons are
+  omitted when close is disabled, tabs are not draggable when drag is disabled,
+  and splitters are not rendered when resize is disabled on either adjacent child,
+  the parent row/column, or globally. Programmatic `handleAction` calls are
+  unchanged. The `create*` helpers no longer stamp these flags to `true`, so
+  omitting them inherits from the parent or global defaults.
+
 ## [0.1.1] - 2026-08-24
 
 Packaging, documentation and tooling only. No runtime behaviour changed.
@@ -86,9 +118,7 @@ Packaging, documentation and tooling only. No runtime behaviour changed.
 
 Tracked for the next release:
 
-- Tab content unmounts when switching tabs, so component state is lost.
 - Splitter drag is measured against the viewport rather than the parent element.
-- `enableClose`, `enableDrag` and `enableResize` are accepted but not enforced.
 
 `arethetypeswrong` still reports "masquerading as CJS" for the ESM entry: the
 runtime bundle is now correct ESM, but a single `index.d.ts` cannot describe both

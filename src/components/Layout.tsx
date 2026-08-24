@@ -27,6 +27,7 @@ import {
   findNodeById,
   findNodeByIdCached,
   removeEmptyTabsets,
+  isCapabilityEnabled,
 } from "../utils/layoutUtils";
 import "./Layout.css";
 
@@ -285,6 +286,10 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     const direction: Direction = currentModel.global?.direction || "ltr";
 
     const splitterSize = currentModel.global?.splitterSize || 8;
+    const globalEnableClose = currentModel.global?.enableClose;
+    const globalEnableDrag = currentModel.global?.enableDrag;
+    const globalEnableResize = currentModel.global?.enableResize;
+    const globalEnableTabKeepAlive = currentModel.global?.enableTabKeepAlive;
 
     const renderNode = useCallback(
       (node: LayoutNode): React.ReactNode => {
@@ -314,6 +319,9 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 closeButtonClassName={closeButtonClassName}
                 scrollLeftIcon={scrollLeftIcon}
                 scrollRightIcon={scrollRightIcon}
+                globalEnableClose={globalEnableClose}
+                globalEnableDrag={globalEnableDrag}
+                globalEnableTabKeepAlive={globalEnableTabKeepAlive}
               />
             );
 
@@ -335,9 +343,21 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 }}
               >
                 {rowChildren.map((child, index) => {
-                  const hasNextSibling = index < rowChildren.length - 1;
+                  const nextChild = rowChildren[index + 1];
+                  const showSplitter =
+                    !!nextChild &&
+                    isCapabilityEnabled(
+                      child.enableResize,
+                      node.enableResize,
+                      globalEnableResize
+                    ) &&
+                    isCapabilityEnabled(
+                      nextChild.enableResize,
+                      node.enableResize,
+                      globalEnableResize
+                    );
 
-                  if (!hasNextSibling) {
+                  if (!showSplitter) {
                     return (
                       <React.Fragment key={child.id}>
                         {renderNode(child)}
@@ -365,7 +385,9 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
             );
           }
 
-          case "column":
+          case "column": {
+            const columnChildren = node.children || [];
+
             return (
               <div
                 key={node.id}
@@ -380,27 +402,48 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                   maxHeight: node.maxHeight ? `${node.maxHeight}px` : undefined,
                 }}
               >
-                {node.children?.map((child, index) => {
-                  const verticalHandlers =
-                    index < (node.children?.length || 0) - 1
-                      ? getResizeHandler(child.id, "vertical")
-                      : null;
+                {columnChildren.map((child, index) => {
+                  const nextChild = columnChildren[index + 1];
+                  const showSplitter =
+                    !!nextChild &&
+                    isCapabilityEnabled(
+                      child.enableResize,
+                      node.enableResize,
+                      globalEnableResize
+                    ) &&
+                    isCapabilityEnabled(
+                      nextChild.enableResize,
+                      node.enableResize,
+                      globalEnableResize
+                    );
+
+                  if (!showSplitter) {
+                    return (
+                      <React.Fragment key={child.id}>
+                        {renderNode(child)}
+                      </React.Fragment>
+                    );
+                  }
+
+                  const verticalHandlers = getResizeHandler(
+                    child.id,
+                    "vertical"
+                  );
                   return (
                     <React.Fragment key={child.id}>
                       {renderNode(child)}
-                      {verticalHandlers && (
-                        <Splitter
-                          direction="vertical"
-                          onResize={verticalHandlers.onResize}
-                          onResizeStart={verticalHandlers.onResizeStart}
-                          size={splitterSize}
-                        />
-                      )}
+                      <Splitter
+                        direction="vertical"
+                        onResize={verticalHandlers.onResize}
+                        onResizeStart={verticalHandlers.onResizeStart}
+                        size={splitterSize}
+                      />
                     </React.Fragment>
                   );
                 })}
               </div>
             );
+          }
 
           case "tab":
             return factory(node);
@@ -427,6 +470,10 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         closeButtonClassName,
         scrollLeftIcon,
         scrollRightIcon,
+        globalEnableClose,
+        globalEnableDrag,
+        globalEnableTabKeepAlive,
+        globalEnableResize,
         getResizeHandler,
       ]
     );

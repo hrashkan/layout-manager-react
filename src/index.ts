@@ -7,6 +7,7 @@ export { ScrollLeftIcon, ScrollRightIcon } from "./components/icons";
 
 export { MemoizedTab } from "./components/MemoizedTab";
 export { MemoizedTabSet } from "./components/MemoizedTabSet";
+export { useTabActive } from "./hooks/useTabActive";
 
 export type {
   LayoutNode,
@@ -38,6 +39,7 @@ export {
   restoreTab,
   tabExists,
   addTabToTabset,
+  isCapabilityEnabled,
 } from "./utils/layoutUtils";
 export type { ComponentRestoreData } from "./utils/layoutUtils";
 

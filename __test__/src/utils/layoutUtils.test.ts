@@ -14,6 +14,7 @@ import {
   removeTab,
   restoreTab,
   tabExists,
+  isCapabilityEnabled,
 } from "../../../src/utils/layoutUtils";
 import type { LayoutModel, LayoutNode } from "../../../src/types";
 
@@ -33,6 +34,15 @@ const mkBase = (): LayoutModel =>
   );
 
 describe("layoutUtils", () => {
+  it("isCapabilityEnabled uses first defined flag and defaults to true", () => {
+    expect(isCapabilityEnabled()).toBe(true);
+    expect(isCapabilityEnabled(undefined, undefined)).toBe(true);
+    expect(isCapabilityEnabled(false)).toBe(false);
+    expect(isCapabilityEnabled(true, false)).toBe(true);
+    expect(isCapabilityEnabled(undefined, false, true)).toBe(false);
+    expect(isCapabilityEnabled(undefined, undefined, false)).toBe(false);
+  });
+
   it("create helpers produce expected shapes", () => {
     const model = mkBase();
     expect(model.global.splitterSize).toBe(8);
@@ -136,6 +146,66 @@ describe("layoutUtils", () => {
     expect(tabExists(restored, "t1")).toBe(true);
     const ts = findNodeById(restored, "tabs-left")!;
     expect((ts.children || []).some((c) => c.id === "t1")).toBe(true);
+    // left column was pruned; it must come back as the first sibling of root
+    expect(findNodeById(restored, "left")).toBeTruthy();
+    expect(restored.children?.[0]?.id).toBe("left");
+  });
+
+  it("restoreTab recreates a nested single-tab pane in its original position", () => {
+    const initial = createLayoutModel(
+      createRow("root", [
+        createColumn("left", [
+          createTabSet("left-tabset", [createTab("tab1", "c1", "Dashboard")]),
+        ]),
+        createColumn("right", [
+          createRow("top-right", [
+            createTabSet("top-tabset", [createTab("tab3", "c3", "Settings")]),
+          ]),
+          createRow("bottom-right", [
+            createTabSet("bottom-tabset", [
+              createTab("tab4", "c4", "Logs"),
+              createTab("tab5", "c5", "Console"),
+            ]),
+          ]),
+        ]),
+      ])
+    );
+
+    const removed = removeTab(initial.layout, "tab3");
+    const afterRemove = removeEmptyTabsets(removed.layout!)!;
+    expect(tabExists(afterRemove, "tab3")).toBe(false);
+    expect(findNodeById(afterRemove, "top-tabset")).toBeNull();
+    expect(findNodeById(afterRemove, "top-right")).toBeNull();
+
+    const restored = restoreTab(
+      afterRemove,
+      removed.restoreData!,
+      initial.layout
+    )!;
+    expect(tabExists(restored, "tab3")).toBe(true);
+
+    const right = findNodeById(restored, "right")!;
+    expect(right.children?.map((c) => c.id)).toEqual([
+      "top-right",
+      "bottom-right",
+    ]);
+    const topRight = findNodeById(restored, "top-right")!;
+    expect(topRight.children?.map((c) => c.id)).toEqual(["top-tabset"]);
+    const topTabset = findNodeById(restored, "top-tabset")!;
+    expect(topTabset.children?.map((c) => c.id)).toEqual(["tab3"]);
+  });
+
+  it("restoreTab puts a tab back at its original index among siblings", () => {
+    const initial = mkBase();
+    const removed = removeTab(initial.layout, "t2");
+    const afterRemove = removeEmptyTabsets(removed.layout!)!;
+    const restored = restoreTab(
+      afterRemove,
+      removed.restoreData!,
+      initial.layout
+    )!;
+    const ts = findNodeById(restored, "tabs-right")!;
+    expect(ts.children?.map((c) => c.id)).toEqual(["t2", "t3"]);
   });
 
   it("restoreTab returns original layout if tab already exists", () => {
