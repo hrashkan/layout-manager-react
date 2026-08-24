@@ -1,9 +1,5 @@
 import React from "react";
 
-/**
- * Default scroll left icon component
- * Extracted for better tree-shaking and code organization
- */
 export const ScrollLeftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
   props
 ) => (

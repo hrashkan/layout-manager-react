@@ -11,8 +11,6 @@
   position: relative;
 }
 
-/* Only the specific tabset being hovered over should show drop zone styling */
-
 .react-flex-layout-tabset.drag-over {
   position: relative;
 }
@@ -34,7 +32,6 @@
     height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Drop zone indicators - clean style with blurred background and dashed border */
 .react-flex-layout-tabset.drag-over[data-drop-position="center"]::before {
   content: "";
   position: absolute;
@@ -182,13 +179,13 @@
   overflow-x: auto;
   overflow-y: hidden;
   min-width: 0;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   scroll-behavior: smooth;
 }
 
 .react-flex-layout-tabset-tabs-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
 }
 
 .react-flex-layout-tabset-scroll-button {
@@ -231,7 +228,6 @@
   position: relative;
 }
 
-/* Tabset close button */
 .react-flex-layout-tabset-close {
   background: none;
   border: none;
@@ -257,13 +253,11 @@
   background-color: rgba(0, 0, 0, 0.2);
 }
 
-/* RTL support for close button */
 .react-flex-layout[dir="rtl"] .react-flex-layout-tabset-close {
   margin-left: 0;
   margin-right: 8px;
 }
 
-/* Tab drop indicator for reordering */
 .react-flex-layout-tab-drop-indicator {
   width: 2px;
   height: 24px;

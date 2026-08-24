@@ -56,26 +56,22 @@ describe("General Memory Management", () => {
     expect(container.querySelector(".react-flex-layout")).toBeNull();
   });
 
-  it("should not leak memory with storage enabled and disabled", async () => {
+  it("should not leak memory in controlled and uncontrolled mode", async () => {
     const model = mkModel();
 
-    // Test with storage enabled
+    // Controlled: the caller owns the model.
     const { unmount: unmount1 } = render(
       <div style={{ width: 800, height: 600 }}>
-        <Layout
-          model={model}
-          factory={factory}
-          storage={{ enabled: true, key: "memory-test-1" }}
-        />
+        <Layout model={model} factory={factory} onModelChange={() => {}} />
       </div>
     );
     unmount1();
     await new Promise<void>((resolve) => setTimeout(resolve, 100));
 
-    // Test with storage disabled
+    // Uncontrolled: the component keeps the model in internal state.
     const { unmount: unmount2 } = render(
       <div style={{ width: 800, height: 600 }}>
-        <Layout model={model} factory={factory} storage={{ enabled: false }} />
+        <Layout model={model} factory={factory} />
       </div>
     );
     unmount2();

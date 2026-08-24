@@ -9,6 +9,12 @@ import React, {
 import { SplitterProps } from "../types";
 import "./Splitter.css";
 
+const defaultStyles: React.CSSProperties = {
+  backgroundColor: "#ffffff",
+  border: "none",
+  outline: "none",
+};
+
 const SplitterComponent: React.FC<SplitterProps> = ({
   direction,
   onResize,
@@ -64,12 +70,6 @@ const SplitterComponent: React.FC<SplitterProps> = ({
     },
     [direction, onResize, onResizeStart]
   );
-
-  const defaultStyles: React.CSSProperties = {
-    backgroundColor: "#ffffff",
-    border: "none",
-    outline: "none",
-  };
 
   const currentStyles = useMemo<React.CSSProperties>(() => {
     if (isDragging && customStyles.active) return customStyles.active;

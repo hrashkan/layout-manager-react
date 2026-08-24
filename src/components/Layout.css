@@ -23,7 +23,6 @@
   min-width: 0;
 }
 
-/* Global styles for better UX */
 .react-flex-layout * {
   box-sizing: border-box;
 }
@@ -43,7 +42,6 @@
   min-height: 0;
 }
 
-/* RTL Support */
 .react-flex-layout[dir="rtl"] .react-flex-layout-row {
   flex-direction: row-reverse;
 }
@@ -56,7 +54,6 @@
   flex-direction: row-reverse;
 }
 
-/* Ensure proper text direction inheritance */
 .react-flex-layout[dir="rtl"] {
   text-align: right;
 }

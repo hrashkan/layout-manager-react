@@ -58,10 +58,13 @@ describe("MemoizedTab", () => {
 
   it("re-renders when onSelect handler changes", () => {
     let renders = 0;
+    const selections: number[] = [];
     function Wrapper() {
       const [ver, setVer] = useState(0);
       const onRender = () => (renders += 1);
-      const onSelect = useCallback(() => {}, [ver]);
+      const onSelect = useCallback(() => {
+        selections.push(ver);
+      }, [ver]);
       return (
         <div>
           <Profiler id="memo-tab" onRender={onRender}>

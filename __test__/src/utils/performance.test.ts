@@ -5,7 +5,6 @@ import {
   findParentNode,
   findParentNodeCached,
   buildNodeIndexes,
-  createLayoutModel,
   createTab,
   createTabSet,
   createRow,
@@ -213,7 +212,7 @@ describe("Performance: Tree Traversal Caching", () => {
       const nodeCount = collectNodeIds(layout).length;
 
       const start = performance.now();
-      const { nodeIndex, parentIndex } = buildNodeIndexes(layout);
+      const { nodeIndex } = buildNodeIndexes(layout);
       const buildTime = performance.now() - start;
 
       console.log(

@@ -5,6 +5,97 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-08-24
+
+Packaging, documentation and tooling only. No runtime behaviour changed.
+
+### Fixed
+
+- **Type declarations now resolve.** Every emitted `.d.ts` carried a CSS
+  side-effect import (for example `import "./Layout.css"`) that does not exist in
+  the published package, because Vite bundles all CSS into `dist/style.css`.
+  Consumers without `skipLibCheck` saw an unresolvable import for each one. The
+  build now strips those imports from the declarations.
+- **`exports` conditions were in an unusable order.** `"types"` was listed after
+  `"import"` and `"require"`, so it could never match and TypeScript found no
+  declarations for the package. `"types"` now comes first, and a `"default"`
+  condition was added for older bundlers.
+- **The ESM bundle was not loadable by Node.** It shipped as `dist/index.es.js`,
+  and with no `"type"` field Node parsed the `.js` extension as CommonJS and
+  failed on the ESM syntax. The ESM output is now `dist/index.mjs` and the
+  package declares `"type": "commonjs"` for the UMD/CJS entry.
+- **Version metadata was wrong.** `package.json` declared `1.0.0` while the last
+  published release was `0.1.0`, so a publish would have shipped an accidental
+  major.
+- **The tab drop indicator did not follow the pointer when reordering tabs
+  inside one tabset.** `dropTargetIndex` was missing from the dependencies of the
+  `renderNode` callback, and the rendered tree is memoised on that callback's
+  identity. Dragging within a single tabset leaves `dragOverTabset` and
+  `dropPosition` unchanged and moves only `dropTargetIndex`, so the tree was
+  never recomputed and the indicator stayed where it first appeared.
+- **`scrollLeftIcon` and `scrollRightIcon` were ignored after the first render.**
+  They were missing both from the `renderNode` dependencies and from the
+  `MemoizedTabSet` props comparison, so replacing them on a mounted layout had no
+  effect.
+
+### Added
+
+- `layout-manager-react/style.css` as a shorter stylesheet entry point. The
+  existing `layout-manager-react/dist/style.css` path still works.
+- `sideEffects: ["**/*.css"]`, so bundlers can tree-shake the JavaScript.
+- Source maps for both bundles.
+- ESLint with the `react-hooks` rules, plus `lint` and `lint:fix` scripts.
+- A GitHub Actions workflow running type-check, lint, unit tests, build and the
+  Playwright suite on every push and pull request.
+- `engines.node: ">=18"` and `packageManager: "npm@10.9.3"`.
+
+### Changed
+
+- `useNodeIndex` no longer keeps a hand-rolled ref cache on top of `useMemo`.
+  The memo already recomputed exactly when the layout root changed by reference,
+  so the refs added a concurrent-rendering hazard for no benefit.
+- `TabSet` no longer reassigns a callback ref during render to reach its latest
+  scroll-button check. The callback closes over nothing that changes between
+  renders, so it is a stable `useCallback` instead.
+- The `react-hooks` `exhaustive-deps`, `refs` and `set-state-in-effect` rules are
+  now errors rather than warnings.
+
+### Changed
+
+- The `dist/` and `demo/dist/` build outputs are no longer committed to git.
+- README: removed the `storage` prop, `createLayoutStorage` and the whole
+  Persistent Storage section, all of which were deleted in 0.1.0 but still
+  documented. Replaced with a worked example of persisting the model yourself.
+- README: corrected the `createRow`, `createColumn`, `createTabSet` and
+  `createTab` signatures, which did not match the code, and documented the
+  controlled/uncontrolled behaviour of `onModelChange`.
+
+### Removed
+
+- `yarn.lock`. The repository carried both it and `package-lock.json`, which are
+  two independent answers to how dependencies resolve, and nothing kept them in
+  agreement. The project now installs with npm only: `packageManager` pins it,
+  CI rejects a foreign lockfile, and `.gitignore` blocks one from returning.
+  `demo/package-lock.json` stays, since the demo is a separate install root.
+- Two test files that imported modules deleted in 0.1.0
+  (`useLayoutStorage.test.ts`, `storageUtils.test.ts`) and three tests that
+  passed the removed `storage` prop. The suite now passes on a clean checkout
+  (93 unit tests, 19 end-to-end tests).
+
+### Known issues
+
+Tracked for the next release:
+
+- Tab content unmounts when switching tabs, so component state is lost.
+- Splitter drag is measured against the viewport rather than the parent element.
+- `enableClose`, `enableDrag` and `enableResize` are accepted but not enforced.
+
+`arethetypeswrong` still reports "masquerading as CJS" for the ESM entry: the
+runtime bundle is now correct ESM, but a single `index.d.ts` cannot describe both
+entries under `"type": "commonjs"`. Resolving it needs a bundled `index.d.mts`
+alongside the existing declarations, which is deferred to the next release. Named
+imports type-check correctly today; only default-import interop is affected.
+
 ## [0.1.0] - 2025-12-13
 
 ### Breaking Changes

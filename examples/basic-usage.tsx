@@ -95,7 +95,7 @@ const BasicExample: React.FC = () => {
   }, []);
 
   const handleAction = useCallback((action: LayoutAction) => {
-    // Handle actions
+    console.log("layout action", action.type);
   }, []);
 
   return (

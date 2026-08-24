@@ -152,7 +152,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
     const handleAction = useCallback((action: LayoutAction) => {
       const updateModel = (prevModel: LayoutModel): LayoutModel => {
         switch (action.type) {
-          case "selectTab":
+          case "selectTab": {
             const { nodeId, tabIndex } = action.payload as SelectTabPayload;
             const selectResult = updateNodeById(prevModel.layout, nodeId, {
               selected: tabIndex,
@@ -164,7 +164,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               ...prevModel,
               layout: selectResult,
             };
-          case "removeNode":
+          }
+          case "removeNode": {
             const { nodeId: tabsetId, tabIndex: removeTabIndex } =
               action.payload as { nodeId: string; tabIndex: number };
             const tabsetNode =
@@ -203,7 +204,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               }
             }
             return prevModel;
-          case "closeTabset":
+          }
+          case "closeTabset": {
             const { nodeId: closeTabsetId } =
               action.payload as CloseTabsetPayload;
             const updatedLayout = updateNodeById(
@@ -221,7 +223,8 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               }
             }
             return prevModel;
-          case "changeDirection":
+          }
+          case "changeDirection": {
             const { direction: newDirection } = action.payload as {
               direction: Direction;
             };
@@ -232,6 +235,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 direction: newDirection,
               },
             };
+          }
           default:
             return prevModel;
         }
@@ -313,7 +317,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
               />
             );
 
-          case "row":
+          case "row": {
             const rowChildren = node.children || [];
 
             return (
@@ -359,6 +363,7 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
                 })}
               </div>
             );
+          }
 
           case "column":
             return (
@@ -410,7 +415,6 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         factory,
         handleTabSelect,
         handleTabClose,
-        handleResize,
         handleDragStart,
         handleDragEnd,
         handleDragOver,
@@ -418,8 +422,11 @@ export const Layout = forwardRef<LayoutRef, LayoutProps>(
         handleDrop,
         dragOverTabset,
         dropPosition,
+        dropTargetIndex,
         closeIcon,
         closeButtonClassName,
+        scrollLeftIcon,
+        scrollRightIcon,
         getResizeHandler,
       ]
     );

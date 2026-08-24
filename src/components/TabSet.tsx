@@ -93,8 +93,7 @@ export const TabSet: React.FC<TabSetProps> = ({
   const [showRightArrow, setShowRightArrow] = useState(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const checkScrollButtonsRef = useRef<() => void>();
-  checkScrollButtonsRef.current = () => {
+  const checkScrollButtons = useCallback(() => {
     const container = tabsContainerRef.current;
     if (!container) {
       setShowLeftArrow(false);
@@ -105,16 +104,16 @@ export const TabSet: React.FC<TabSetProps> = ({
     const { scrollLeft, scrollWidth, clientWidth } = container;
     setShowLeftArrow(scrollLeft > 1);
     setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
-  };
+  }, []);
 
   const handleScroll = useCallback(() => {
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
     scrollTimeoutRef.current = setTimeout(() => {
-      checkScrollButtonsRef.current?.();
+      checkScrollButtons();
     }, 10);
-  }, []);
+  }, [checkScrollButtons]);
 
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
@@ -127,7 +126,7 @@ export const TabSet: React.FC<TabSetProps> = ({
       const width = rect.width;
       const height = rect.height;
 
-      let position: DropPosition = "center";
+      let position: DropPosition;
 
       const headerHeight = 40;
       const isOverHeader = y < headerHeight;
@@ -232,8 +231,7 @@ export const TabSet: React.FC<TabSetProps> = ({
     const container = tabsContainerRef.current;
     if (!container || selectedTabIndex < 0) return;
 
-    let rafId: number;
-    rafId = requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const tabElements = container.children;
       const selectedTab = tabElements[selectedTabIndex] as HTMLElement;
       if (!selectedTab) return;
@@ -268,7 +266,7 @@ export const TabSet: React.FC<TabSetProps> = ({
 
     const rafIdRef = { current: 0 };
     rafIdRef.current = requestAnimationFrame(() => {
-      checkScrollButtonsRef.current?.();
+      checkScrollButtons();
     });
 
     container.addEventListener("scroll", handleScroll, { passive: true });
@@ -278,7 +276,7 @@ export const TabSet: React.FC<TabSetProps> = ({
         cancelAnimationFrame(rafIdRef.current);
       }
       rafIdRef.current = requestAnimationFrame(() => {
-        checkScrollButtonsRef.current?.();
+        checkScrollButtons();
       });
     });
     resizeObserver.observe(container);
@@ -294,7 +292,7 @@ export const TabSet: React.FC<TabSetProps> = ({
         scrollTimeoutRef.current = null;
       }
     };
-  }, [handleScroll, tabsToRender.length]);
+  }, [checkScrollButtons, handleScroll, tabsToRender.length]);
 
   const tabSetStyle: React.CSSProperties = {
     ...style,

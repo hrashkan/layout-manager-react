@@ -1,9 +1,5 @@
 import React from "react";
 
-/**
- * Default scroll right icon component
- * Extracted for better tree-shaking and code organization
- */
 export const ScrollRightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (
   props
 ) => (

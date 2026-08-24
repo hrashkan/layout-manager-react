@@ -9,7 +9,9 @@ export default defineConfig({
     timeout: 120_000,
   },
   testDir: "__test__/e2e",
-  reporter: [["list"]],
+  reporter: process.env.CI
+    ? [["list"], ["html", { open: "never" }]]
+    : [["list"]],
   use: {
     baseURL: "http://localhost:5173",
     trace: "on-first-retry",

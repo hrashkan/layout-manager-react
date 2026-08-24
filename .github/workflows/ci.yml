@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce a single lockfile
+        run: |
+          found=$(git ls-files | grep -E '(^|/)(yarn\.lock|pnpm-lock\.yaml|bun\.lockb?)$' || true)
+          if [ -n "$found" ]; then
+            echo "This project installs with npm only, but found:" >&2
+            echo "$found" >&2
+            echo "Delete the file and commit package-lock.json instead." >&2
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Report bundle size
+        run: |
+          echo "### Bundle size" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          for f in dist/index.mjs dist/index.umd.js dist/style.css; do
+            printf '%-20s raw %6s  gzip %6s\n' \
+              "$(basename "$f")" \
+              "$(du -h "$f" | cut -f1)" \
+              "$(gzip -c "$f" | wc -c | numfmt --to=iec)" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # The demo app is a separate workspace and hosts the pages the e2e
+      # suite drives, so it needs its own install.
+      - name: Install demo dependencies
+        run: npm ci
+        working-directory: demo
+
+      - name: Install Playwright browsers
+        run: npm run e2e:install
+
+      - name: End-to-end tests
+        run: npm run e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

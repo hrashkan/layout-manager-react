@@ -13,10 +13,14 @@ Try it out: **[https://hrashkan.github.io/layout-manager-demo/](https://hrashkan
 - 🔄 **Drag & Drop**: Full drag and drop support with 4 drop zones (center, left, right, top/bottom)
 - 📐 **Resizable**: Resize tabsets with smooth mouse tracking
 - 🌍 **RTL/LTR Support**: Full right-to-left and left-to-right direction support
-- 💾 **Persistent Storage**: Automatic localStorage persistence with debounced saving
 - 🎨 **Customizable**: Easy to style and customize
-- ⚡ **Performance**: Optimized for best performance
+- 🪶 **Small**: ~9 kB gzipped JavaScript plus ~1 kB of CSS, with React as the only peer dependency
+- 🔗 **Broad compatibility**: Works on React 16.8+ and ships both ESM and UMD builds
 - 🔒 **Type Safe**: Full TypeScript support
+
+> **Persistence:** built-in `localStorage` support was removed in v0.1.0 to keep the
+> package small. The layout model is plain JSON, so you can persist it yourself —
+> see [Persisting the layout](#persisting-the-layout).
 
 ## Installation
 
@@ -32,7 +36,7 @@ npm install layout-manager-react@latest
 npm update layout-manager-react
 ```
 
-**Bundle Size**: Check the package size on [Bundlephobia](https://bundlephobia.com/package/layout-manager-react@0.0.14)
+**Bundle Size**: Check the package size on [Bundlephobia](https://bundlephobia.com/package/layout-manager-react)
 
 ## Quick Start
 
@@ -98,8 +102,11 @@ export default App;
 **Option 1: Direct import (Recommended)**
 
 ```tsx
-import "layout-manager-react/dist/style.css";
+import "layout-manager-react/style.css";
 ```
+
+The longer `layout-manager-react/dist/style.css` path also works and is kept for
+backwards compatibility.
 
 **Option 2: In your main entry file (e.g., `app.tsx`, `_app.tsx`, or `main.tsx`)**
 
@@ -203,11 +210,17 @@ The main layout component.
 | `factory`              | `(node: LayoutNode) => React.ReactNode` | Yes      | Factory function to render tab content    |
 | `onModelChange`        | `(model: LayoutModel) => void`          | No       | Callback when layout changes              |
 | `onAction`             | `(action: LayoutAction) => void`        | No       | Callback for layout actions               |
-| `storage`              | `StorageOptions`                        | No       | Storage configuration                     |
 | `className`            | `string`                                | No       | Additional CSS class                      |
 | `style`                | `React.CSSProperties`                   | No       | Additional inline styles                  |
+| `splitterStyles`       | `{ default?, hover?, active? }`         | No       | Inline styles for splitters, per state    |
 | `closeIcon`            | `React.ReactElement`                    | No       | Custom close icon for all tabs            |
 | `closeButtonClassName` | `string`                                | No       | Custom CSS class for close buttons        |
+| `scrollLeftIcon`       | `React.ReactElement`                    | No       | Custom icon for the scroll-left button    |
+| `scrollRightIcon`      | `React.ReactElement`                    | No       | Custom icon for the scroll-right button   |
+
+When `onModelChange` is supplied the component is **controlled**: it reports the next
+model and renders whatever you pass back in `model`. Omit `onModelChange` and it keeps
+the model in internal state instead.
 
 ### LayoutNode Types
 
@@ -229,39 +242,38 @@ const model = createLayoutModel(rootNode, {
 });
 ```
 
-#### `createRow(id: string, children: LayoutNode[], flex?: number): LayoutNode`
+#### `createRow(id, children, width?, height?): LayoutNode`
 
-Creates a row node (horizontal container).
+Creates a row node (horizontal container). Children get an even `flex` share unless
+they already carry one. `width` and `height` are percentages.
 
 ```tsx
-const row = createRow("root", [tabset1, tabset2], 1);
+const row = createRow("root", [tabset1, tabset2]);
 ```
 
-#### `createColumn(id: string, children: LayoutNode[], flex?: number): LayoutNode`
+#### `createColumn(id, children, width?, height?): LayoutNode`
 
-Creates a column node (vertical container).
+Creates a column node (vertical container), with the same sizing rules as `createRow`.
 
 ```tsx
-const column = createColumn("col1", [tabset1, tabset2], 0.5);
+const column = createColumn("col1", [tabset1, tabset2]);
 ```
 
-#### `createTabSet(id: string, children: TabNode[], flex?: number, selected?: number): LayoutNode`
+#### `createTabSet(id, children, selected?): LayoutNode`
 
-Creates a tabset node.
+Creates a tabset node. `selected` is the index of the active tab and defaults to `0`.
 
 ```tsx
-const tabset = createTabSet("tabs", [tab1, tab2], 1, 0);
+const tabset = createTabSet("tabs", [tab1, tab2], 0);
 ```
 
-#### `createTab(id: string, component: string, name: string, options?: TabOptions): TabNode`
+#### `createTab(id, component, name, config?): LayoutNode`
 
-Creates a tab node.
+Creates a tab node. `component` is the key your `factory` switches on; `config` is an
+arbitrary object carried along with the tab.
 
 ```tsx
-const tab = createTab("tab1", "dashboard", "Dashboard", {
-  enableClose: true,
-  enableDrag: true,
-});
+const tab = createTab("tab1", "dashboard", "Dashboard", { filter: "active" });
 ```
 
 ## Direction Support
@@ -298,62 +310,50 @@ const toggleDirection = () => {
 - **Dynamic**: Change direction at runtime
 - **CSS Support**: Proper RTL styling with `dir` attribute
 
-## Persistent Storage
+## Persisting the layout
 
-The layout manager supports automatic localStorage persistence to save user customizations.
-
-### Basic Storage Usage
-
-```tsx
-<Layout
-  model={model}
-  factory={factory}
-  storage={{
-    enabled: true,
-    key: "my-layout",
-    autoSave: true,
-    debounceMs: 500,
-  }}
-/>
-```
-
-### Storage Options
-
-| Option       | Type      | Default     | Description                    |
-| ------------ | --------- | ----------- | ------------------------------ |
-| `enabled`    | `boolean` | `false`     | Enable/disable storage         |
-| `key`        | `string`  | `"default"` | Storage key for localStorage   |
-| `autoSave`   | `boolean` | `true`      | Automatically save on changes  |
-| `debounceMs` | `number`  | `500`       | Debounce delay in milliseconds |
-
-### Manual Storage Control
+Built-in `localStorage` persistence was removed in v0.1.0. `LayoutModel` is plain
+JSON, so persisting it is a few lines and keeps you in control of the storage
+backend, the key and the migration strategy:
 
 ```tsx
-import { createLayoutStorage, LayoutModel } from "layout-manager-react";
+import { useCallback, useState } from "react";
+import { Layout, type LayoutModel } from "layout-manager-react";
 
-const storage = createLayoutStorage({ key: "my-layout" });
+const STORAGE_KEY = "my-layout";
 
-// Save manually
-storage.save(model);
+const loadModel = (fallback: LayoutModel): LayoutModel => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? (JSON.parse(saved) as LayoutModel) : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
-// Load manually
-const savedModel: LayoutModel | null = storage.load();
+const App = () => {
+  const [model, setModel] = useState<LayoutModel>(() => loadModel(defaultModel));
 
-// Clear storage
-storage.clear();
+  const handleModelChange = useCallback((next: LayoutModel) => {
+    setModel(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // storage full or unavailable — keep the in-memory layout
+    }
+  }, []);
 
-// Check if storage exists
-if (storage.exists()) {
-  // Load saved layout
-}
+  return (
+    <Layout model={model} factory={factory} onModelChange={handleModelChange} />
+  );
+};
 ```
 
-### Storage Features
+If a layout changes rapidly (for example while dragging a splitter), debounce the
+write rather than saving on every model update.
 
-- **Automatic Saving**: Changes are automatically saved to localStorage
-- **Debounced Writes**: Multiple rapid changes are batched to avoid excessive writes
-- **Custom Keys**: Use different storage keys for multiple layouts
-- **Manual Control**: Clear storage or disable auto-save as needed
+> **Note:** validate anything you read back from storage. A model saved by an older
+> version of your app may not match the current shape.
 
 ## Drag & Drop
 
@@ -364,7 +364,9 @@ Full drag and drop support with 4 drop zones:
 - **Right**: Create new tabset to the right (50% width)
 - **Top/Bottom**: Create new tabset above/below (50% height)
 
-Tabs can be dragged by enabling `enableDrag: true` on the tab node.
+> **Known limitation:** every tab is currently draggable and closeable. The
+> `enableDrag`, `enableClose` and `enableResize` attributes are accepted by the model
+> but are not yet enforced.
 
 ## Resizing
 
@@ -450,7 +452,7 @@ Apply custom CSS classes to close buttons:
 See the `examples/` directory for more complete examples:
 
 - `basic-usage.tsx` - Basic layout setup
-- `advanced-usage.tsx` - Advanced features with storage and actions
+- `advanced-usage.tsx` - Actions, imperative ref usage and custom styling
 
 ## Browser Support
 

@@ -21,6 +21,8 @@ export const MemoizedTabSet = memo<TabSetProps>(
     if (prevProps.closeIcon !== nextProps.closeIcon) return false;
     if (prevProps.closeButtonClassName !== nextProps.closeButtonClassName)
       return false;
+    if (prevProps.scrollLeftIcon !== nextProps.scrollLeftIcon) return false;
+    if (prevProps.scrollRightIcon !== nextProps.scrollRightIcon) return false;
     if (prevProps.style !== nextProps.style) return false;
     if (prevProps.children !== nextProps.children) return false;
 
@@ -46,8 +48,7 @@ export const MemoizedTabSet = memo<TabSetProps>(
       const prevChildren = prevProps.node.children || [];
       const nextChildren = nextProps.node.children || [];
 
-      if (prevChildren === nextChildren) {
-      } else {
+      if (prevChildren !== nextChildren) {
         if (prevChildren.length !== nextChildren.length) return false;
 
         for (let i = 0; i < prevChildren.length; i++) {

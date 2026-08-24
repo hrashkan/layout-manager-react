@@ -125,7 +125,6 @@ export const useDragAndDrop = (
         currentDropPosition === "tab" &&
         currentDropTargetIndex !== null
       ) {
-        // Use cached lookup first, fallback to recursive search
         const sourceTabset =
           (nodeIndexRef.current &&
             findNodeByIdCached(nodeIndexRef.current, sourceTabsetId)) ??
@@ -182,7 +181,6 @@ export const useDragAndDrop = (
         return;
       }
 
-      // Use cached lookup first, fallback to recursive search
       const sourceTabset =
         (nodeIndexRef.current &&
           findNodeByIdCached(nodeIndexRef.current, sourceTabsetId)) ??
@@ -243,8 +241,6 @@ export const useDragAndDrop = (
           [tabToMove]
         );
 
-        // Use cached lookup first, fallback to recursive search
-        // Note: updatedLayout might not be in cache yet, so we try cache first then fallback
         const parent =
           (parentIndexRef.current &&
             findParentNodeCached(parentIndexRef.current, targetTabsetId)) ??

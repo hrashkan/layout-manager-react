@@ -26,9 +26,6 @@ export const buildNodeIndexes = (
   return { nodeIndex, parentIndex };
 };
 
-/**
- * Cached version of findNodeById using index map
- */
 export const findNodeByIdCached = (
   nodeIndex: Map<string, LayoutNode>,
   id: string
@@ -36,9 +33,6 @@ export const findNodeByIdCached = (
   return nodeIndex.get(id) ?? null;
 };
 
-/**
- * Cached version of findParentNode using index map
- */
 export const findParentNodeCached = (
   parentIndex: Map<string, LayoutNode>,
   childId: string
@@ -518,9 +512,7 @@ export const restoreTab = (
     const existingTabset = parentInCurrent.children.find(
       (child) => child.id === restoreData.tabsetId
     );
-    if (existingTabset) {
-      tabsetNode = existingTabset;
-    } else {
+    if (!existingTabset) {
       const newTabset = createTabSet(restoreData.tabsetId, []);
 
       const updatedParentChildren = [...parentInCurrent.children, newTabset];

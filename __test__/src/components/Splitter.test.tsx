@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, act } from "@testing-library/react";
 import { Splitter } from "../../../src/components/Splitter";
 

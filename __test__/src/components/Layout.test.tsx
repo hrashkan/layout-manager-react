@@ -35,7 +35,6 @@ describe("Layout component", () => {
         <Layout model={model} factory={factory} />
       </div>
     );
-    // Initially selected of ts1 is 0 -> component 'ca'
     expect(getByTestId("content-ca")).toBeTruthy();
   });
 
@@ -94,27 +93,34 @@ describe("Layout component", () => {
     expect(splitters.length).toBe(1);
   });
 
-  it("reverses row order when direction=rtl", () => {
-    const rtlModel: LayoutModel = createLayoutModel(
-      createRow("root", [
-        createTabSet("left", [createTab("l", "cl", "Left")]),
-        createTabSet("right", [createTab("r", "cr", "Right")]),
-      ]),
-      { direction: "rtl" }
-    );
 
-    const { getAllByText } = render(
-      <div style={{ width: 800, height: 600 }}>
-        <Layout model={rtlModel} factory={factory} />
-      </div>
-    );
+  it("exposes direction via the dir attribute without reordering the DOM", () => {
+    const mkDirectionalModel = (direction: "ltr" | "rtl"): LayoutModel =>
+      createLayoutModel(
+        createRow("root", [
+          createTabSet("left", [createTab("l", "cl", "Left")]),
+          createTabSet("right", [createTab("r", "cr", "Right")]),
+        ]),
+        { direction }
+      );
 
-    const leftEl = getAllByText("Left")[0];
-    const rightEl = getAllByText("Right")[0];
-    // In RTL, Right should appear before Left in DOM order
-    const order = leftEl.compareDocumentPosition(rightEl);
-    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBe(0);
-    expect(order & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+    for (const direction of ["ltr", "rtl"] as const) {
+      const { container, getAllByText, unmount } = render(
+        <div style={{ width: 800, height: 600 }}>
+          <Layout model={mkDirectionalModel(direction)} factory={factory} />
+        </div>
+      );
+
+      const root = container.querySelector(".react-flex-layout") as HTMLElement;
+      expect(root.getAttribute("dir")).toBe(direction);
+
+      const order = getAllByText("Left")[0].compareDocumentPosition(
+        getAllByText("Right")[0]
+      );
+      expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+      unmount();
+    }
   });
 
   it("applies custom closeButtonClassName to tab close buttons", () => {
@@ -150,20 +156,26 @@ describe("Layout component", () => {
     expect(call).toBeTruthy();
   });
 
-  it("renders immediately when storage.enabled=true (no visible loading in test env)", () => {
+  it("defers to the caller for state when onModelChange is supplied", async () => {
+    const user = userEvent.setup();
     const model = mkModel();
-    const { queryByText, getByTestId } = render(
+    const onModelChange = vi.fn();
+    const { getAllByText, getByTestId } = render(
       <div style={{ width: 800, height: 600 }}>
         <Layout
           model={model}
           factory={factory}
-          storage={{ enabled: true, key: "lt" }}
+          onModelChange={onModelChange}
         />
       </div>
     );
-    // In this environment, hook resolves synchronously; ensure content is present and no loading text
+
+    await user.click(getAllByText("B")[0]);
+
+    expect(onModelChange).toHaveBeenCalledTimes(1);
+    const [nextModel] = onModelChange.mock.calls[0];
+    expect(nextModel.layout.children[0].selected).toBe(1);
     expect(getByTestId("content-ca")).toBeTruthy();
-    expect(queryByText("Loading layout...")).toBeNull();
   });
 
   describe("Memory Management", () => {
@@ -175,13 +187,10 @@ describe("Layout component", () => {
         </div>
       );
 
-      // Unmount component
       unmount();
 
-      // Wait for cleanup
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
 
-      // After unmount, the container should be empty
       expect(container.querySelector(".react-flex-layout")).toBeNull();
     });
 
@@ -203,11 +212,9 @@ describe("Layout component", () => {
         document.body.removeChild(testContainer);
       }
 
-      // Final node count should be similar to initial (allowing for test framework overhead)
       const finalNodeCount = document.querySelectorAll("*").length;
       const nodeGrowth = finalNodeCount - initialNodeCount;
 
-      // Should not have excessive node growth (allow up to 50 nodes for test framework)
       expect(nodeGrowth).toBeLessThan(50);
     });
 
@@ -238,7 +245,6 @@ describe("Layout component", () => {
         );
       }
 
-      // Should not throw errors or accumulate memory
       expect(true).toBe(true);
     });
   });

@@ -15,10 +15,13 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "ReactFlexLayout",
-      fileName: (format) => `index.${format}.js`,
+      // The ESM output must not use `.js`: the package is type "commonjs", so
+      // Node would parse a `.js` file as CommonJS and choke on the ESM syntax.
+      fileName: (format) => (format === "es" ? "index.mjs" : "index.umd.js"),
       formats: ["es", "umd"],
     },
     minify: true,
+    sourcemap: true,
     rollupOptions: {
       external: (id) => {
         return (
