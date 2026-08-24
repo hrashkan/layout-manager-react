@@ -1,5 +1,9 @@
 # Layout Manager React
 
+[![npm version](https://img.shields.io/npm/v/layout-manager-react.svg)](https://www.npmjs.com/package/layout-manager-react)
+[![CI](https://github.com/hrashkan/layout-manager-react/actions/workflows/ci.yml/badge.svg)](https://github.com/hrashkan/layout-manager-react/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A modern React layout manager using flexbox with percentage-based sizing, similar to FlexLayout but simpler and more performant.
 
 ## 🚀 Live Demo
@@ -501,11 +505,17 @@ See the `examples/` directory for more complete examples:
 
 ## License
 
-MIT
+[MIT](LICENSE)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+See [CONTRIBUTING.md](CONTRIBUTING.md). By participating you agree to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Do not open a public issue for security reports.
 
 ## Repository
 

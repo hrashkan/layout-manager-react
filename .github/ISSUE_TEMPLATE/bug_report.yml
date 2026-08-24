@@ -1,0 +1,33 @@
+name: Bug report
+description: Something in the layout manager does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Search existing issues first. Security reports go to [SECURITY.md](https://github.com/hrashkan/layout-manager-react/blob/main/SECURITY.md), not here.
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: 0.2.1
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Minimal model, steps, or a link to a sandbox.
+    validations:
+      required: true

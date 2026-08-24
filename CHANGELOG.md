@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Project community files: `CONTRIBUTING.md`, Contributor Covenant
+  `CODE_OF_CONDUCT.md`, `SECURITY.md`, and GitHub issue / pull-request
+  templates.
+
 ## [0.2.1] - 2026-08-24
 
 ### Fixed
